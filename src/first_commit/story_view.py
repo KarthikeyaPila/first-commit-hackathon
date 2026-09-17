@@ -43,9 +43,9 @@ def build_demo_stories(
             "articles_considered": len(articles),
             "matched_groups": 0,
             "matching_method": (
-            "labeled benchmark + TF-IDF + explainable metadata scorer"
+            "state-anchor → national-coverage matching with TF-IDF"
             if use_tfidf else
-            "labeled benchmark + lexical fallback + explainable metadata scorer"
+            "state-anchor → national-coverage matching with lexical fallback"
         ),
         }
 
@@ -80,6 +80,12 @@ def build_demo_stories(
         first = article_index.get(row.get("first_url", ""))
         second = article_index.get(row.get("second_url", ""))
         if first is None or second is None:
+            continue
+        first_is_state = source_by_id[articles[first].source_id].scope != "NATIONAL"
+        second_is_state = source_by_id[articles[second].source_id].scope != "NATIONAL"
+        # State/regional reports are anchors; national reports provide
+        # supplemental coverage only after matching an anchor.
+        if first_is_state == second_is_state:
             continue
         if use_tfidf:
             similarity = float(cosine_similarity(matrix[first], matrix[second])[0, 0])
@@ -136,9 +142,9 @@ def build_demo_stories(
         "articles_considered": len(articles),
         "matched_groups": len(stories),
         "matching_method": (
-            "labeled benchmark + TF-IDF + explainable metadata scorer"
+            "state-anchor → national-coverage matching with TF-IDF"
             if use_tfidf else
-            "labeled benchmark + lexical fallback + explainable metadata scorer"
+            "state-anchor → national-coverage matching with lexical fallback"
         ),
         "benchmark_pairs": len(rows),
         "benchmark_metrics": summary,
