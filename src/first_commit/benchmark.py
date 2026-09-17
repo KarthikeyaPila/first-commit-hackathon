@@ -20,6 +20,7 @@ LABELS_PATH = PROCESSED_DATA_DIR / "benchmark_pairs.csv"
 BALANCED_LABELS_PATH = PROCESSED_DATA_DIR / "benchmark_pairs_balanced.csv"
 TFIDF_RESULTS_PATH = PROCESSED_DATA_DIR / "tfidf_results.json"
 EMBEDDING_RESULTS_PATH = PROCESSED_DATA_DIR / "embedding_results.json"
+ERROR_ANALYSIS_PATH = PROCESSED_DATA_DIR / "error_analysis.json"
 DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 TOKEN_RE = re.compile(r"[a-z0-9]{3,}")
 
@@ -295,6 +296,95 @@ def run_embeddings(
     output_path.write_text(json.dumps(results, indent=2) + "\n")
     return output_path
 
+def run_error_analysis(
+    labels_path: Path = LABELS_PATH,
+    output_path: Path = ERROR_ANALYSIS_PATH,
+    model_name: str = DEFAULT_EMBEDDING_MODEL,
+) -> Path:
+    """Write the highest-confidence false positives and false negatives."""
+
+    labeled, actual = _labeled_rows(labels_path)
+    results: dict[str, object] = {"labeled_pairs": len(labeled)}
+    if not labeled:
+        results["message"] = "Add same_story labels to the CSV before running this command."
+    else:
+        try:
+            from sklearn.feature_extraction.text import TfidfVectorizer
+            from sklearn.metrics.pairwise import cosine_similarity
+            from sentence_transformers import SentenceTransformer
+        except ImportError as error:
+            raise RuntimeError("Install the research extras to run error analysis") from error
+
+        texts = [row.get("first_headline", "") for row in labeled] + [
+            row.get("second_headline", "") for row in labeled
+        ]
+        tfidf_matrix = TfidfVectorizer(
+            stop_words="english", ngram_range=(1, 2)
+        ).fit_transform(texts)
+        tfidf_scores = [
+            float(cosine_similarity(tfidf_matrix[index], tfidf_matrix[index + len(labeled)])[0, 0])
+            for index in range(len(labeled))
+        ]
+
+        model = SentenceTransformer(model_name, device="cpu")
+        embeddings = model.encode(
+            texts,
+            batch_size=32,
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+            show_progress_bar=True,
+        )
+        pair_count = len(labeled)
+        embedding_scores = [
+            float(embeddings[index] @ embeddings[index + pair_count])
+            for index in range(pair_count)
+        ]
+
+        def errors_for(
+            scores: list[float],
+            method: str,
+        ) -> dict[str, object]:
+            metrics = _evaluate_scores(scores, actual, method)
+            threshold = float(metrics["best_threshold"])
+            mistakes = []
+            for row, label, score in zip(labeled, actual, scores):
+                predicted = score >= threshold
+                if predicted == label:
+                    continue
+                mistakes.append({
+                    "error_type": "false_positive" if predicted else "false_negative",
+                    "label": "same_story" if label else "different_story",
+                    "score": round(score, 6),
+                    "first_source": row.get("first_source", ""),
+                    "second_source": row.get("second_source", ""),
+                    "first_headline": row.get("first_headline", ""),
+                    "second_headline": row.get("second_headline", ""),
+                    "first_url": row.get("first_url", ""),
+                    "second_url": row.get("second_url", ""),
+                    "notes": row.get("notes", ""),
+                })
+            mistakes.sort(
+                key=lambda item: (
+                    item["error_type"] != "false_positive",
+                    -float(item["score"]),
+                )
+            )
+            return {
+                "metrics": metrics,
+                "mistake_count": len(mistakes),
+                "mistakes": mistakes,
+            }
+
+        results["tfidf"] = errors_for(tfidf_scores, "tfidf_cosine_headline")
+        results["embeddings"] = {
+            "model": model_name,
+            **errors_for(embedding_scores, "sentence_transformer_cosine_headline"),
+        }
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(results, indent=2) + "\n")
+    return output_path
+
+
 def read_label_rows(path: Path = LABELS_PATH) -> list[dict[str, str]]:
     """Read the current manual-labeling table."""
     if not path.exists():
@@ -330,13 +420,19 @@ def main() -> None:
     embeddings.add_argument("--labels", type=Path, default=LABELS_PATH)
     embeddings.add_argument("--output", type=Path, default=EMBEDDING_RESULTS_PATH)
     embeddings.add_argument("--model", default=DEFAULT_EMBEDDING_MODEL)
+    errors = subparsers.add_parser("errors", help="analyze false positives and false negatives")
+    errors.add_argument("--labels", type=Path, default=LABELS_PATH)
+    errors.add_argument("--output", type=Path, default=ERROR_ANALYSIS_PATH)
+    errors.add_argument("--model", default=DEFAULT_EMBEDDING_MODEL)
     args = parser.parse_args()
     if args.command == "prepare":
         path = prepare_labels(args.snapshot, args.output, args.limit)
     elif args.command == "tfidf":
         path = run_tfidf(args.labels, args.output)
-    else:
+    elif args.command == "embeddings":
         path = run_embeddings(args.labels, args.output, args.model)
+    else:
+        path = run_error_analysis(args.labels, args.output, args.model)
     print(path)
 
 
