@@ -112,6 +112,7 @@ def score_pair(
     *,
     tfidf_similarity: float | None = None,
     embedding_similarity: float | None = None,
+    reject_state_conflict: bool = True,
 ) -> MatchDecision:
     """Score a pair using text, metadata, and state signals.
 

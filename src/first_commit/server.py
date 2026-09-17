@@ -15,7 +15,7 @@ from .dedupe import deduplicate_articles
 from .feeds import fetch_source
 from .sources import SOURCES
 from .state_routing import route_article, state_source_directory
-from .story_view import build_snapshot_stories
+from .clustering import build_global_stories
 from .storage import save_snapshot
 
 
@@ -139,7 +139,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             return {"stories": [], "articles_considered": 0, "matched_groups": 0}
         snapshot_mtime = snapshot.stat().st_mtime
         if _story_cache["snapshot_mtime"] != snapshot_mtime:
-            _story_cache["payload"] = build_snapshot_stories(snapshot)
+            _story_cache["payload"] = build_global_stories(snapshot)
             _story_cache["snapshot_mtime"] = snapshot_mtime
         return _story_cache["payload"]
 
