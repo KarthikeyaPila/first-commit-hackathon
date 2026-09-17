@@ -190,18 +190,32 @@ def build_snapshot_stories(
     try:
         from sklearn.feature_extraction.text import TfidfVectorizer
         from sklearn.metrics.pairwise import cosine_similarity
-    except ImportError as error:
-        raise RuntimeError("Install the research extras to build snapshot stories") from error
 
-    headline_matrix = TfidfVectorizer(
-        stop_words="english",
-        ngram_range=(1, 2),
-    ).fit_transform([article.headline for article in articles])
+        use_tfidf = True
+        headline_matrix = TfidfVectorizer(
+            stop_words="english",
+            ngram_range=(1, 2),
+        ).fit_transform([article.headline for article in articles])
+    except ImportError:
+        use_tfidf = False
+        headline_matrix = None
+
     candidate_pairs: set[tuple[int, int]] = set()
     for index in range(len(articles)):
-        similarities = cosine_similarity(headline_matrix[index], headline_matrix).ravel()
-        neighbor_count = min(max_neighbors + 1, len(articles))
-        neighbors = similarities.argsort()[-neighbor_count:]
+        if use_tfidf:
+            similarities = cosine_similarity(headline_matrix[index], headline_matrix).ravel()
+            neighbor_count = min(max_neighbors + 1, len(articles))
+            neighbors = similarities.argsort()[-neighbor_count:]
+        else:
+            lexical_neighbors = sorted(
+                (
+                    (lexical_similarity(articles[index], articles[other]), other)
+                    for other in range(len(articles))
+                    if other != index
+                ),
+                reverse=True,
+            )
+            neighbors = [other for _, other in lexical_neighbors[:max_neighbors]]
         for neighbor in neighbors:
             if neighbor == index:
                 continue
@@ -217,7 +231,15 @@ def build_snapshot_stories(
             candidate_pairs.add((first, second))
 
     pairs = sorted(candidate_pairs)
-    weighted_scores = weighted_tfidf_similarities(articles, pairs)
+    try:
+        weighted_scores = weighted_tfidf_similarities(articles, pairs)
+        score_method = "weighted TF-IDF"
+    except RuntimeError:
+        weighted_scores = [
+            lexical_similarity(articles[first], articles[second])
+            for first, second in pairs
+        ]
+        score_method = "lexical fallback"
     edges: list[tuple[int, int, object]] = []
     for (first, second), similarity in zip(pairs, weighted_scores):
         decision = score_pair(
@@ -282,7 +304,7 @@ def build_snapshot_stories(
         "matched_groups": len(stories),
         "matching_method": (
             "full snapshot · headline neighbor retrieval · "
-            "weighted headline/summary/lead matching"
+            + score_method + " · state-anchored grouping"
         ),
     }
 
