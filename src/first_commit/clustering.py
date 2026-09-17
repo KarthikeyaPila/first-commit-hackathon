@@ -218,8 +218,10 @@ def build_global_stories(
 
     stories.sort(key=lambda story: (story["article_count"], story["sources"]), reverse=True)
     review_candidates.sort(key=lambda candidate: candidate["score"], reverse=True)
+    visible_stories = stories[:max_stories]
     return {
-        "stories": stories[:max_stories],
+        "stories": visible_stories,
+        "state_groups": _project_state_groups(visible_stories),
         "articles_considered": len(articles),
         "candidate_pairs": len(pairs),
         "decision_counts": decision_counts,
@@ -234,6 +236,25 @@ def build_global_stories(
             + score_method
         ),
     }
+
+
+def _project_state_groups(stories: list[dict[str, object]]) -> list[dict[str, object]]:
+    """Project each grouped story into its backend-owned state sections."""
+    grouped: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for story in stories:
+        states = story.get("states") or ["National / Unassigned"]
+        for state in states:
+            projected = dict(story)
+            projected["state"] = state
+            grouped[str(state)].append(projected)
+    return [
+        {
+            "state": state,
+            "story_count": len(state_stories),
+            "stories": state_stories,
+        }
+        for state, state_stories in sorted(grouped.items())
+    ]
 
 
 def _unique_reasons(decisions: list[object]) -> list[str]:

@@ -37,6 +37,9 @@
       .story-panel { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 20px; margin: 28px 0; }
       .story-panel h2 { margin: 4px 0; font: 700 26px/1.1 Georgia, serif; }
       .story-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 16px; }
+      .state-story-group { border-top: 1px solid var(--line); margin-top: 24px; padding-top: 18px; }
+      .state-story-group:first-child { border-top: 0; margin-top: 16px; padding-top: 0; }
+      .state-story-group h3 { margin: 0; font: 700 22px/1.1 Georgia, serif; }
       .story-card { border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
       .story-card h3 { margin: 0 0 8px; font-size: 15px; }
       .story-card ul { margin: 8px 0 0; padding-left: 18px; }
@@ -145,13 +148,18 @@
         storiesSummary.textContent = payload.matched_groups
           ? payload.matched_groups + ' grouped stories from ' + payload.articles_considered + ' snapshot articles (' + payload.candidate_pairs + ' candidates; ' + (payload.decision_counts?.MATCH ?? 0) + ' matches; ' + (payload.decision_counts?.CANDIDATE ?? 0) + ' candidates awaiting review; ' + (payload.articles_ungrouped ?? 0) + ' ungrouped; ' + payload.matching_method + ').'
           : 'No confident cross-source groups available yet.';
-        storyList.innerHTML = (payload.stories || []).map((story) =>
-          '<article class="story-card"><h3>' + escapeHtml(story.story_id) + ' · ' + story.article_count + ' reports</h3>' +
-          '<div class="meta">' + escapeHtml((story.sources || []).join(' · ')) + '</div>' +
-          '<div>' + (story.reasons || []).map((reason) => '<span class="reason">' + escapeHtml(reason) + '</span>').join('') + '</div>' +
-          '<ul>' + (story.articles || []).map((article) =>
-            '<li><a href="' + escapeHtml(article.url) + '" target="_blank" rel="noreferrer"><strong>' + escapeHtml(article.source) + ':</strong> ' + escapeHtml(article.headline) + '</a></li>'
-          ).join('') + '</ul></article>'
+        const groups = payload.state_groups || [];
+        storyList.innerHTML = groups.map((group) =>
+          '<section class="state-story-group"><h3>' + escapeHtml(group.state) + '</h3>' +
+          '<div class="meta">' + group.story_count + ' grouped stories</div>' +
+          '<div class="story-grid">' + (group.stories || []).map((story) =>
+            '<article class="story-card"><h3>' + escapeHtml(story.story_id) + ' · ' + story.article_count + ' reports</h3>' +
+            '<div class="meta">' + escapeHtml((story.sources || []).join(' · ')) + '</div>' +
+            '<div>' + (story.reasons || []).map((reason) => '<span class="reason">' + escapeHtml(reason) + '</span>').join('') + '</div>' +
+            '<ul>' + (story.articles || []).map((article) =>
+              '<li><a href="' + escapeHtml(article.url) + '" target="_blank" rel="noreferrer"><strong>' + escapeHtml(article.source) + ':</strong> ' + escapeHtml(article.headline) + '</a></li>'
+            ).join('') + '</ul></article>'
+          ).join('') + '</div></section>'
         ).join('') || '<div class="feed">No grouped stories to display.</div>';
       };
       const renderCandidates = (payload) => {
