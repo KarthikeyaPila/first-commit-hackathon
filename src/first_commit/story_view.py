@@ -163,7 +163,7 @@ def build_snapshot_stories(
     snapshot_path: Path,
     *,
     max_articles: int = 2000,
-    max_neighbors: int = 30,
+    max_neighbors: int = 8,
     max_stories: int = 60,
 ) -> dict[str, object]:
     """Cluster the full snapshot using sparse nearest-neighbor candidates."""
@@ -200,35 +200,61 @@ def build_snapshot_stories(
         use_tfidf = False
         headline_matrix = None
 
-    candidate_pairs: set[tuple[int, int]] = set()
-    for index in range(len(articles)):
+    def time_compatible(first: int, second: int) -> bool:
+        first_time = articles[first].published_at
+        second_time = articles[second].published_at
+        if not first_time or not second_time:
+            return True
+        return abs((first_time - second_time).total_seconds()) / 3600 <= 48
+
+    def source_compatible(anchor: int, candidate: int) -> bool:
+        anchor_source = source_by_id[articles[anchor].source_id]
+        candidate_source = source_by_id[articles[candidate].source_id]
+        if anchor_source.scope == "NATIONAL" and candidate_source.scope == "NATIONAL":
+            return False
+        if anchor_source.scope == "NATIONAL" or candidate_source.scope == "NATIONAL":
+            return True
+        return bool(set(anchor_source.states) & set(candidate_source.states))
+
+    def nearest_candidates(anchor: int, candidate_indexes: list[int]) -> list[int]:
         if use_tfidf:
-            similarities = cosine_similarity(headline_matrix[index], headline_matrix).ravel()
-            neighbor_count = min(max_neighbors + 1, len(articles))
-            neighbors = similarities.argsort()[-neighbor_count:]
-        else:
-            lexical_neighbors = sorted(
-                (
-                    (lexical_similarity(articles[index], articles[other]), other)
-                    for other in range(len(articles))
-                    if other != index
+            ranked = sorted(
+                candidate_indexes,
+                key=lambda candidate: float(
+                    cosine_similarity(headline_matrix[anchor], headline_matrix[candidate])[0, 0]
                 ),
                 reverse=True,
             )
-            neighbors = [other for _, other in lexical_neighbors[:max_neighbors]]
-        for neighbor in neighbors:
-            if neighbor == index:
-                continue
-            first, second = sorted((index, int(neighbor)))
-            if articles[first].source_id == articles[second].source_id:
-                continue
-            first_time = articles[first].published_at
-            second_time = articles[second].published_at
-            if first_time and second_time:
-                hours = abs((first_time - second_time).total_seconds()) / 3600
-                if hours > 48:
-                    continue
-            candidate_pairs.add((first, second))
+        else:
+            ranked = sorted(
+                candidate_indexes,
+                key=lambda candidate: lexical_similarity(articles[anchor], articles[candidate]),
+                reverse=True,
+            )
+        return ranked[:max_neighbors]
+
+    # First pass: every state/regional anchor searches each compatible source.
+    anchor_indexes = [
+        index
+        for index, article in enumerate(articles)
+        if source_by_id[article.source_id].scope != "NATIONAL"
+    ]
+    source_indexes = {
+        source_id: [index for index, article in enumerate(articles) if article.source_id == source_id]
+        for source_id in source_by_id
+    }
+    candidate_pairs: set[tuple[int, int]] = set()
+    for anchor in anchor_indexes:
+        for source_id, indexes in source_indexes.items():
+            candidates = [
+                candidate for candidate in indexes
+                if candidate != anchor
+                and articles[candidate].source_id != articles[anchor].source_id
+                and source_compatible(anchor, candidate)
+                and time_compatible(anchor, candidate)
+            ]
+            for candidate in nearest_candidates(anchor, candidates):
+                candidate_pairs.add(tuple(sorted((anchor, candidate))))
 
     pairs = sorted(candidate_pairs)
     try:
@@ -240,7 +266,9 @@ def build_snapshot_stories(
             for first, second in pairs
         ]
         score_method = "lexical fallback"
+
     embedding_scores: list[float | None] = [None] * len(pairs)
+    embeddings = None
     try:
         from sentence_transformers import SentenceTransformer
 
@@ -265,20 +293,66 @@ def build_snapshot_stories(
 
     edges: list[tuple[int, int, object]] = []
     outcome_counts = {"MATCH": 0, "CANDIDATE": 0, "NEW_STORY": 0}
-    for (first, second), tfidf_score, embedding_score in zip(
-        pairs, weighted_scores, embedding_scores
-    ):
-        decision = score_pair(
-            articles[first],
-            articles[second],
-            source_by_id[articles[first].source_id],
-            source_by_id[articles[second].source_id],
-            tfidf_similarity=tfidf_score,
-            embedding_similarity=embedding_score,
-        )
-        outcome_counts[decision.outcome] += 1
-        if decision.outcome == "MATCH":
-            edges.append((first, second, decision))
+
+    def evaluate_pairs(
+        pair_list: list[tuple[int, int]],
+        tfidf_scores: list[float],
+        semantic_scores: list[float | None],
+    ) -> list[int]:
+        matched = []
+        for (first, second), tfidf_score, embedding_score in zip(
+            pair_list, tfidf_scores, semantic_scores
+        ):
+            decision = score_pair(
+                articles[first],
+                articles[second],
+                source_by_id[articles[first].source_id],
+                source_by_id[articles[second].source_id],
+                tfidf_similarity=tfidf_score,
+                embedding_similarity=embedding_score,
+            )
+            outcome_counts[decision.outcome] += 1
+            if decision.outcome == "MATCH":
+                edges.append((first, second, decision))
+                if source_by_id[articles[first].source_id].scope == "NATIONAL":
+                    matched.append(first)
+                if source_by_id[articles[second].source_id].scope == "NATIONAL":
+                    matched.append(second)
+        return matched
+
+    matched_national = set(evaluate_pairs(pairs, weighted_scores, embedding_scores))
+
+    # Second pass: national reports can form coverage chains after anchoring.
+    national_pairs: set[tuple[int, int]] = set()
+    for anchor in matched_national:
+        candidates = [
+            candidate for candidate, article in enumerate(articles)
+            if candidate != anchor
+            and source_by_id[article.source_id].scope == "NATIONAL"
+            and articles[candidate].source_id != articles[anchor].source_id
+            and time_compatible(anchor, candidate)
+        ]
+        for candidate in nearest_candidates(anchor, candidates):
+            pair = tuple(sorted((anchor, candidate)))
+            if pair not in candidate_pairs:
+                national_pairs.add(pair)
+
+    if national_pairs:
+        extra_pairs = sorted(national_pairs)
+        try:
+            extra_scores = weighted_tfidf_similarities(articles, extra_pairs)
+        except RuntimeError:
+            extra_scores = [
+                lexical_similarity(articles[first], articles[second])
+                for first, second in extra_pairs
+            ]
+        extra_embeddings = [
+            float(embeddings[first] @ embeddings[second])
+            if embeddings is not None else None
+            for first, second in extra_pairs
+        ]
+        evaluate_pairs(extra_pairs, extra_scores, extra_embeddings)
+        pairs.extend(extra_pairs)
 
     groups = cluster_matched_articles(len(articles), edges)
     stories = []
