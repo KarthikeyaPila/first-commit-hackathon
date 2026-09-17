@@ -56,7 +56,7 @@ pytest
 Start the local API and UI:
 
 ```bash
-PYTHONPATH=src python -m first_commit.server
+PYTHONPATH=src .venv/bin/python -m first_commit.server
 ```
 
 Then open <http://127.0.0.1:8000> and click **Process latest news**. The UI

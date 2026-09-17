@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 from pathlib import Path
 
-from .benchmark import LABELS_PATH, _evaluate_scores, _labeled_rows
+from .benchmark import LABELS_PATH, _evaluate_scores, _labeled_rows, lexical_similarity
 from .matching import score_pair
 from .models import Article
 from .sources import SOURCES
@@ -42,19 +42,24 @@ def build_demo_stories(
             "stories": [],
             "articles_considered": len(articles),
             "matched_groups": 0,
-            "matching_method": "labeled benchmark + explainable metadata scorer",
+            "matching_method": (
+            "labeled benchmark + TF-IDF + explainable metadata scorer"
+            if use_tfidf else
+            "labeled benchmark + lexical fallback + explainable metadata scorer"
+        ),
         }
 
     try:
         from sklearn.feature_extraction.text import TfidfVectorizer
         from sklearn.metrics.pairwise import cosine_similarity
-    except ImportError as error:
-        raise RuntimeError("Install the research extras to build story cards") from error
-
-    matrix = TfidfVectorizer(
-        stop_words="english",
-        ngram_range=(1, 2),
-    ).fit_transform([article.clustering_text for article in articles])
+        use_tfidf = True
+        matrix = TfidfVectorizer(
+            stop_words="english",
+            ngram_range=(1, 2),
+        ).fit_transform([article.clustering_text for article in articles])
+    except ImportError:
+        use_tfidf = False
+        matrix = None
     parents = list(range(len(articles)))
     edges: list[tuple[int, int, object]] = []
     scores: list[float] = []
@@ -76,7 +81,10 @@ def build_demo_stories(
         second = article_index.get(row.get("second_url", ""))
         if first is None or second is None:
             continue
-        similarity = float(cosine_similarity(matrix[first], matrix[second])[0, 0])
+        if use_tfidf:
+            similarity = float(cosine_similarity(matrix[first], matrix[second])[0, 0])
+        else:
+            similarity = lexical_similarity(articles[first], articles[second])
         decision = score_pair(
             articles[first],
             articles[second],
@@ -127,7 +135,11 @@ def build_demo_stories(
         "stories": stories[:max_stories],
         "articles_considered": len(articles),
         "matched_groups": len(stories),
-        "matching_method": "labeled benchmark + explainable metadata scorer",
+        "matching_method": (
+            "labeled benchmark + TF-IDF + explainable metadata scorer"
+            if use_tfidf else
+            "labeled benchmark + lexical fallback + explainable metadata scorer"
+        ),
         "benchmark_pairs": len(rows),
         "benchmark_metrics": summary,
     }
