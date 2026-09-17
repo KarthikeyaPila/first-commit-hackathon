@@ -104,6 +104,8 @@
       const feeds = document.querySelector('#feeds');
       const benchmarkPair = document.querySelector('#benchmark-pair');
       const benchmarkProgress = document.querySelector('#benchmark-progress');
+      const storyList = document.querySelector('#story-list');
+      const storiesSummary = document.querySelector('#stories-summary');
       const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
       const renderBenchmark = (payload) => {
         benchmarkProgress.textContent = payload.total_pairs ? payload.labeled_pairs + ' of ' + payload.total_pairs + ' pairs labeled' : 'No benchmark pairs available yet.';
