@@ -44,6 +44,12 @@
       .story-card a { color: var(--ink); text-decoration: none; }
       .story-card a:hover { color: var(--accent); }
       .reason { display: inline-block; background: #fff2ec; border-radius: 999px; color: #9b4329; font-size: 12px; margin: 3px 4px 0 0; padding: 4px 8px; }
+      .candidate-panel { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 20px; margin: 28px 0; }
+      .candidate-panel h2 { margin: 4px 0; font: 700 26px/1.1 Georgia, serif; }
+      .candidate-grid { display: grid; gap: 10px; margin-top: 16px; }
+      .candidate-card { border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+      .candidate-card strong { display: block; margin-bottom: 8px; }
+      .candidate-card a { color: var(--accent); font-size: 12px; }
       .states { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 16px; }
       .state-card { border: 1px solid var(--line); border-radius: 12px; padding: 13px; }
       .state-card h3 { margin: 0 0 7px; font-size: 16px; }
@@ -79,6 +85,12 @@
         <p id="stories-summary" class="meta">Loading story groups…</p>
         <div id="story-list" class="story-grid"><div class="feed">Loading story cards…</div></div>
       </section>
+      <section class="candidate-panel" aria-label="Candidate story matches">
+        <div class="section-kicker">Review queue</div>
+        <h2>Possible matches not yet grouped</h2>
+        <p id="candidate-summary" class="meta">Loading candidate reviews…</p>
+        <div id="candidate-list" class="candidate-grid"><div class="feed">Loading candidate pairs…</div></div>
+      </section>
       <section class="benchmark-panel" aria-label="Story matching labeler">
         <div class="section-kicker">Story matching benchmark</div>
         <h2>Are these the same story?</h2>
@@ -106,6 +118,8 @@
       const benchmarkProgress = document.querySelector('#benchmark-progress');
       const storyList = document.querySelector('#story-list');
       const storiesSummary = document.querySelector('#stories-summary');
+      const candidateList = document.querySelector('#candidate-list');
+      const candidateSummary = document.querySelector('#candidate-summary');
       const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
       const renderBenchmark = (payload) => {
         benchmarkProgress.textContent = payload.total_pairs ? payload.labeled_pairs + ' of ' + payload.total_pairs + ' pairs labeled' : 'No benchmark pairs available yet.';
@@ -136,8 +150,22 @@
           ).join('') + '</ul></article>'
         ).join('') || '<div class="feed">No grouped stories to display.</div>';
       };
+      const renderCandidates = (payload) => {
+        const candidates = payload.candidate_reviews || [];
+        candidateSummary.textContent = candidates.length
+          ? candidates.length + ' reviewable pairs shown, sorted by combined score.'
+          : 'No reviewable candidate pairs.';
+        candidateList.innerHTML = candidates.map((candidate, index) =>
+          '<article class="candidate-card"><strong>#' + (index + 1) + ' · score ' + escapeHtml(candidate.score) + '</strong>' +
+          '<div><b>' + escapeHtml(candidate.first_source) + ':</b> ' + escapeHtml(candidate.first_headline) + '</div>' +
+          '<div><b>' + escapeHtml(candidate.second_source) + ':</b> ' + escapeHtml(candidate.second_headline) + '</div>' +
+          '<div>' + (candidate.reasons || []).map((reason) => '<span class="reason">' + escapeHtml(reason) + '</span>').join('') + '</div>' +
+          '<p><a href="' + escapeHtml(candidate.first_url) + '" target="_blank" rel="noreferrer">First article</a> · ' +
+          '<a href="' + escapeHtml(candidate.second_url) + '" target="_blank" rel="noreferrer">Second article</a></p></article>'
+        ).join('') || '<div class="feed">No candidate pairs to review.</div>';
+      };
       const loadStories = async () => {
-        try { renderStories(await (await fetch('/api/stories')).json()); }
+        try { const payload = await (await fetch('/api/stories')).json(); renderStories(payload); renderCandidates(payload); }
         catch (error) { storiesSummary.textContent = 'Could not load story groups.'; storyList.innerHTML = '<div class="error">' + escapeHtml(error.message) + '</div>'; }
       };
       const loadBenchmark = async () => {

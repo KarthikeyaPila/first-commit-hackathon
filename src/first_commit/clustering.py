@@ -129,6 +129,7 @@ def build_global_stories(
 
     parents = list(range(len(articles)))
     edges: list[tuple[int, int, object]] = []
+    review_candidates: list[dict[str, object]] = []
     decision_counts = {"MATCH": 0, "CANDIDATE": 0, "NEW_STORY": 0}
 
     def find(index: int) -> int:
@@ -158,6 +159,18 @@ def build_global_stories(
         if decision.outcome == "MATCH":
             union(first, second)
             edges.append((first, second, decision))
+        elif decision.outcome == "CANDIDATE":
+            review_candidates.append({
+                "score": round(decision.score, 4),
+                "reasons": decision.reasons,
+                "signals": decision.signals,
+                "first_source": source_by_id[articles[first].source_id].name,
+                "first_headline": articles[first].headline,
+                "first_url": articles[first].url,
+                "second_source": source_by_id[articles[second].source_id].name,
+                "second_headline": articles[second].headline,
+                "second_url": articles[second].url,
+            })
 
     groups: dict[int, list[int]] = defaultdict(list)
     for index in range(len(articles)):
@@ -204,6 +217,7 @@ def build_global_stories(
         })
 
     stories.sort(key=lambda story: (story["article_count"], story["sources"]), reverse=True)
+    review_candidates.sort(key=lambda candidate: candidate["score"], reverse=True)
     return {
         "stories": stories[:max_stories],
         "articles_considered": len(articles),
@@ -214,6 +228,7 @@ def build_global_stories(
         "matched_groups": len(stories),
         "articles_in_groups": len(grouped_indexes),
         "articles_ungrouped": len(articles) - len(grouped_indexes),
+        "candidate_reviews": review_candidates[:100],
         "matching_method": (
             "global story graph · per-source retrieval · "
             + score_method
