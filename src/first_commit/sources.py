@@ -119,4 +119,12 @@ SOURCES: tuple[Source, ...] = (
         language="EN",
         rss_url="http://feeds.feedburner.com/apherald-politics-english",
     ),
+    Source(
+        source_id="the-hans-india-ap-telangana",
+        name="The Hans India — Andhra Pradesh & Telangana",
+        scope="REGIONAL",
+        states=("Andhra Pradesh", "Telangana"),
+        language="EN",
+        rss_url="https://www.thehansindia.com/feed",
+    ),
 )

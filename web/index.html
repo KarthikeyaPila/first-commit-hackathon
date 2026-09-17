@@ -27,6 +27,7 @@
       .states { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 16px; }
       .state-card { border: 1px solid var(--line); border-radius: 12px; padding: 13px; }
       .state-card h3 { margin: 0 0 7px; font-size: 16px; }
+      .source-group-label { color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .06em; margin-top: 8px; text-transform: uppercase; }
       .source-chip { display: inline-block; background: #edf0f4; border-radius: 999px; color: var(--ink); font-size: 12px; margin: 3px 4px 0 0; padding: 4px 8px; }
       .feed-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
       .feed h2 { font-size: 18px; margin: 0 0 3px; }
@@ -85,8 +86,12 @@
       const renderStateDirectory = (directory) => {
         const list = document.querySelector('#state-list');
         list.innerHTML = (directory.states || []).map((entry) => {
-          const sources = entry.sources.map((source) => '<span class="source-chip" title="' + escapeHtml(source.scope) + ' · ' + escapeHtml(source.feed_health) + '">' + escapeHtml(source.name) + '</span>').join('');
-          return '<div class="state-card"><h3>' + escapeHtml(entry.state) + '</h3>' + sources + '</div>';
+          const chips = (sources) => sources.map((source) => '<span class="source-chip" title="' + escapeHtml(source.scope) + ' · ' + escapeHtml(source.feed_health) + '">' + escapeHtml(source.name) + '</span>').join('');
+          const local = chips(entry.local_sources || []);
+          const national = chips(entry.national_sources || []);
+          return '<div class="state-card"><h3>' + escapeHtml(entry.state) + '</h3>' +
+            '<div class="source-group-label">State / regional</div>' + (local || '<span class="meta">None mapped yet</span>') +
+            '<div class="source-group-label">National candidates</div>' + (national || '<span class="meta">None configured</span>') + '</div>';
         }).join('');
       };
       const loadStateDirectory = async () => {

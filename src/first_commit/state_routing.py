@@ -79,18 +79,20 @@ def state_source_directory(sources: tuple[Source, ...] = ()) -> list[dict[str, o
     for state in SUPPORTED_STATES:
         state_sources = [source for source in active_sources if state in source.states]
         national_sources = [source for source in active_sources if source.scope == "NATIONAL"]
+        def source_payload(source):
+            return {
+                "source_id": source.source_id,
+                "name": source.name,
+                "scope": source.scope,
+                "feed_health": source.feed_health,
+            }
+
         result.append(
             {
                 "state": state,
-                "sources": [
-                    {
-                        "source_id": source.source_id,
-                        "name": source.name,
-                        "scope": source.scope,
-                        "feed_health": source.feed_health,
-                    }
-                    for source in (*national_sources, *state_sources)
-                ],
+                "national_sources": [source_payload(source) for source in national_sources],
+                "local_sources": [source_payload(source) for source in state_sources],
+                "sources": [source_payload(source) for source in (*national_sources, *state_sources)],
             }
         )
     return result
