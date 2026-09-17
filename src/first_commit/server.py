@@ -46,14 +46,16 @@ def run_ingestion() -> dict[str, object]:
             "states": list(source.states),
             "rss_url": source.rss_url,
             "status": "fetching",
+            "feed_health": source.feed_health,
             "fetched_at": None,
             "articles_found": 0,
             "articles": [],
-            "error": None,
+            "error": source.last_error,
         }
         try:
             articles = fetch_source(source, config.max_entries_per_source)
             report["status"] = "ok"
+            report["feed_health"] = "OK"
             report["fetched_at"] = _now()
             report["articles_found"] = len(articles)
             report["articles"] = [
@@ -67,6 +69,7 @@ def run_ingestion() -> dict[str, object]:
             ]
         except Exception as error:  # noqa: BLE001 - a failed feed must not stop other feeds
             report["status"] = "error"
+            report["feed_health"] = "ERROR"
             report["error"] = f"{type(error).__name__}: {error}"
         reports.append(report)
 

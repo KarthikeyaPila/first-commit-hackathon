@@ -57,7 +57,7 @@
       const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
       const render = (run) => {
         const reports = run.feeds || [];
-        const healthy = reports.filter((feed) => feed.status === 'ok').length;
+        const healthy = reports.filter((feed) => feed.feed_health === 'OK').length;
         const articles = reports.reduce((sum, feed) => sum + (feed.articles_found || 0), 0);
         document.querySelector('#source-count').textContent = reports.length;
         document.querySelector('#healthy-count').textContent = healthy;
@@ -65,7 +65,7 @@
         status.textContent = run.completed_at ? `Completed ${new Date(run.completed_at).toLocaleString()}` : 'Running…';
         feeds.innerHTML = reports.map((feed) => `
           <article class="feed">
-            <div class="feed-head"><div><h2>${escapeHtml(feed.name)}</h2><div class="meta">${escapeHtml(feed.scope)} · ${escapeHtml(feed.rss_url)}</div></div><span class="badge ${feed.status === 'ok' ? 'ok' : 'error'}">${escapeHtml(feed.status)}</span></div>
+            <div class="feed-head"><div><h2>${escapeHtml(feed.name)}</h2><div class="meta">${escapeHtml(feed.scope)} · ${escapeHtml(feed.rss_url)}</div></div><span class="badge ${feed.feed_health === 'OK' ? 'ok' : feed.feed_health === 'NOT_CHECKED' ? '' : 'error'}">${escapeHtml(feed.feed_health || 'NOT_CHECKED')}</span></div>
             ${feed.error ? `<p class="error">${escapeHtml(feed.error)}</p>` : `<div class="articles">${(feed.articles || []).map((article) => `<div class="article"><a href="${escapeHtml(article.url)}" target="_blank" rel="noreferrer">${escapeHtml(article.headline)}</a><div class="meta">${article.published_at ? new Date(article.published_at).toLocaleString() : 'Publication time unavailable'}</div></div>`).join('') || '<div class="meta">No articles returned.</div>'}</div>`}
           </article>`).join('') || '<div class="feed">No active sources configured.</div>';
       };

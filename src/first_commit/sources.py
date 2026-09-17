@@ -12,6 +12,8 @@ class Source:
     language: str
     rss_url: str
     active: bool = True
+    feed_health: str = "NOT_CHECKED"
+    last_error: str | None = None
 
 
 # These are deliberately kept in code for the first local validation slice.

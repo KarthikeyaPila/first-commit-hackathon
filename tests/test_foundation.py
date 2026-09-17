@@ -43,3 +43,8 @@ def test_rss_parser_extracts_article_metadata() -> None:
     assert articles[0].headline == "A headline"
     assert articles[0].summary == "A summary."
     assert articles[0].published_at is not None
+
+
+def test_sources_expose_feed_health_state() -> None:
+    assert SOURCES[0].feed_health == "NOT_CHECKED"
+    assert SOURCES[0].last_error is None
