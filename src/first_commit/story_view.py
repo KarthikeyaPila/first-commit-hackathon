@@ -165,6 +165,7 @@ def build_snapshot_stories(
     max_articles: int = 2000,
     max_neighbors: int = 8,
     max_stories: int = 60,
+    use_embeddings: bool = False,
 ) -> dict[str, object]:
     """Cluster the full snapshot using sparse nearest-neighbor candidates."""
 
@@ -196,6 +197,7 @@ def build_snapshot_stories(
             stop_words="english",
             ngram_range=(1, 2),
         ).fit_transform([article.headline for article in articles])
+        headline_similarities = cosine_similarity(headline_matrix)
     except ImportError:
         use_tfidf = False
         headline_matrix = None
@@ -220,9 +222,7 @@ def build_snapshot_stories(
         if use_tfidf:
             ranked = sorted(
                 candidate_indexes,
-                key=lambda candidate: float(
-                    cosine_similarity(headline_matrix[anchor], headline_matrix[candidate])[0, 0]
-                ),
+                key=lambda candidate: float(headline_similarities[anchor, candidate]),
                 reverse=True,
             )
         else:
@@ -269,27 +269,28 @@ def build_snapshot_stories(
 
     embedding_scores: list[float | None] = [None] * len(pairs)
     embeddings = None
-    try:
-        from sentence_transformers import SentenceTransformer
+    if use_embeddings:
+        try:
+            from sentence_transformers import SentenceTransformer
 
-        model = SentenceTransformer(
-            "sentence-transformers/all-MiniLM-L6-v2",
-            device="cpu",
-        )
-        embeddings = model.encode(
-            [article.clustering_text for article in articles],
-            batch_size=32,
-            convert_to_numpy=True,
-            normalize_embeddings=True,
-            show_progress_bar=False,
-        )
-        embedding_scores = [
-            float(embeddings[first] @ embeddings[second])
-            for first, second in pairs
-        ]
-        score_method += " + Sentence Transformer"
-    except ImportError:
-        pass
+            model = SentenceTransformer(
+                "sentence-transformers/all-MiniLM-L6-v2",
+                device="cpu",
+            )
+            embeddings = model.encode(
+                [article.clustering_text for article in articles],
+                batch_size=32,
+                convert_to_numpy=True,
+                normalize_embeddings=True,
+                show_progress_bar=False,
+            )
+            embedding_scores = [
+                float(embeddings[first] @ embeddings[second])
+                for first, second in pairs
+            ]
+            score_method += " + Sentence Transformer"
+        except ImportError:
+            pass
 
     edges: list[tuple[int, int, object]] = []
     outcome_counts = {"MATCH": 0, "CANDIDATE": 0, "NEW_STORY": 0}
