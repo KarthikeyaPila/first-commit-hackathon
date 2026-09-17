@@ -431,3 +431,20 @@ National feeds remain the fallback for it until a genuine Ladakh feed is found.
 
 The official directory and its English-language scope are documented at:
 https://www.thehawk.in/news/rss
+
+## Additional publisher-diversity feeds — 17 September 2026
+
+The next validation batch includes three additional publishers:
+
+- India Today Home: https://www.indiatoday.in/rss/home
+- India Today Nation: https://www.indiatoday.in/rss/1206514
+- National Herald India: https://www.nationalheraldindia.com/stories.rss?section=india
+- The Tribune state feeds: https://publish.tribuneindia.com/state/{region}/feed/
+- The Tribune Chandigarh and Delhi feeds:
+  https://publish.tribuneindia.com/city/chandigarh/feed/
+  and https://publish.tribuneindia.com/city/delhi/feed/
+
+The exact entries are kept in the source registry. Local parser validation found
+13 feeds with parseable articles; National Herald responded but returned no
+parseable articles and is retained inactive for later rechecking. These publishers' RSS terms
+should be reviewed before public AWS deployment.
