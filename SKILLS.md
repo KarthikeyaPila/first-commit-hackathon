@@ -144,6 +144,10 @@ state/regional anchor, readable length, and recency. Keep all source headlines
 for comparison. Never synthesize facts or use a political framing label in the
 title. Test both anchor preference and missing-headline fallback.
 
+Representative story headlines are implemented and exposed through the API/UI;
+future title changes must preserve the original publisher headlines for
+comparison.
+
 ## AWS skill
 
 AWS is required, not optional.
@@ -176,6 +180,9 @@ Minimum code verification:
     python3 -m compileall -q src
     if [ -x .venv/bin/pytest ]; then .venv/bin/pytest -q; else python3 -m pytest -q; fi
     git diff --check
+
+The current suite contains 17 tests; update this count when tests are added or
+removed.
 
 Source changes additionally require live parser validation and a report of
 candidate, active/parseable, inactive, and error counts.

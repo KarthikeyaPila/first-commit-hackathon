@@ -47,6 +47,8 @@ Branch: main
 
 Latest pushed commits:
 
+- e8afceb — representative story headlines
+- a424f5f — project handoff and development playbook
 - 4ba7186 — final RSS publisher sweep
 - 190df7a — deep RSS publisher coverage
 - cb2d817 — diverse regional RSS sources
@@ -214,10 +216,11 @@ Generated snapshots, labels, model caches, and raw captures are ignored.
 
 - Read AGENTS.md, SKILLS.md, and the relevant docs.
 - Check git status and recent commits.
-- Run the 15-test suite before changing behavior.
+- Run the 17-test suite before changing behavior.
 - Read error.md when the user reports a browser/runtime issue.
 - Inspect API payloads and cache behavior before changing the UI.
 - Treat DEVELOPMENT_CHECKPOINTS.md as a local tracker, not something to blindly
   stage.
-- Continue with AWS deployment, multilingual matching, feed-health history, or
-  frontend work based on the next user request.
+- Continue with AWS deployment as the required next phase. Multilingual matching
+  is deliberately deferred; feed-health history and frontend work remain later
+  follow-up options.
