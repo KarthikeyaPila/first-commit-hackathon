@@ -80,3 +80,23 @@ def test_weighted_similarity_prioritizes_headline_and_handles_missing_context() 
 
     score = weighted_tfidf_similarities([first, second], [(0, 1)])[0]
     assert score > 0.50
+
+
+def test_tfidf_only_match_uses_its_lower_score_scale() -> None:
+    first = Article(
+        source_id="first",
+        url="https://example.com/1",
+        headline="State approves new irrigation project",
+    )
+    second = Article(
+        source_id="second",
+        url="https://example.com/2",
+        headline="Government approves irrigation project",
+    )
+
+    decision = score_pair(
+        first, second, _source("first"), _source("second"),
+        tfidf_similarity=0.90,
+    )
+
+    assert decision.outcome == "MATCH"

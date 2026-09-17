@@ -170,9 +170,13 @@ def score_pair(
     if not reasons:
         reasons.append("weak similarity and metadata evidence")
 
-    if state_conflict or score < 0.40:
+    # Embeddings and TF-IDF have different score scales. The full snapshot
+    # currently uses TF-IDF, so it needs its own calibrated starting cutoff.
+    match_threshold = 0.62 if embedding_similarity is not None else 0.50
+    candidate_threshold = 0.40 if embedding_similarity is not None else 0.30
+    if state_conflict or score < candidate_threshold:
         outcome = "NEW_STORY"
-    elif score >= 0.62 and not state_conflict:
+    elif score >= match_threshold and not state_conflict:
         outcome = "MATCH"
     else:
         outcome = "CANDIDATE"
