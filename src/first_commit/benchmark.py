@@ -8,6 +8,7 @@ from datetime import datetime
 import json
 from itertools import combinations
 from pathlib import Path
+import random
 import re
 from statistics import mean, median
 
@@ -15,7 +16,8 @@ from .config import PROCESSED_DATA_DIR
 from .models import Article
 
 
-LABELS_PATH = PROCESSED_DATA_DIR / "benchmark_pairs.csv"
+LEGACY_LABELS_PATH = PROCESSED_DATA_DIR / "benchmark_pairs.csv"
+LABELS_PATH = PROCESSED_DATA_DIR / "benchmark_pairs_balanced.csv"
 TFIDF_RESULTS_PATH = PROCESSED_DATA_DIR / "tfidf_results.json"
 EMBEDDING_RESULTS_PATH = PROCESSED_DATA_DIR / "embedding_results.json"
 DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
@@ -104,9 +106,19 @@ def prepare_labels(snapshot_path: Path, output_path: Path = LABELS_PATH, limit: 
         scores = [lexical_similarity(articles[first], articles[second]) for first, second in pairs]
         score_method = "lexical_fallback"
 
-    ranked = sorted(zip(scores, pairs), key=lambda item: item[0], reverse=True)
-    half = max(1, limit // 2)
-    selected = ranked[:half] + ranked[-half:]
+    ranked = sorted(zip(scores, pairs), key=lambda item: item[0])
+    bucket_size = max(1, limit // 4)
+    selected: list[tuple[float, tuple[int, int], str]] = []
+    randomizer = random.Random(42)
+    for bucket_number in range(4):
+        start = bucket_number * len(ranked) // 4
+        end = (bucket_number + 1) * len(ranked) // 4
+        bucket = ranked[start:end]
+        randomizer.shuffle(bucket)
+        selected.extend(
+            (score, pair, f"quartile_{bucket_number + 1}")
+            for score, pair in bucket[:bucket_size]
+        )
     selected = selected[:limit]
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -116,11 +128,11 @@ def prepare_labels(snapshot_path: Path, output_path: Path = LABELS_PATH, limit: 
             fieldnames=(
                 "first_url", "second_url", "first_source", "second_source",
                 "first_headline", "second_headline", "similarity", "similarity_method",
-                "same_story", "notes",
+                "candidate_bucket", "same_story", "notes",
             ),
         )
         writer.writeheader()
-        for score, (first, second) in selected:
+        for score, (first, second), candidate_bucket in selected:
             writer.writerow({
                 "first_url": articles[first].url,
                 "second_url": articles[second].url,
@@ -130,6 +142,7 @@ def prepare_labels(snapshot_path: Path, output_path: Path = LABELS_PATH, limit: 
                 "second_headline": articles[second].headline,
                 "similarity": f"{score:.6f}",
                 "similarity_method": score_method,
+                "candidate_bucket": candidate_bucket,
                 "same_story": "",
                 "notes": "",
             })

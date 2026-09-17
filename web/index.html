@@ -101,7 +101,7 @@
             '<div class="pair-card"><h3>' + escapeHtml(pair.first_source) + '</h3><strong>' + escapeHtml(pair.first_headline) + '</strong><p><a href="' + escapeHtml(pair.first_url) + '" target="_blank" rel="noreferrer">Open article</a></p></div>' +
             '<div class="pair-card"><h3>' + escapeHtml(pair.second_source) + '</h3><strong>' + escapeHtml(pair.second_headline) + '</strong><p><a href="' + escapeHtml(pair.second_url) + '" target="_blank" rel="noreferrer">Open article</a></p></div>' +
           '</div>' +
-          '<div class="meta">TF-IDF similarity: ' + escapeHtml(pair.similarity) + '</div>' +
+          '<div class="meta">Candidate similarity: ' + escapeHtml(pair.similarity) + ' · Sampling band: ' + escapeHtml(pair.candidate_bucket || 'legacy') + '</div>' +
           '<textarea id="reasoning" class="reasoning" placeholder="Why did you choose this label?"></textarea>' +
           '<div class="label-actions"><button class="same" data-label="true">Same story</button><button class="different" data-label="false">Different story</button></div>';
       };
