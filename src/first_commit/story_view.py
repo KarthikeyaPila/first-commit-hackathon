@@ -163,7 +163,7 @@ def build_snapshot_stories(
     snapshot_path: Path,
     *,
     max_articles: int = 2000,
-    max_neighbors: int = 12,
+    max_neighbors: int = 30,
     max_stories: int = 60,
 ) -> dict[str, object]:
     """Cluster the full snapshot using sparse nearest-neighbor candidates."""
@@ -240,15 +240,43 @@ def build_snapshot_stories(
             for first, second in pairs
         ]
         score_method = "lexical fallback"
+    embedding_scores: list[float | None] = [None] * len(pairs)
+    try:
+        from sentence_transformers import SentenceTransformer
+
+        model = SentenceTransformer(
+            "sentence-transformers/all-MiniLM-L6-v2",
+            device="cpu",
+        )
+        embeddings = model.encode(
+            [article.clustering_text for article in articles],
+            batch_size=32,
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+            show_progress_bar=False,
+        )
+        embedding_scores = [
+            float(embeddings[first] @ embeddings[second])
+            for first, second in pairs
+        ]
+        score_method += " + Sentence Transformer"
+    except ImportError:
+        pass
+
     edges: list[tuple[int, int, object]] = []
-    for (first, second), similarity in zip(pairs, weighted_scores):
+    outcome_counts = {"MATCH": 0, "CANDIDATE": 0, "NEW_STORY": 0}
+    for (first, second), tfidf_score, embedding_score in zip(
+        pairs, weighted_scores, embedding_scores
+    ):
         decision = score_pair(
             articles[first],
             articles[second],
             source_by_id[articles[first].source_id],
             source_by_id[articles[second].source_id],
-            tfidf_similarity=similarity,
+            tfidf_similarity=tfidf_score,
+            embedding_similarity=embedding_score,
         )
+        outcome_counts[decision.outcome] += 1
         if decision.outcome == "MATCH":
             edges.append((first, second, decision))
 
@@ -296,12 +324,24 @@ def build_snapshot_stories(
         })
 
     stories.sort(key=lambda story: (story["article_count"], story["sources"]), reverse=True)
+    grouped_indexes = {
+        index
+        for indexes in groups
+        if any(
+            source_by_id[articles[index].source_id].scope != "NATIONAL"
+            for index in indexes
+        )
+        for index in indexes
+    }
     return {
         "stories": stories[:max_stories],
         "articles_considered": len(articles),
         "candidate_pairs": len(pairs),
+        "decision_counts": outcome_counts,
         "matched_edges": len(edges),
         "matched_groups": len(stories),
+        "articles_in_groups": len(grouped_indexes),
+        "articles_ungrouped": len(articles) - len(grouped_indexes),
         "matching_method": (
             "full snapshot · headline neighbor retrieval · "
             + score_method + " · state-anchored grouping"

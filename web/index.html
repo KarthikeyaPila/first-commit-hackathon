@@ -125,7 +125,7 @@
       };
       const renderStories = (payload) => {
         storiesSummary.textContent = payload.matched_groups
-          ? payload.matched_groups + ' grouped stories from ' + payload.articles_considered + ' snapshot articles (' + payload.candidate_pairs + ' candidates; ' + payload.matching_method + ').'
+          ? payload.matched_groups + ' grouped stories from ' + payload.articles_considered + ' snapshot articles (' + payload.candidate_pairs + ' candidates; ' + (payload.decision_counts?.MATCH ?? 0) + ' matches; ' + (payload.decision_counts?.CANDIDATE ?? 0) + ' candidates awaiting review; ' + (payload.articles_ungrouped ?? 0) + ' ungrouped; ' + payload.matching_method + ').'
           : 'No confident cross-source groups available yet.';
         storyList.innerHTML = (payload.stories || []).map((story) =>
           '<article class="story-card"><h3>' + escapeHtml(story.story_id) + ' · ' + story.article_count + ' reports</h3>' +
