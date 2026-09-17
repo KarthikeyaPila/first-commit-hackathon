@@ -9,7 +9,7 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
-from .benchmark import LABELS_PATH, label_pair, prepare_labels, read_label_rows
+from .benchmark import LABELS_PATH, label_candidate, label_pair, prepare_labels, read_label_rows
 from .config import PROCESSED_DATA_DIR, PrototypeConfig
 from .dedupe import deduplicate_articles
 from .feeds import fetch_source
@@ -173,6 +173,18 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         path = urlparse(self.path).path
+        if path == "/api/candidates/label":
+            try:
+                body = self._read_json_body()
+                row = label_candidate(
+                    dict(body["candidate"]),
+                    bool(body["same_story"]),
+                    str(body.get("notes", "")),
+                )
+                self._send_json({"ok": True, "row": row})
+            except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+                self._send_json({"ok": False, "error": str(error)}, HTTPStatus.BAD_REQUEST)
+            return
         if path == "/api/benchmark/label":
             try:
                 body = self._read_json_body()

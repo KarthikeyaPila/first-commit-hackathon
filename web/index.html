@@ -50,6 +50,10 @@
       .candidate-card { border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
       .candidate-card strong { display: block; margin-bottom: 8px; }
       .candidate-card a { color: var(--accent); font-size: 12px; }
+      .candidate-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+      .candidate-actions button { padding: 8px 12px; font-size: 13px; }
+      .candidate-actions button.same { background: var(--ok); }
+      .candidate-actions button.different { background: var(--bad); }
       .states { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 16px; }
       .state-card { border: 1px solid var(--line); border-radius: 12px; padding: 13px; }
       .state-card h3 { margin: 0 0 7px; font-size: 16px; }
@@ -152,6 +156,7 @@
       };
       const renderCandidates = (payload) => {
         const candidates = payload.candidate_reviews || [];
+        window.currentCandidatePayload = candidates;
         candidateSummary.textContent = candidates.length
           ? candidates.length + ' reviewable pairs shown, sorted by combined score.'
           : 'No reviewable candidate pairs.';
@@ -161,9 +166,37 @@
           '<div><b>' + escapeHtml(candidate.second_source) + ':</b> ' + escapeHtml(candidate.second_headline) + '</div>' +
           '<div>' + (candidate.reasons || []).map((reason) => '<span class="reason">' + escapeHtml(reason) + '</span>').join('') + '</div>' +
           '<p><a href="' + escapeHtml(candidate.first_url) + '" target="_blank" rel="noreferrer">First article</a> · ' +
-          '<a href="' + escapeHtml(candidate.second_url) + '" target="_blank" rel="noreferrer">Second article</a></p></article>'
+          '<a href="' + escapeHtml(candidate.second_url) + '" target="_blank" rel="noreferrer">Second article</a></p>' +
+          '<textarea class="reasoning candidate-notes" placeholder="Why did you choose this label?"></textarea>' +
+          '<div class="candidate-actions"><button class="same" data-candidate-label="true">Same story</button>' +
+          '<button class="different" data-candidate-label="false">Different story</button></div></article>'
         ).join('') || '<div class="feed">No candidate pairs to review.</div>';
       };
+      candidateList.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-candidate-label]');
+        if (!button) return;
+        const card = button.closest('.candidate-card');
+        const index = [...candidateList.querySelectorAll('.candidate-card')].indexOf(card);
+        const candidate = (window.currentCandidatePayload || [])[index];
+        if (!candidate) return;
+        button.disabled = true;
+        try {
+          const payload = await (await fetch('/api/candidates/label', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              candidate,
+              same_story: button.dataset.candidateLabel === 'true',
+              notes: card.querySelector('.candidate-notes').value
+            })
+          })).json();
+          if (!payload.ok) throw new Error(payload.error);
+          card.querySelector('.candidate-actions').innerHTML = '<span class="meta">Saved as ' + (button.dataset.candidateLabel === 'true' ? 'same story' : 'different story') + '.</span>';
+        } catch (error) {
+          button.disabled = false;
+          candidateSummary.textContent = 'Could not save candidate label: ' + error.message;
+        }
+      });
       const loadStories = async () => {
         try { const payload = await (await fetch('/api/stories')).json(); renderStories(payload); renderCandidates(payload); }
         catch (error) { storiesSummary.textContent = 'Could not load story groups.'; storyList.innerHTML = '<div class="error">' + escapeHtml(error.message) + '</div>'; }

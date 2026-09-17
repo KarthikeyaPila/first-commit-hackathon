@@ -17,6 +17,7 @@ from .models import Article
 
 
 LABELS_PATH = PROCESSED_DATA_DIR / "benchmark_pairs.csv"
+CANDIDATE_LABELS_PATH = PROCESSED_DATA_DIR / "candidate_reviews.csv"
 BALANCED_LABELS_PATH = PROCESSED_DATA_DIR / "benchmark_pairs_balanced.csv"
 TFIDF_RESULTS_PATH = PROCESSED_DATA_DIR / "tfidf_results.json"
 EMBEDDING_RESULTS_PATH = PROCESSED_DATA_DIR / "embedding_results.json"
@@ -209,6 +210,40 @@ def _evaluate_scores(
         "best_recall": round(best[4], 6),
         "best_f1": round(best[0], 6),
     }
+
+
+def label_candidate(
+    candidate: dict[str, object],
+    same_story: bool,
+    notes: str,
+    path: Path = CANDIDATE_LABELS_PATH,
+) -> dict[str, str]:
+    """Append a human label for a live clustering candidate."""
+    fields = (
+        "first_url", "second_url", "first_source", "second_source",
+        "first_headline", "second_headline", "score", "same_story", "notes",
+    )
+    row = {
+        "first_url": str(candidate.get("first_url", "")),
+        "second_url": str(candidate.get("second_url", "")),
+        "first_source": str(candidate.get("first_source", "")),
+        "second_source": str(candidate.get("second_source", "")),
+        "first_headline": str(candidate.get("first_headline", "")),
+        "second_headline": str(candidate.get("second_headline", "")),
+        "score": str(candidate.get("score", "")),
+        "same_story": "yes" if same_story else "no",
+        "notes": notes,
+    }
+    if not row["first_url"] or not row["second_url"]:
+        raise ValueError("Candidate articles must include both URLs")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    write_header = not path.exists() or path.stat().st_size == 0
+    with path.open("a", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        if write_header:
+            writer.writeheader()
+        writer.writerow(row)
+    return row
 
 
 def _labeled_rows(labels_path: Path) -> tuple[list[dict[str, str]], list[bool]]:
