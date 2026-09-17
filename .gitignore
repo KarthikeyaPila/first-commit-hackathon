@@ -22,3 +22,6 @@ data/processed/*
 .DS_Store
 .idea/
 .vscode/
+
+# Local development tracker
+DEVELOPMENT_CHECKPOINTS.md
