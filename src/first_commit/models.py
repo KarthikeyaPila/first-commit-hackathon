@@ -1,6 +1,6 @@
 """Core data structures for articles and benchmark labels."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 
 

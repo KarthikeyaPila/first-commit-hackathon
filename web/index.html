@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>First Commit · Ingestion Monitor</title>
+    <style>
+      :root { --ink: #17202a; --muted: #697586; --line: #d9dee7; --paper: #f5f7fb; --accent: #d45d3d; --ok: #227a57; --bad: #b43d43; }
+      * { box-sizing: border-box; }
+      body { margin: 0; color: var(--ink); background: var(--paper); font: 15px/1.5 system-ui, sans-serif; }
+      main { max-width: 1100px; margin: 0 auto; padding: 44px 22px 72px; }
+      .eyebrow { color: var(--accent); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: 12px; }
+      h1 { font: 700 clamp(34px, 6vw, 64px)/.98 Georgia, serif; margin: 12px 0; max-width: 650px; }
+      .intro { color: var(--muted); max-width: 630px; font-size: 17px; }
+      .toolbar { display: flex; align-items: center; gap: 16px; margin: 30px 0 20px; flex-wrap: wrap; }
+      button { border: 0; border-radius: 999px; background: var(--ink); color: white; cursor: pointer; font: inherit; font-weight: 700; padding: 12px 18px; }
+      button:disabled { cursor: wait; opacity: .6; }
+      #run-status { color: var(--muted); }
+      .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 18px 0 28px; }
+      .metric, .feed { background: white; border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
+      .metric strong { display: block; font-size: 28px; }
+      .metric span, .meta { color: var(--muted); font-size: 13px; }
+      .feeds { display: grid; gap: 14px; }
+      .feed-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+      .feed h2 { font-size: 18px; margin: 0 0 3px; }
+      .badge { border-radius: 999px; padding: 4px 9px; font-size: 12px; font-weight: 700; background: #edf0f4; }
+      .badge.ok { color: var(--ok); background: #e6f4ed; }
+      .badge.error { color: var(--bad); background: #fbe9ea; }
+      .articles { border-top: 1px solid var(--line); margin-top: 14px; padding-top: 10px; }
+      .article { padding: 8px 0; }
+      .article a { color: var(--ink); font-weight: 650; text-decoration: none; }
+      .article a:hover { color: var(--accent); }
+      .error { color: var(--bad); }
+      @media (max-width: 650px) { .summary { grid-template-columns: 1fr; } .feed-head { display: block; } .badge { display: inline-block; margin-top: 10px; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="eyebrow">First Commit · Research prototype</div>
+      <h1>Is the news pipeline alive?</h1>
+      <p class="intro">A deliberately small verification view for the first ingestion slice. Fetch the configured English RSS feeds and inspect what came back before we add story matching.</p>
+      <div class="toolbar">
+        <button id="ingest">Process latest news</button>
+        <span id="run-status">No ingestion run yet.</span>
+      </div>
+      <section class="summary" aria-label="Ingestion summary">
+        <div class="metric"><strong id="source-count">—</strong><span>active sources</span></div>
+        <div class="metric"><strong id="healthy-count">—</strong><span>healthy feeds</span></div>
+        <div class="metric"><strong id="article-count">—</strong><span>articles found</span></div>
+      </section>
+      <section id="feeds" class="feeds"><div class="feed">Click “Process latest news” to test the feeds.</div></section>
+    </main>
+    <script>
+      const button = document.querySelector('#ingest');
+      const status = document.querySelector('#run-status');
+      const feeds = document.querySelector('#feeds');
+      const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
+      const render = (run) => {
+        const reports = run.feeds || [];
+        const healthy = reports.filter((feed) => feed.status === 'ok').length;
+        const articles = reports.reduce((sum, feed) => sum + (feed.articles_found || 0), 0);
+        document.querySelector('#source-count').textContent = reports.length;
+        document.querySelector('#healthy-count').textContent = healthy;
+        document.querySelector('#article-count').textContent = articles;
+        status.textContent = run.completed_at ? `Completed ${new Date(run.completed_at).toLocaleString()}` : 'Running…';
+        feeds.innerHTML = reports.map((feed) => `
+          <article class="feed">
+            <div class="feed-head"><div><h2>${escapeHtml(feed.name)}</h2><div class="meta">${escapeHtml(feed.scope)} · ${escapeHtml(feed.rss_url)}</div></div><span class="badge ${feed.status === 'ok' ? 'ok' : 'error'}">${escapeHtml(feed.status)}</span></div>
+            ${feed.error ? `<p class="error">${escapeHtml(feed.error)}</p>` : `<div class="articles">${(feed.articles || []).map((article) => `<div class="article"><a href="${escapeHtml(article.url)}" target="_blank" rel="noreferrer">${escapeHtml(article.headline)}</a><div class="meta">${article.published_at ? new Date(article.published_at).toLocaleString() : 'Publication time unavailable'}</div></div>`).join('') || '<div class="meta">No articles returned.</div>'}</div>`}
+          </article>`).join('') || '<div class="feed">No active sources configured.</div>';
+      };
+      button.addEventListener('click', async () => {
+        button.disabled = true; status.textContent = 'Fetching RSS feeds…';
+        try { render(await (await fetch('/api/ingest', { method: 'POST' })).json()); }
+        catch (error) { status.textContent = `Request failed: ${error.message}`; }
+        finally { button.disabled = false; }
+      });
+    </script>
+  </body>
+</html>
