@@ -15,10 +15,14 @@ from .dedupe import deduplicate_articles
 from .feeds import fetch_source
 from .sources import SOURCES
 from .state_routing import route_article, state_source_directory
+from .story_view import build_demo_stories
 from .storage import save_snapshot
 
 
 WEB_DIR = Path(__file__).resolve().parents[2] / "web"
+_story_cache: dict[str, object] = {"snapshot_mtime": None, "payload": None}
+
+
 _last_run: dict[str, object] = {
     "status": "not_started",
     "started_at": None,
@@ -124,6 +128,16 @@ class RequestHandler(BaseHTTPRequestHandler):
             "pair": rows[next_index] if next_index is not None else None,
         }
 
+    def _story_payload(self) -> dict[str, object]:
+        snapshot = PROCESSED_DATA_DIR / "ingestion_latest.json"
+        if not snapshot.exists():
+            return {"stories": [], "articles_considered": 0, "matched_groups": 0}
+        snapshot_mtime = snapshot.stat().st_mtime
+        if _story_cache["snapshot_mtime"] != snapshot_mtime:
+            _story_cache["payload"] = build_demo_stories(snapshot)
+            _story_cache["snapshot_mtime"] = snapshot_mtime
+        return _story_cache["payload"]
+
     def _read_json_body(self) -> dict[str, object]:
         length = int(self.headers.get("Content-Length", "0"))
         return json.loads(self.rfile.read(length) or b"{}")
@@ -138,6 +152,9 @@ class RequestHandler(BaseHTTPRequestHandler):
             return
         if path == "/api/state-sources":
             self._send_json({"states": state_source_directory()})
+            return
+        if path == "/api/stories":
+            self._send_json(self._story_payload())
             return
         if path in {"/", "/index.html"}:
             body = (WEB_DIR / "index.html").read_bytes()

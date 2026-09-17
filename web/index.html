@@ -34,6 +34,16 @@
       .state-panel { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 20px; margin: 28px 0; }
       .section-kicker { color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
       .state-panel h2 { margin: 4px 0; font: 700 26px/1.1 Georgia, serif; }
+      .story-panel { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 20px; margin: 28px 0; }
+      .story-panel h2 { margin: 4px 0; font: 700 26px/1.1 Georgia, serif; }
+      .story-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 16px; }
+      .story-card { border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+      .story-card h3 { margin: 0 0 8px; font-size: 15px; }
+      .story-card ul { margin: 8px 0 0; padding-left: 18px; }
+      .story-card li { margin: 7px 0; }
+      .story-card a { color: var(--ink); text-decoration: none; }
+      .story-card a:hover { color: var(--accent); }
+      .reason { display: inline-block; background: #fff2ec; border-radius: 999px; color: #9b4329; font-size: 12px; margin: 3px 4px 0 0; padding: 4px 8px; }
       .states { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 16px; }
       .state-card { border: 1px solid var(--line); border-radius: 12px; padding: 13px; }
       .state-card h3 { margin: 0 0 7px; font-size: 16px; }
@@ -49,7 +59,7 @@
       .article a { color: var(--ink); font-weight: 650; text-decoration: none; }
       .article a:hover { color: var(--accent); }
       .error { color: var(--bad); }
-      @media (max-width: 650px) { .summary { grid-template-columns: 1fr; } .feed-head { display: block; } .badge { display: inline-block; margin-top: 10px; } }
+      @media (max-width: 650px) { .summary { grid-template-columns: 1fr; } .story-grid { grid-template-columns: 1fr; } .feed-head { display: block; } .badge { display: inline-block; margin-top: 10px; } }
     </style>
   </head>
   <body>
@@ -62,6 +72,12 @@
         <h2>States and their sources</h2>
         <p class="meta">National sources are potential contributors to every state. State and regional sources are mapped directly.</p>
         <div id="state-list" class="states"><div class="feed">Loading state directory…</div></div>
+      </section>
+      <section class="story-panel" aria-label="Matched story cards">
+        <div class="section-kicker">Matching preview</div>
+        <h2>Stories grouped across sources</h2>
+        <p id="stories-summary" class="meta">Loading story groups…</p>
+        <div id="story-list" class="story-grid"><div class="feed">Loading story cards…</div></div>
       </section>
       <section class="benchmark-panel" aria-label="Story matching labeler">
         <div class="section-kicker">Story matching benchmark</div>
@@ -105,6 +121,23 @@
           '<textarea id="reasoning" class="reasoning" placeholder="Why did you choose this label?"></textarea>' +
           '<div class="label-actions"><button class="same" data-label="true">Same story</button><button class="different" data-label="false">Different story</button></div>';
       };
+      const renderStories = (payload) => {
+        storiesSummary.textContent = payload.matched_groups
+          ? payload.matched_groups + ' grouped stories from ' + payload.benchmark_pairs + ' labeled benchmark pairs (' + payload.matching_method + ').'
+          : 'No confident cross-source groups available yet.';
+        storyList.innerHTML = (payload.stories || []).map((story) =>
+          '<article class="story-card"><h3>' + escapeHtml(story.story_id) + ' · ' + story.article_count + ' reports</h3>' +
+          '<div class="meta">' + escapeHtml((story.sources || []).join(' · ')) + '</div>' +
+          '<div>' + (story.reasons || []).map((reason) => '<span class="reason">' + escapeHtml(reason) + '</span>').join('') + '</div>' +
+          '<ul>' + (story.articles || []).map((article) =>
+            '<li><a href="' + escapeHtml(article.url) + '" target="_blank" rel="noreferrer"><strong>' + escapeHtml(article.source) + ':</strong> ' + escapeHtml(article.headline) + '</a></li>'
+          ).join('') + '</ul></article>'
+        ).join('') || '<div class="feed">No grouped stories to display.</div>';
+      };
+      const loadStories = async () => {
+        try { renderStories(await (await fetch('/api/stories')).json()); }
+        catch (error) { storiesSummary.textContent = 'Could not load story groups.'; storyList.innerHTML = '<div class="error">' + escapeHtml(error.message) + '</div>'; }
+      };
       const loadBenchmark = async () => {
         try { renderBenchmark(await (await fetch('/api/benchmark')).json()); }
         catch (error) { benchmarkPair.innerHTML = '<div class="error">Could not load benchmark: ' + escapeHtml(error.message) + '</div>'; }
@@ -127,6 +160,7 @@
         }
       });
       loadBenchmark();
+      loadStories();
       const render = (run) => {
         const reports = run.feeds || [];
         const healthy = reports.filter((feed) => feed.feed_health === 'OK').length;
