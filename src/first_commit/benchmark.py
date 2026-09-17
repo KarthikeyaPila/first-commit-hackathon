@@ -17,6 +17,8 @@ from .models import Article
 
 LABELS_PATH = PROCESSED_DATA_DIR / "benchmark_pairs.csv"
 TFIDF_RESULTS_PATH = PROCESSED_DATA_DIR / "tfidf_results.json"
+EMBEDDING_RESULTS_PATH = PROCESSED_DATA_DIR / "embedding_results.json"
+DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 TOKEN_RE = re.compile(r"[a-z0-9]{3,}")
 
 
@@ -134,15 +136,85 @@ def prepare_labels(snapshot_path: Path, output_path: Path = LABELS_PATH, limit: 
     return output_path
 
 
-def run_tfidf(labels_path: Path, output_path: Path = TFIDF_RESULTS_PATH) -> Path:
-    """Score labeled pairs and write summary distributions/results."""
+def _evaluate_scores(
+    scores: list[float],
+    actual: list[bool],
+    method: str,
+) -> dict[str, object]:
+    """Summarize score distributions and find the best benchmark threshold."""
 
+    same_scores = [score for score, label in zip(scores, actual) if label]
+    different_scores = [score for score, label in zip(scores, actual) if not label]
+
+    def distribution(values: list[float]) -> dict[str, float | int]:
+        return {
+            "count": len(values),
+            "mean": round(mean(values), 6) if values else 0.0,
+            "median": round(median(values), 6) if values else 0.0,
+            "min": round(min(values), 6) if values else 0.0,
+            "max": round(max(values), 6) if values else 0.0,
+        }
+
+    candidates = sorted({0.0, 1.0, *scores})
+    best: tuple[float, float, float, float, float] | None = None
+    for threshold in candidates:
+        predicted = [score >= threshold for score in scores]
+        true_positive = sum(
+            predicted_item and actual_item
+            for predicted_item, actual_item in zip(predicted, actual)
+        )
+        false_positive = sum(
+            predicted_item and not actual_item
+            for predicted_item, actual_item in zip(predicted, actual)
+        )
+        false_negative = sum(
+            not predicted_item and actual_item
+            for predicted_item, actual_item in zip(predicted, actual)
+        )
+        accuracy = sum(
+            predicted_item == actual_item
+            for predicted_item, actual_item in zip(predicted, actual)
+        ) / len(actual)
+        precision = true_positive / (true_positive + false_positive) if true_positive + false_positive else 0.0
+        recall = true_positive / (true_positive + false_negative) if true_positive + false_negative else 0.0
+        f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+        candidate = (f1, accuracy, threshold, precision, recall)
+        if best is None or candidate > best:
+            best = candidate
+
+    assert best is not None
+    return {
+        "method": method,
+        "same_story_pairs": len(same_scores),
+        "different_story_pairs": len(different_scores),
+        "same_story_scores": distribution(same_scores),
+        "different_story_scores": distribution(different_scores),
+        "best_threshold": round(best[2], 6),
+        "best_accuracy": round(best[1], 6),
+        "best_precision": round(best[3], 6),
+        "best_recall": round(best[4], 6),
+        "best_f1": round(best[0], 6),
+    }
+
+
+def _labeled_rows(labels_path: Path) -> tuple[list[dict[str, str]], list[bool]]:
     rows = list(csv.DictReader(labels_path.open(encoding="utf-8")))
     label_values = {"1": True, "true": True, "yes": True, "0": False, "false": False, "no": False}
     labeled = [
         row for row in rows
         if row.get("same_story", "").strip().casefold() in label_values
     ]
+    actual = [
+        label_values[row["same_story"].strip().casefold()]
+        for row in labeled
+    ]
+    return labeled, actual
+
+
+def run_tfidf(labels_path: Path, output_path: Path = TFIDF_RESULTS_PATH) -> Path:
+    """Score labeled pairs with TF-IDF cosine similarity."""
+
+    labeled, actual = _labeled_rows(labels_path)
     results: dict[str, object] = {"labeled_pairs": len(labeled)}
     if not labeled:
         results["message"] = "Add same_story labels to the CSV before running this command."
@@ -153,80 +225,59 @@ def run_tfidf(labels_path: Path, output_path: Path = TFIDF_RESULTS_PATH) -> Path
         except ImportError as error:
             raise RuntimeError("Install the research extras to run the TF-IDF baseline") from error
 
-        texts = [
-            row.get("first_headline", "")
-            for row in labeled
-        ] + [
-            row.get("second_headline", "")
-            for row in labeled
+        texts = [row.get("first_headline", "") for row in labeled] + [
+            row.get("second_headline", "") for row in labeled
         ]
         matrix = TfidfVectorizer(stop_words="english", ngram_range=(1, 2)).fit_transform(texts)
         scores = [
             float(cosine_similarity(matrix[index], matrix[index + len(labeled)])[0, 0])
             for index in range(len(labeled))
         ]
-        same_scores = [
-            score for score, row in zip(scores, labeled)
-            if label_values[row["same_story"].strip().casefold()]
-        ]
-        different_scores = [
-            score for score, row in zip(scores, labeled)
-            if not label_values[row["same_story"].strip().casefold()]
-        ]
+        results.update(_evaluate_scores(scores, actual, "tfidf_cosine_headline"))
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(results, indent=2) + "\n")
+    return output_path
 
-        def distribution(values: list[float]) -> dict[str, float | int]:
-            return {
-                "count": len(values),
-                "mean": round(mean(values), 6) if values else 0.0,
-                "median": round(median(values), 6) if values else 0.0,
-                "min": round(min(values), 6) if values else 0.0,
-                "max": round(max(values), 6) if values else 0.0,
-            }
 
-        candidates = sorted({0.0, 1.0, *scores})
-        best: tuple[float, float, float, float, float] | None = None
-        actual = [
-            label_values[row["same_story"].strip().casefold()]
-            for row in labeled
+def run_embeddings(
+    labels_path: Path,
+    output_path: Path = EMBEDDING_RESULTS_PATH,
+    model_name: str = DEFAULT_EMBEDDING_MODEL,
+) -> Path:
+    """Score labeled pairs with a pre-trained Sentence Transformer model."""
+
+    labeled, actual = _labeled_rows(labels_path)
+    results: dict[str, object] = {
+        "labeled_pairs": len(labeled),
+        "model": model_name,
+    }
+    if not labeled:
+        results["message"] = "Add same_story labels to the CSV before running this command."
+    else:
+        try:
+            from sentence_transformers import SentenceTransformer
+        except ImportError as error:
+            raise RuntimeError(
+                "Install the research extras to run the embedding baseline"
+            ) from error
+
+        texts = [row.get("first_headline", "") for row in labeled] + [
+            row.get("second_headline", "") for row in labeled
         ]
-        for threshold in candidates:
-            predicted = [score >= threshold for score in scores]
-            true_positive = sum(
-                predicted_item and actual_item
-                for predicted_item, actual_item in zip(predicted, actual)
-            )
-            false_positive = sum(
-                predicted_item and not actual_item
-                for predicted_item, actual_item in zip(predicted, actual)
-            )
-            false_negative = sum(
-                not predicted_item and actual_item
-                for predicted_item, actual_item in zip(predicted, actual)
-            )
-            accuracy = sum(
-                predicted_item == actual_item
-                for predicted_item, actual_item in zip(predicted, actual)
-            ) / len(actual)
-            precision = true_positive / (true_positive + false_positive) if true_positive + false_positive else 0.0
-            recall = true_positive / (true_positive + false_negative) if true_positive + false_negative else 0.0
-            f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
-            candidate = (f1, accuracy, threshold, precision, recall)
-            if best is None or candidate > best:
-                best = candidate
-
-        assert best is not None
-        results.update({
-            "method": "tfidf_cosine_headline",
-            "same_story_pairs": len(same_scores),
-            "different_story_pairs": len(different_scores),
-            "same_story_scores": distribution(same_scores),
-            "different_story_scores": distribution(different_scores),
-            "best_threshold": round(best[2], 6),
-            "best_accuracy": round(best[1], 6),
-            "best_precision": round(best[3], 6),
-            "best_recall": round(best[4], 6),
-            "best_f1": round(best[0], 6),
-        })
+        model = SentenceTransformer(model_name, device="cpu")
+        embeddings = model.encode(
+            texts,
+            batch_size=32,
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+            show_progress_bar=True,
+        )
+        pair_count = len(labeled)
+        scores = [
+            float(embeddings[index] @ embeddings[index + pair_count])
+            for index in range(pair_count)
+        ]
+        results.update(_evaluate_scores(scores, actual, "sentence_transformer_cosine_headline"))
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(results, indent=2) + "\n")
     return output_path
@@ -259,11 +310,20 @@ def main() -> None:
     prepare.add_argument("--snapshot", type=Path, default=PROCESSED_DATA_DIR / "ingestion_latest.json")
     prepare.add_argument("--output", type=Path, default=LABELS_PATH)
     prepare.add_argument("--limit", type=int, default=100)
-    score = subparsers.add_parser("tfidf", help="record the labeled-pair evaluation state")
+    score = subparsers.add_parser("tfidf", help="run the TF-IDF labeled-pair baseline")
     score.add_argument("--labels", type=Path, default=LABELS_PATH)
     score.add_argument("--output", type=Path, default=TFIDF_RESULTS_PATH)
+    embeddings = subparsers.add_parser("embeddings", help="run the Sentence Transformer labeled-pair baseline")
+    embeddings.add_argument("--labels", type=Path, default=LABELS_PATH)
+    embeddings.add_argument("--output", type=Path, default=EMBEDDING_RESULTS_PATH)
+    embeddings.add_argument("--model", default=DEFAULT_EMBEDDING_MODEL)
     args = parser.parse_args()
-    path = prepare_labels(args.snapshot, args.output, args.limit) if args.command == "prepare" else run_tfidf(args.labels, args.output)
+    if args.command == "prepare":
+        path = prepare_labels(args.snapshot, args.output, args.limit)
+    elif args.command == "tfidf":
+        path = run_tfidf(args.labels, args.output)
+    else:
+        path = run_embeddings(args.labels, args.output, args.model)
     print(path)
 
 
