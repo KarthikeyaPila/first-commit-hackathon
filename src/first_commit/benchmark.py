@@ -147,6 +147,27 @@ def run_tfidf(labels_path: Path, output_path: Path = TFIDF_RESULTS_PATH) -> Path
     return output_path
 
 
+def read_label_rows(path: Path = LABELS_PATH) -> list[dict[str, str]]:
+    """Read the current manual-labeling table."""
+    if not path.exists():
+        return []
+    with path.open(encoding="utf-8", newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
+def label_pair(index: int, same_story: bool, notes: str, path: Path = LABELS_PATH) -> dict[str, str]:
+    """Persist one human label while preserving the CSV schema."""
+    rows = read_label_rows(path)
+    if index < 0 or index >= len(rows):
+        raise IndexError("benchmark pair index is out of range")
+    rows[index]["same_story"] = "yes" if same_story else "no"
+    rows[index]["notes"] = notes.strip()
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=rows[0].keys())
+        writer.writeheader()
+        writer.writerows(rows)
+    return rows[index]
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)

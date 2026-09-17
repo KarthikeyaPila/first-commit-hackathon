@@ -21,6 +21,16 @@
       .metric strong { display: block; font-size: 28px; }
       .metric span, .meta { color: var(--muted); font-size: 13px; }
       .feeds { display: grid; gap: 14px; }
+      .benchmark-panel { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 20px; margin: 28px 0; }
+      .benchmark-panel h2 { margin: 4px 0; font: 700 26px/1.1 Georgia, serif; }
+      .pair-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 16px; }
+      .pair-card { border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+      .pair-card h3 { font-size: 14px; margin: 0 0 8px; }
+      .pair-card a { color: var(--accent); font-size: 12px; word-break: break-all; }
+      .reasoning { width: 100%; min-height: 64px; border: 1px solid var(--line); border-radius: 10px; font: inherit; margin-top: 14px; padding: 10px; resize: vertical; }
+      .label-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+      .label-actions button.same { background: var(--ok); }
+      .label-actions button.different { background: var(--bad); }
       .state-panel { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 20px; margin: 28px 0; }
       .section-kicker { color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
       .state-panel h2 { margin: 4px 0; font: 700 26px/1.1 Georgia, serif; }
@@ -53,6 +63,12 @@
         <p class="meta">National sources are potential contributors to every state. State and regional sources are mapped directly.</p>
         <div id="state-list" class="states"><div class="feed">Loading state directory…</div></div>
       </section>
+      <section class="benchmark-panel" aria-label="Story matching labeler">
+        <div class="section-kicker">Story matching benchmark</div>
+        <h2>Are these the same story?</h2>
+        <p id="benchmark-progress" class="meta">Loading labeling queue…</p>
+        <div id="benchmark-pair"><div class="feed">Loading next pair…</div></div>
+      </section>
       <div class="toolbar">
         <button id="ingest">Process latest news</button>
         <span id="run-status">No ingestion run yet.</span>
@@ -70,7 +86,47 @@
       const button = document.querySelector('#ingest');
       const status = document.querySelector('#run-status');
       const feeds = document.querySelector('#feeds');
+      const benchmarkPair = document.querySelector('#benchmark-pair');
+      const benchmarkProgress = document.querySelector('#benchmark-progress');
       const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
+      const renderBenchmark = (payload) => {
+        benchmarkProgress.textContent = payload.total_pairs ? payload.labeled_pairs + ' of ' + payload.total_pairs + ' pairs labeled' : 'No benchmark pairs available yet.';
+        if (!payload.pair) {
+          benchmarkPair.innerHTML = '<div class="feed">All available pairs are labeled. Run the benchmark command to evaluate them.</div>';
+          return;
+        }
+        const pair = payload.pair;
+        benchmarkPair.innerHTML =
+          '<div class="pair-grid">' +
+            '<div class="pair-card"><h3>' + escapeHtml(pair.first_source) + '</h3><strong>' + escapeHtml(pair.first_headline) + '</strong><p><a href="' + escapeHtml(pair.first_url) + '" target="_blank" rel="noreferrer">Open article</a></p></div>' +
+            '<div class="pair-card"><h3>' + escapeHtml(pair.second_source) + '</h3><strong>' + escapeHtml(pair.second_headline) + '</strong><p><a href="' + escapeHtml(pair.second_url) + '" target="_blank" rel="noreferrer">Open article</a></p></div>' +
+          '</div>' +
+          '<div class="meta">TF-IDF similarity: ' + escapeHtml(pair.similarity) + '</div>' +
+          '<textarea id="reasoning" class="reasoning" placeholder="Why did you choose this label?"></textarea>' +
+          '<div class="label-actions"><button class="same" data-label="true">Same story</button><button class="different" data-label="false">Different story</button></div>';
+      };
+      const loadBenchmark = async () => {
+        try { renderBenchmark(await (await fetch('/api/benchmark')).json()); }
+        catch (error) { benchmarkPair.innerHTML = '<div class="error">Could not load benchmark: ' + escapeHtml(error.message) + '</div>'; }
+      };
+      benchmarkPair.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-label]');
+        if (!button) return;
+        button.disabled = true;
+        try {
+          const payload = await (await fetch('/api/benchmark/label', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({index: (await (await fetch('/api/benchmark')).json()).next_index, same_story: button.dataset.label === 'true', notes: document.querySelector('#reasoning').value})
+          })).json();
+          if (!payload.ok) throw new Error(payload.error);
+          renderBenchmark(payload.benchmark);
+        } catch (error) {
+          benchmarkProgress.textContent = 'Could not save label: ' + error.message;
+          button.disabled = false;
+        }
+      });
+      loadBenchmark();
       const render = (run) => {
         const reports = run.feeds || [];
         const healthy = reports.filter((feed) => feed.feed_health === 'OK').length;

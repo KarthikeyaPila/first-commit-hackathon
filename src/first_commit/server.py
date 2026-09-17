@@ -9,7 +9,8 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
-from .config import PrototypeConfig
+from .benchmark import LABELS_PATH, label_pair, prepare_labels, read_label_rows
+from .config import PROCESSED_DATA_DIR, PrototypeConfig
 from .dedupe import deduplicate_articles
 from .feeds import fetch_source
 from .sources import SOURCES
@@ -108,8 +109,30 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _benchmark_payload(self) -> dict[str, object]:
+        if not LABELS_PATH.exists():
+            snapshot = PROCESSED_DATA_DIR / "ingestion_latest.json"
+            if snapshot.exists():
+                prepare_labels(snapshot)
+        rows = read_label_rows()
+        labeled = sum(bool(row.get("same_story", "").strip()) for row in rows)
+        next_index = next((index for index, row in enumerate(rows) if not row.get("same_story", "").strip()), None)
+        return {
+            "total_pairs": len(rows),
+            "labeled_pairs": labeled,
+            "next_index": next_index,
+            "pair": rows[next_index] if next_index is not None else None,
+        }
+
+    def _read_json_body(self) -> dict[str, object]:
+        length = int(self.headers.get("Content-Length", "0"))
+        return json.loads(self.rfile.read(length) or b"{}")
+
     def do_GET(self) -> None:  # noqa: N802
         path = urlparse(self.path).path
+        if path == "/api/benchmark":
+            self._send_json(self._benchmark_payload())
+            return
         if path == "/api/feeds":
             self._send_json(_last_run)
             return
@@ -127,7 +150,20 @@ class RequestHandler(BaseHTTPRequestHandler):
         self._send_json({"error": "Not found"}, HTTPStatus.NOT_FOUND)
 
     def do_POST(self) -> None:  # noqa: N802
-        if urlparse(self.path).path == "/api/ingest":
+        path = urlparse(self.path).path
+        if path == "/api/benchmark/label":
+            try:
+                body = self._read_json_body()
+                row = label_pair(
+                    int(body["index"]),
+                    bool(body["same_story"]),
+                    str(body.get("notes", "")),
+                )
+                self._send_json({"ok": True, "row": row, "benchmark": self._benchmark_payload()})
+            except (KeyError, TypeError, ValueError, IndexError, json.JSONDecodeError) as error:
+                self._send_json({"ok": False, "error": str(error)}, HTTPStatus.BAD_REQUEST)
+            return
+        if path == "/api/ingest":
             self._send_json(run_ingestion())
             return
         self._send_json({"error": "Not found"}, HTTPStatus.NOT_FOUND)
