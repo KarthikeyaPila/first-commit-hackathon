@@ -10,6 +10,33 @@ from .matching import score_pair, weighted_tfidf_similarities
 from .models import Article
 from .sources import SOURCES
 
+def cluster_matched_articles(
+    article_count: int,
+    matched_edges: list[tuple[int, int, object]],
+) -> list[list[int]]:
+    """Return connected article groups from pairwise MATCH decisions."""
+
+    parents = list(range(article_count))
+
+    def find(index: int) -> int:
+        while parents[index] != index:
+            parents[index] = parents[parents[index]]
+            index = parents[index]
+        return index
+
+    def union(first: int, second: int) -> None:
+        first_root, second_root = find(first), find(second)
+        if first_root != second_root:
+            parents[second_root] = first_root
+
+    for first, second, _ in matched_edges:
+        union(first, second)
+
+    groups: dict[int, list[int]] = defaultdict(list)
+    for index in range(article_count):
+        groups[find(index)].append(index)
+    return [indexes for indexes in groups.values() if len(indexes) > 1]
+
 
 def build_demo_stories(
     snapshot_path: Path | None = None,
@@ -45,21 +72,9 @@ def build_demo_stories(
             "matching_method": "no benchmark candidates available",
         }
 
-    parents = list(range(len(articles)))
     edges: list[tuple[int, int, object]] = []
     scores: list[float] = []
     actual: list[bool] = []
-
-    def find(index: int) -> int:
-        while parents[index] != index:
-            parents[index] = parents[parents[index]]
-            index = parents[index]
-        return index
-
-    def union(first: int, second: int) -> None:
-        first_root, second_root = find(first), find(second)
-        if first_root != second_root:
-            parents[second_root] = first_root
 
     row_indexes = []
     for row in rows:
@@ -93,15 +108,11 @@ def build_demo_stories(
         scores.append(similarity)
         actual.append(row.get("same_story", "").strip().casefold() in {"1", "true", "yes"})
         if decision.outcome == "MATCH":
-            union(first, second)
             edges.append((first, second, decision))
 
-    groups: dict[int, list[int]] = defaultdict(list)
-    for index in range(len(articles)):
-        groups[find(index)].append(index)
-
+    groups = cluster_matched_articles(len(articles), edges)
     stories = []
-    for indexes in groups.values():
+    for indexes in groups:
         if len(indexes) < 2:
             continue
         has_state_anchor = any(
