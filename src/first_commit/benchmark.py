@@ -9,6 +9,7 @@ import json
 from itertools import combinations
 from pathlib import Path
 import re
+from statistics import mean, median
 
 from .config import PROCESSED_DATA_DIR
 from .models import Article
@@ -137,15 +138,98 @@ def run_tfidf(labels_path: Path, output_path: Path = TFIDF_RESULTS_PATH) -> Path
     """Score labeled pairs and write summary distributions/results."""
 
     rows = list(csv.DictReader(labels_path.open(encoding="utf-8")))
-    labeled = [row for row in rows if row.get("same_story", "").strip().casefold() in {"1", "true", "yes", "0", "false", "no"}]
-    results = {
-        "labeled_pairs": len(labeled),
-        "message": "Add same_story labels to the CSV before running this command." if not labeled else "TF-IDF scoring is ready for labeled evaluation.",
-    }
+    label_values = {"1": True, "true": True, "yes": True, "0": False, "false": False, "no": False}
+    labeled = [
+        row for row in rows
+        if row.get("same_story", "").strip().casefold() in label_values
+    ]
+    results: dict[str, object] = {"labeled_pairs": len(labeled)}
+    if not labeled:
+        results["message"] = "Add same_story labels to the CSV before running this command."
+    else:
+        try:
+            from sklearn.feature_extraction.text import TfidfVectorizer
+            from sklearn.metrics.pairwise import cosine_similarity
+        except ImportError as error:
+            raise RuntimeError("Install the research extras to run the TF-IDF baseline") from error
+
+        texts = [
+            row.get("first_headline", "")
+            for row in labeled
+        ] + [
+            row.get("second_headline", "")
+            for row in labeled
+        ]
+        matrix = TfidfVectorizer(stop_words="english", ngram_range=(1, 2)).fit_transform(texts)
+        scores = [
+            float(cosine_similarity(matrix[index], matrix[index + len(labeled)])[0, 0])
+            for index in range(len(labeled))
+        ]
+        same_scores = [
+            score for score, row in zip(scores, labeled)
+            if label_values[row["same_story"].strip().casefold()]
+        ]
+        different_scores = [
+            score for score, row in zip(scores, labeled)
+            if not label_values[row["same_story"].strip().casefold()]
+        ]
+
+        def distribution(values: list[float]) -> dict[str, float | int]:
+            return {
+                "count": len(values),
+                "mean": round(mean(values), 6) if values else 0.0,
+                "median": round(median(values), 6) if values else 0.0,
+                "min": round(min(values), 6) if values else 0.0,
+                "max": round(max(values), 6) if values else 0.0,
+            }
+
+        candidates = sorted({0.0, 1.0, *scores})
+        best: tuple[float, float, float, float, float] | None = None
+        actual = [
+            label_values[row["same_story"].strip().casefold()]
+            for row in labeled
+        ]
+        for threshold in candidates:
+            predicted = [score >= threshold for score in scores]
+            true_positive = sum(
+                predicted_item and actual_item
+                for predicted_item, actual_item in zip(predicted, actual)
+            )
+            false_positive = sum(
+                predicted_item and not actual_item
+                for predicted_item, actual_item in zip(predicted, actual)
+            )
+            false_negative = sum(
+                not predicted_item and actual_item
+                for predicted_item, actual_item in zip(predicted, actual)
+            )
+            accuracy = sum(
+                predicted_item == actual_item
+                for predicted_item, actual_item in zip(predicted, actual)
+            ) / len(actual)
+            precision = true_positive / (true_positive + false_positive) if true_positive + false_positive else 0.0
+            recall = true_positive / (true_positive + false_negative) if true_positive + false_negative else 0.0
+            f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+            candidate = (f1, accuracy, threshold, precision, recall)
+            if best is None or candidate > best:
+                best = candidate
+
+        assert best is not None
+        results.update({
+            "method": "tfidf_cosine_headline",
+            "same_story_pairs": len(same_scores),
+            "different_story_pairs": len(different_scores),
+            "same_story_scores": distribution(same_scores),
+            "different_story_scores": distribution(different_scores),
+            "best_threshold": round(best[2], 6),
+            "best_accuracy": round(best[1], 6),
+            "best_precision": round(best[3], 6),
+            "best_recall": round(best[4], 6),
+            "best_f1": round(best[0], 6),
+        })
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(results, indent=2) + "\n")
     return output_path
-
 
 def read_label_rows(path: Path = LABELS_PATH) -> list[dict[str, str]]:
     """Read the current manual-labeling table."""
