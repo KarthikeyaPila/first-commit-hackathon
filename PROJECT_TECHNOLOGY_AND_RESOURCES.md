@@ -126,6 +126,25 @@ that run.
 
 These are source-health results, not a quality or political-bias judgment.
 
+## Latest full-registry health check
+
+On 17 September 2026, the concrete feeds from the RSS registry document were
+imported and checked through the local ingestion pipeline.
+
+- 40 source records are configured after duplicate cleanup
+- 39 sources are active; one previously known 404 source remains inactive
+- 38 feeds returned parseable RSS/XML data
+- 2 feeds failed:
+  - ThePrint — ParseError: syntax error: line 1, column 0
+  - New Indian Express — Kerala — ParseError: not well-formed (invalid token): line 5, column 2400
+- One duplicate The Indian Express Kerala entry was removed after the health run
+- The registry's AP page URLs were not imported because the document marks them
+  as coverage pages rather than confirmed RSS endpoints
+
+The failed sources remain preserved and active for now so their errors can be
+seen in the verification UI. They should be deactivated after we decide whether
+to replace or repair their feed URLs.
+
 ## Proposed national source expansion
 
 The target is **five to six national sources total**. The current two sources
@@ -136,10 +155,10 @@ outlet's ideology in the product.
 
 | Candidate | Feed or official feed directory | Why it is useful | Status |
 |---|---|---|---|
-| Hindustan Times | [`India News RSS`](https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml) · [`RSS directory`](https://www.hindustantimes.com/rss) | Large national newsroom and distinct editorial workflow | Candidate; endpoint found, not yet added |
-| NDTV | [`India RSS`](https://feeds.feedburner.com/ndtvnews-india-news) · [`official RSS page`](https://www.ndtv.com/rss?site=classic) | National breaking-news coverage and another newsroom style | Candidate; endpoint found, not yet added |
-| Times of India | [`India RSS`](https://timesofindia.indiatimes.com/rssfeeds/-2128936835.cms) · [`official RSS page`](https://timesofindia.indiatimes.com/rss.cms) | High-volume national and city coverage | Candidate; endpoint found, not yet added |
-| ThePrint | [`site feed`](https://theprint.in/feed/) · [`About`](https://theprint.in/about-us/) | Ground reporting, analysis, and opinion-oriented coverage | Candidate; endpoint needs live validation |
+| Hindustan Times | [`India News RSS`](https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml) · [`RSS directory`](https://www.hindustantimes.com/rss) | Large national newsroom and distinct editorial workflow | Imported; live health checked |
+| NDTV | [`India RSS`](https://feeds.feedburner.com/ndtvnews-india-news) · [`official RSS page`](https://www.ndtv.com/rss?site=classic) | National breaking-news coverage and another newsroom style | Imported; live health checked |
+| Times of India | [`India RSS`](https://timesofindia.indiatimes.com/rssfeeds/-2128936835.cms) · [`official RSS page`](https://timesofindia.indiatimes.com/rss.cms) | High-volume national and city coverage | Imported; live health checked |
+| ThePrint | [`site feed`](https://theprint.in/feed/) · [`About`](https://theprint.in/about-us/) | Ground reporting, analysis, and opinion-oriented coverage | Imported; live health checked |
 
 The first expansion experiment should add these one at a time, run the UI,
 record response counts and errors, and only then mark each source active.
