@@ -494,3 +494,31 @@ Official source directories used:
 Technical availability still does not grant public redistribution rights. The
 existing personal/non-commercial RSS-use caveats continue to apply before the
 required AWS deployment is made public.
+
+
+### Final publisher sweep — Business Standard and Firstpost
+
+The official Business Standard RSS directory also exposes national and Hindi
+state feeds. Six of seven tested Business Standard feeds returned parseable
+articles and were activated:
+
+- English India
+- Hindi India
+- Hindi Uttar Pradesh
+- Hindi Bihar & Jharkhand
+- Hindi Madhya Pradesh & Chhattisgarh
+- Hindi Maharashtra
+
+Business Standard Hindi — Rajasthan is preserved inactive because its endpoint
+returned no parseable articles. Firstpost India also returned parseable articles
+from its current RSS endpoint and was activated.
+
+Three additional Financial Express/Deccan Chronicle candidates were preserved
+inactive after validation: one HTTP 410, one HTTP 503, and one timeout. They are
+not counted as working feeds.
+
+Official directory used for this sweep:
+
+- Business Standard RSS: https://www.business-standard.com/rss-feeds/listing
+- Business Standard Hindi RSS: https://hindi.business-standard.com/rss-feeds
+- Financial Express RSS: https://www.financialexpress.com/syndication/
