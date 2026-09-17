@@ -32,7 +32,7 @@ src/first_commit/
 web/
   index.html            Basic ingestion verification UI
 tests/                 Foundation tests
-first_commit_codex_handoff.md
+docs/first_commit_codex_handoff.md
 ```
 
 ## Development checkpoints
@@ -40,7 +40,7 @@ first_commit_codex_handoff.md
 Each meaningful stage will be verified, committed, and pushed so the project
 can be safely recovered if a later experiment breaks something.
 
-The next checkpoint is the RSS ingestion and feed-validation experiment.
+The local prototype now includes RSS ingestion, deduplication, state-aware routing, explainable story clustering, story cards, and a multi-publisher RSS registry. The next required product phase is AWS deployment.
 
 ## Local setup
 
