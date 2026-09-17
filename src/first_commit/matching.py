@@ -174,8 +174,9 @@ def score_pair(
 
     # Embeddings and TF-IDF have different score scales. Candidate review
     # labels support a modest TF-IDF cutoff reduction while keeping the
-    # lower-scoring band available for human review.
-    match_threshold = 0.62 if embedding_similarity is not None else 0.45
+    # lower-scoring band available for human review. The live candidate
+    # labels support a 0.40 TF-IDF cutoff with a precision/recall tradeoff.
+    match_threshold = 0.62 if embedding_similarity is not None else 0.40
     candidate_threshold = 0.40 if embedding_similarity is not None else 0.30
     if state_conflict or score < candidate_threshold:
         outcome = "NEW_STORY"
