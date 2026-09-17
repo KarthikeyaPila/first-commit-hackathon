@@ -100,3 +100,22 @@ def test_tfidf_only_match_uses_its_lower_score_scale() -> None:
     )
 
     assert decision.outcome == "MATCH"
+
+
+def test_tfidf_calibration_promotes_scores_at_or_above_045() -> None:
+    first = Article(source_id="first", url="https://example.com/1", headline="alpha")
+    second = Article(source_id="second", url="https://example.com/2", headline="omega")
+
+    promoted = score_pair(
+        first, second, _source("first"), _source("second"),
+        tfidf_similarity=0.73,
+    )
+    review = score_pair(
+        first, second, _source("first"), _source("second"),
+        tfidf_similarity=0.72,
+    )
+
+    assert promoted.score >= 0.45
+    assert promoted.outcome == "MATCH"
+    assert review.score < 0.45
+    assert review.outcome == "CANDIDATE"

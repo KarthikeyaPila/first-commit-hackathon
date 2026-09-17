@@ -172,9 +172,10 @@ def score_pair(
     if not reasons:
         reasons.append("weak similarity and metadata evidence")
 
-    # Embeddings and TF-IDF have different score scales. The full snapshot
-    # currently uses TF-IDF, so it needs its own calibrated starting cutoff.
-    match_threshold = 0.62 if embedding_similarity is not None else 0.50
+    # Embeddings and TF-IDF have different score scales. Candidate review
+    # labels support a modest TF-IDF cutoff reduction while keeping the
+    # lower-scoring band available for human review.
+    match_threshold = 0.62 if embedding_similarity is not None else 0.45
     candidate_threshold = 0.40 if embedding_similarity is not None else 0.30
     if state_conflict or score < candidate_threshold:
         outcome = "NEW_STORY"
