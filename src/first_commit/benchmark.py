@@ -16,8 +16,8 @@ from .config import PROCESSED_DATA_DIR
 from .models import Article
 
 
-LEGACY_LABELS_PATH = PROCESSED_DATA_DIR / "benchmark_pairs.csv"
-LABELS_PATH = PROCESSED_DATA_DIR / "benchmark_pairs_balanced.csv"
+LABELS_PATH = PROCESSED_DATA_DIR / "benchmark_pairs.csv"
+BALANCED_LABELS_PATH = PROCESSED_DATA_DIR / "benchmark_pairs_balanced.csv"
 TFIDF_RESULTS_PATH = PROCESSED_DATA_DIR / "tfidf_results.json"
 EMBEDDING_RESULTS_PATH = PROCESSED_DATA_DIR / "embedding_results.json"
 DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
