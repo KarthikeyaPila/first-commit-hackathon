@@ -10,9 +10,11 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
 from .config import PrototypeConfig
+from .dedupe import deduplicate_articles
 from .feeds import fetch_source
 from .sources import SOURCES
 from .state_routing import route_article, state_source_directory
+from .storage import save_snapshot
 
 
 WEB_DIR = Path(__file__).resolve().parents[2] / "web"
@@ -46,6 +48,7 @@ def run_ingestion() -> dict[str, object]:
     global _last_run
     started_at = _now()
     reports: list[dict[str, object]] = []
+    all_articles = []
     _last_run = {"status": "running", "started_at": started_at, "completed_at": None, "feeds": reports}
 
     config = PrototypeConfig()
@@ -67,6 +70,7 @@ def run_ingestion() -> dict[str, object]:
         }
         try:
             articles = fetch_source(source, config.max_entries_per_source)
+            all_articles.extend(articles)
             report["status"] = "ok"
             report["feed_health"] = "OK"
             report["fetched_at"] = _now()
@@ -78,8 +82,14 @@ def run_ingestion() -> dict[str, object]:
             report["error"] = f"{type(error).__name__}: {error}"
         reports.append(report)
 
+    unique_articles, duplicates_removed = deduplicate_articles(all_articles)
+    snapshot_path = save_snapshot(unique_articles)
     _last_run = {
         "status": "completed",
+        "articles_found": len(all_articles),
+        "articles_unique": len(unique_articles),
+        "duplicates_removed": duplicates_removed,
+        "snapshot_path": str(snapshot_path),
         "started_at": started_at,
         "completed_at": _now(),
         "feeds": reports,

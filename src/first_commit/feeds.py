@@ -88,8 +88,9 @@ def parse_feed_xml(xml_payload: bytes, source: Source) -> list[Article]:
         summary = clean_text(_child_text(element, "description", "summary", "content"))
         published = _child_text(element, "pubDate", "published", "updated", "date")
         guid = clean_text(_child_text(element, "guid", "id"))
-        identity = guid or url or f"{source.source_id}:{headline}"
-        content_hash = hashlib.sha256(identity.encode("utf-8")).hexdigest()
+        content_hash = hashlib.sha256(
+            clean_text(f"{headline}\n{summary}").casefold().encode("utf-8")
+        ).hexdigest()
 
         if headline and url:
             entries.append(
@@ -100,6 +101,8 @@ def parse_feed_xml(xml_payload: bytes, source: Source) -> list[Article]:
                     summary=summary,
                     published_at=parse_published(published),
                     content_hash=content_hash,
+                    rss_guid=guid or None,
+                    provenance_source_ids=(source.source_id,),
                 )
             )
     return entries

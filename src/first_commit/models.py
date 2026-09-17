@@ -15,6 +15,8 @@ class Article:
     state: str | None = None
     genre: str | None = None
     content_hash: str | None = None
+    rss_guid: str | None = None
+    provenance_source_ids: tuple[str, ...] = ()
 
     @property
     def clustering_text(self) -> str:

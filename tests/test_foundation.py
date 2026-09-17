@@ -71,3 +71,28 @@ def test_state_source_directory_includes_national_sources_for_each_state() -> No
 def test_sources_expose_feed_health_state() -> None:
     assert SOURCES[0].feed_health == "NOT_CHECKED"
     assert SOURCES[0].last_error is None
+
+
+def test_deduplication_canonicalizes_urls_and_merges_provenance() -> None:
+    from first_commit.dedupe import canonical_url, deduplicate_articles
+
+    first = Article(
+        source_id="source-a",
+        url="https://example.com/story/?utm_source=feed",
+        headline="Same story",
+        rss_guid="a-1",
+        provenance_source_ids=("source-a",),
+    )
+    second = Article(
+        source_id="source-b",
+        url="https://example.com/story/",
+        headline="Same story",
+        provenance_source_ids=("source-b",),
+    )
+
+    assert canonical_url(first.url) == "https://example.com/story"
+    unique, removed = deduplicate_articles([first, second])
+
+    assert len(unique) == 1
+    assert removed == 1
+    assert unique[0].provenance_source_ids == ("source-a", "source-b")
