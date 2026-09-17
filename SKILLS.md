@@ -136,6 +136,14 @@ For loading/story-card issues:
 - Preserve plain HTML/CSS/JavaScript unless a framework is justified.
 - Never add political-bias labels.
 
+## Story-title skill
+
+A grouped story needs a human-readable heading. Use the shared
+choose_story_title helper. Reuse a real publisher headline, preferring the
+state/regional anchor, readable length, and recency. Keep all source headlines
+for comparison. Never synthesize facts or use a political framing label in the
+title. Test both anchor preference and missing-headline fallback.
+
 ## AWS skill
 
 AWS is required, not optional.

@@ -10,6 +10,7 @@ from .matching import score_pair, weighted_tfidf_similarities
 from .models import Article
 from .sources import SOURCES
 from .state_routing import route_article
+from .story_titles import choose_story_title
 
 
 def build_global_stories(
@@ -188,6 +189,7 @@ def build_global_stories(
         ]
         stories.append({
             "story_id": f"global-story-{len(stories) + 1}",
+            "story_title": choose_story_title([articles[index] for index in indexes], source_by_id),
             "article_count": len(indexes),
             "states": sorted({
                 state

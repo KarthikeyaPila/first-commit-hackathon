@@ -153,7 +153,7 @@
           '<section class="state-story-group"><h3>' + escapeHtml(group.state) + '</h3>' +
           '<div class="meta">' + group.story_count + ' grouped stories</div>' +
           '<div class="story-grid">' + (group.stories || []).map((story) =>
-            '<article class="story-card"><h3>' + escapeHtml(story.story_id) + ' · ' + story.article_count + ' reports</h3>' +
+            '<article class="story-card"><h3>' + escapeHtml(story.story_title || 'Untitled story') + '</h3><div class="meta">' + escapeHtml(story.story_id) + ' · ' + story.article_count + ' reports</div>' +
             '<div class="meta">' + escapeHtml((story.sources || []).join(' · ')) + '</div>' +
             '<div>' + (story.reasons || []).map((reason) => '<span class="reason">' + escapeHtml(reason) + '</span>').join('') + '</div>' +
             '<ul>' + (story.articles || []).map((article) =>

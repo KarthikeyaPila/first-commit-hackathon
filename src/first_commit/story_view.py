@@ -9,6 +9,7 @@ from .benchmark import LABELS_PATH, _evaluate_scores, _labeled_rows, lexical_sim
 from .matching import score_pair, weighted_tfidf_similarities
 from .models import Article
 from .sources import SOURCES
+from .story_titles import choose_story_title
 
 def cluster_matched_articles(
     article_count: int,
@@ -128,6 +129,7 @@ def build_demo_stories(
         ]
         stories.append({
             "story_id": f"story-{len(stories) + 1}",
+            "story_title": choose_story_title([articles[index] for index in indexes], source_by_id),
             "article_count": len(indexes),
             "sources": sorted({
                 source_by_id[articles[index].source_id].name
@@ -370,6 +372,7 @@ def build_snapshot_stories(
         ]
         stories.append({
             "story_id": f"snapshot-story-{len(stories) + 1}",
+            "story_title": choose_story_title([articles[index] for index in indexes], source_by_id),
             "article_count": len(indexes),
             "states": sorted({
                 state

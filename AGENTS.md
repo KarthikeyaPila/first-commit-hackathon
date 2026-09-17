@@ -147,6 +147,19 @@ The manually labeled benchmark has 100 pairs: 39 same-story and 61 different.
 Current TF-IDF-only MATCH cutoff is 0.40, calibrated from 122 live labels.
 Embedding-assisted cutoffs are separate.
 
+## Story naming
+
+Grouped stories expose story_title in the API and UI. It is a deterministic
+representative publisher headline, not an LLM-generated claim:
+
+- Prefer a state/regional anchor headline over a national headline.
+- Prefer readable, non-truncated headlines and then the most recent headline.
+- Keep every original article headline visible below the story title.
+- Use Untitled story only when no grouped article has a headline.
+
+If the title rule changes, update src/first_commit/story_titles.py and its tests.
+Do not hide the source headline or present a synthesized title as fact.
+
 ## Required next phase
 
 AWS is mandatory for the finished project.
