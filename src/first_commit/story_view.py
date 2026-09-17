@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 from pathlib import Path
 
-from .benchmark import LABELS_PATH, _evaluate_scores, _labeled_rows, lexical_similarity
+from .benchmark import LABELS_PATH, _evaluate_scores, _labeled_rows, lexical_similarity, load_snapshot
 from .matching import score_pair, weighted_tfidf_similarities
 from .models import Article
 from .sources import SOURCES
@@ -158,6 +158,138 @@ def build_demo_stories(
         "benchmark_pairs": len(rows),
         "benchmark_metrics": summary,
     }
+
+def build_snapshot_stories(
+    snapshot_path: Path,
+    *,
+    max_articles: int = 2000,
+    max_neighbors: int = 12,
+    max_stories: int = 60,
+) -> dict[str, object]:
+    """Cluster the full snapshot using sparse nearest-neighbor candidates."""
+
+    articles = load_snapshot(snapshot_path)
+    articles.sort(
+        key=lambda article: article.published_at.timestamp() if article.published_at else 0,
+        reverse=True,
+    )
+    articles = articles[:max_articles]
+    source_by_id = {source.source_id: source for source in SOURCES}
+    articles = [
+        article for article in articles
+        if article.source_id in source_by_id
+    ]
+    if not articles:
+        return {
+            "stories": [],
+            "articles_considered": 0,
+            "matched_groups": 0,
+            "matching_method": "full snapshot clustering",
+        }
+
+    try:
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        from sklearn.metrics.pairwise import cosine_similarity
+    except ImportError as error:
+        raise RuntimeError("Install the research extras to build snapshot stories") from error
+
+    headline_matrix = TfidfVectorizer(
+        stop_words="english",
+        ngram_range=(1, 2),
+    ).fit_transform([article.headline for article in articles])
+    candidate_pairs: set[tuple[int, int]] = set()
+    for index in range(len(articles)):
+        similarities = cosine_similarity(headline_matrix[index], headline_matrix).ravel()
+        neighbor_count = min(max_neighbors + 1, len(articles))
+        neighbors = similarities.argsort()[-neighbor_count:]
+        for neighbor in neighbors:
+            if neighbor == index:
+                continue
+            first, second = sorted((index, int(neighbor)))
+            if articles[first].source_id == articles[second].source_id:
+                continue
+            first_time = articles[first].published_at
+            second_time = articles[second].published_at
+            if first_time and second_time:
+                hours = abs((first_time - second_time).total_seconds()) / 3600
+                if hours > 48:
+                    continue
+            candidate_pairs.add((first, second))
+
+    pairs = sorted(candidate_pairs)
+    weighted_scores = weighted_tfidf_similarities(articles, pairs)
+    edges: list[tuple[int, int, object]] = []
+    for (first, second), similarity in zip(pairs, weighted_scores):
+        decision = score_pair(
+            articles[first],
+            articles[second],
+            source_by_id[articles[first].source_id],
+            source_by_id[articles[second].source_id],
+            tfidf_similarity=similarity,
+        )
+        if decision.outcome == "MATCH":
+            edges.append((first, second, decision))
+
+    groups = cluster_matched_articles(len(articles), edges)
+    stories = []
+    for indexes in groups:
+        has_state_anchor = any(
+            source_by_id[articles[index].source_id].scope != "NATIONAL"
+            for index in indexes
+        )
+        if not has_state_anchor:
+            continue
+        group_edges = [
+            decision for first, second, decision in edges
+            if first in indexes and second in indexes
+        ]
+        stories.append({
+            "story_id": f"snapshot-story-{len(stories) + 1}",
+            "article_count": len(indexes),
+            "states": sorted({
+                state
+                for index in indexes
+                for state in _article_states(
+                    articles[index],
+                    source_by_id[articles[index].source_id],
+                )
+            }),
+            "sources": sorted({
+                source_by_id[articles[index].source_id].name
+                for index in indexes
+            }),
+            "reasons": _unique_reasons(group_edges),
+            "articles": [
+                {
+                    "source": source_by_id[articles[index].source_id].name,
+                    "headline": articles[index].headline,
+                    "url": articles[index].url,
+                    "published_at": (
+                        articles[index].published_at.isoformat()
+                        if articles[index].published_at else None
+                    ),
+                }
+                for index in indexes
+            ],
+        })
+
+    stories.sort(key=lambda story: (story["article_count"], story["sources"]), reverse=True)
+    return {
+        "stories": stories[:max_stories],
+        "articles_considered": len(articles),
+        "candidate_pairs": len(pairs),
+        "matched_edges": len(edges),
+        "matched_groups": len(stories),
+        "matching_method": (
+            "full snapshot · headline neighbor retrieval · "
+            "weighted headline/summary/lead matching"
+        ),
+    }
+
+def _article_states(article: Article, source) -> tuple[str, ...]:
+    from .state_routing import route_article
+
+    return route_article(article, source).states
 
 
 def _unique_reasons(decisions: list[object]) -> list[str]:
