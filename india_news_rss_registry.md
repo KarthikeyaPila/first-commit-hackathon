@@ -406,3 +406,28 @@ Do not expand the feed registry simply because a publisher has a state page. For
 - Times of India RSS directory: https://timesofindia.indiatimes.com/rss.cms
 - NDTV RSS directory: https://www.ndtv.com/rss?site=classic
 - New Indian Express RSS/current state feeds: https://www.newindianexpress.com/topic/rss
+
+## Nationwide RSS expansion — 17 September 2026
+
+The registry now includes a second English source layer from The Hawk's official RSS directory:
+
+https://www.thehawk.in/news/rss
+
+The directory lists state/UT feeds for 35 of the 36 canonical regions represented by
+the project. The project parser reached all 35 endpoints successfully. Twenty-nine
+returned parseable articles during validation; six returned HTTP 200 XML responses
+with an empty template and are therefore retained but inactive:
+
+- Andaman and Nicobar Islands
+- Dadra and Nagar Haveli and Daman and Diu
+- Lakshadweep
+- Nagaland
+- Puducherry
+- Sikkim
+
+Ladakh remains an explicit coverage gap: no dependable direct RSS endpoint was
+identified, and the registry does not reuse Jammu & Kashmir's feed for Ladakh.
+National feeds remain the fallback for it until a genuine Ladakh feed is found.
+
+The official directory and its English-language scope are documented at:
+https://www.thehawk.in/news/rss
