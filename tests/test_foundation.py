@@ -2,6 +2,7 @@ from first_commit.models import Article
 from first_commit.pipeline import pipeline_stages
 from first_commit.feeds import parse_feed_xml
 from first_commit.sources import SOURCES
+from first_commit.state_routing import route_article, state_source_directory
 
 
 def test_clustering_text_uses_headline_summary_and_lead() -> None:
@@ -43,6 +44,28 @@ def test_rss_parser_extracts_article_metadata() -> None:
     assert articles[0].headline == "A headline"
     assert articles[0].summary == "A summary."
     assert articles[0].published_at is not None
+
+
+def test_national_article_routes_only_when_state_signal_is_present() -> None:
+    article = Article(
+        source_id="the-hindu-india",
+        url="https://example.com/story",
+        headline="New investment announced for Amaravati project",
+    )
+
+    routing = route_article(article, SOURCES[0])
+
+    assert routing.states == ("Andhra Pradesh",)
+    assert routing.confidence == "TEXT_MATCH"
+    assert "amaravati" in routing.matched_terms["Andhra Pradesh"]
+
+
+def test_state_source_directory_includes_national_sources_for_each_state() -> None:
+    directory = state_source_directory()
+    kerala = next(item for item in directory if item["state"] == "Kerala")
+
+    assert any(source["scope"] == "NATIONAL" for source in kerala["sources"])
+    assert any(source["name"] == "Onmanorama — Kerala" for source in kerala["sources"])
 
 
 def test_sources_expose_feed_health_state() -> None:

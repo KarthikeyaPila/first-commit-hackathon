@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 from .config import PrototypeConfig
 from .feeds import fetch_source
 from .sources import SOURCES
+from .state_routing import route_article, state_source_directory
 
 
 WEB_DIR = Path(__file__).resolve().parents[2] / "web"
@@ -26,6 +27,18 @@ _last_run: dict[str, object] = {
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
+
+def _article_payload(article, source):
+    routing = route_article(article, source)
+    return {
+        "headline": article.headline,
+        "url": article.url,
+        "published_at": article.published_at.isoformat() if article.published_at else None,
+        "summary": article.summary,
+        "candidate_states": list(routing.states),
+        "state_confidence": routing.confidence,
+        "state_matches": {state: list(terms) for state, terms in routing.matched_terms.items()},
+    }
 
 def run_ingestion() -> dict[str, object]:
     """Fetch every active source and return UI-friendly run information."""
@@ -58,15 +71,7 @@ def run_ingestion() -> dict[str, object]:
             report["feed_health"] = "OK"
             report["fetched_at"] = _now()
             report["articles_found"] = len(articles)
-            report["articles"] = [
-                {
-                    "headline": article.headline,
-                    "url": article.url,
-                    "published_at": article.published_at.isoformat() if article.published_at else None,
-                    "summary": article.summary,
-                }
-                for article in articles[:10]
-            ]
+            report["articles"] = [_article_payload(article, source) for article in articles[:10]]
         except Exception as error:  # noqa: BLE001 - a failed feed must not stop other feeds
             report["status"] = "error"
             report["feed_health"] = "ERROR"
@@ -97,6 +102,9 @@ class RequestHandler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path
         if path == "/api/feeds":
             self._send_json(_last_run)
+            return
+        if path == "/api/state-sources":
+            self._send_json({"states": state_source_directory()})
             return
         if path in {"/", "/index.html"}:
             body = (WEB_DIR / "index.html").read_bytes()

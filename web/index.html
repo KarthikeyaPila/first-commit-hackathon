@@ -21,6 +21,13 @@
       .metric strong { display: block; font-size: 28px; }
       .metric span, .meta { color: var(--muted); font-size: 13px; }
       .feeds { display: grid; gap: 14px; }
+      .state-panel { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 20px; margin: 28px 0; }
+      .section-kicker { color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+      .state-panel h2 { margin: 4px 0; font: 700 26px/1.1 Georgia, serif; }
+      .states { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 16px; }
+      .state-card { border: 1px solid var(--line); border-radius: 12px; padding: 13px; }
+      .state-card h3 { margin: 0 0 7px; font-size: 16px; }
+      .source-chip { display: inline-block; background: #edf0f4; border-radius: 999px; color: var(--ink); font-size: 12px; margin: 3px 4px 0 0; padding: 4px 8px; }
       .feed-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
       .feed h2 { font-size: 18px; margin: 0 0 3px; }
       .badge { border-radius: 999px; padding: 4px 9px; font-size: 12px; font-weight: 700; background: #edf0f4; }
@@ -39,6 +46,12 @@
       <div class="eyebrow">First Commit · Research prototype</div>
       <h1>Is the news pipeline alive?</h1>
       <p class="intro">A deliberately small verification view for the first ingestion slice. Fetch the configured English RSS feeds and inspect what came back before we add story matching.</p>
+      <section class="state-panel" aria-label="State source directory">
+        <div class="section-kicker">State routing</div>
+        <h2>States and their sources</h2>
+        <p class="meta">National sources are potential contributors to every state. State and regional sources are mapped directly.</p>
+        <div id="state-list" class="states"><div class="feed">Loading state directory…</div></div>
+      </section>
       <div class="toolbar">
         <button id="ingest">Process latest news</button>
         <span id="run-status">No ingestion run yet.</span>
@@ -69,6 +82,18 @@
             ${feed.error ? `<p class="error">${escapeHtml(feed.error)}</p>` : `<div class="articles">${(feed.articles || []).map((article) => `<div class="article"><a href="${escapeHtml(article.url)}" target="_blank" rel="noreferrer">${escapeHtml(article.headline)}</a><div class="meta">${article.published_at ? new Date(article.published_at).toLocaleString() : 'Publication time unavailable'}</div></div>`).join('') || '<div class="meta">No articles returned.</div>'}</div>`}
           </article>`).join('') || '<div class="feed">No active sources configured.</div>';
       };
+      const renderStateDirectory = (directory) => {
+        const list = document.querySelector('#state-list');
+        list.innerHTML = (directory.states || []).map((entry) => {
+          const sources = entry.sources.map((source) => '<span class="source-chip" title="' + escapeHtml(source.scope) + ' · ' + escapeHtml(source.feed_health) + '">' + escapeHtml(source.name) + '</span>').join('');
+          return '<div class="state-card"><h3>' + escapeHtml(entry.state) + '</h3>' + sources + '</div>';
+        }).join('');
+      };
+      const loadStateDirectory = async () => {
+        try { renderStateDirectory(await (await fetch('/api/state-sources')).json()); }
+        catch (error) { document.querySelector('#state-list').innerHTML = '<div class="error">Could not load state directory: ' + escapeHtml(error.message) + '</div>'; }
+      };
+      loadStateDirectory();
       button.addEventListener('click', async () => {
         button.disabled = true; status.textContent = 'Fetching RSS feeds…';
         try { render(await (await fetch('/api/ingest', { method: 'POST' })).json()); }
