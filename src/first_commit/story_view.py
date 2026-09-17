@@ -81,12 +81,8 @@ def build_demo_stories(
         second = article_index.get(row.get("second_url", ""))
         if first is None or second is None:
             continue
-        first_is_state = source_by_id[articles[first].source_id].scope != "NATIONAL"
-        second_is_state = source_by_id[articles[second].source_id].scope != "NATIONAL"
-        # State/regional reports are anchors; national reports provide
-        # supplemental coverage only after matching an anchor.
-        if first_is_state == second_is_state:
-            continue
+        # National reports may match each other, but their group must
+        # eventually connect to a state/regional anchor to appear in a state view.
         if use_tfidf:
             similarity = float(cosine_similarity(matrix[first], matrix[second])[0, 0])
         else:
@@ -111,6 +107,12 @@ def build_demo_stories(
     stories = []
     for indexes in groups.values():
         if len(indexes) < 2:
+            continue
+        has_state_anchor = any(
+            source_by_id[articles[index].source_id].scope != "NATIONAL"
+            for index in indexes
+        )
+        if not has_state_anchor:
             continue
         group_edges = [
             (first, second, decision)
