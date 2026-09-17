@@ -11,6 +11,7 @@ class Source:
     states: tuple[str, ...]
     language: str
     rss_url: str
+    max_entries: int = 50
     active: bool = True
     feed_health: str = "NOT_CHECKED"
     last_error: str | None = None
@@ -26,6 +27,7 @@ SOURCES: tuple[Source, ...] = (
         scope="NATIONAL",
         states=(),
         language="EN",
+        max_entries=100,
         rss_url="https://www.thehindu.com/news/national/feeder/default.rss",
     ),
     Source(
@@ -34,6 +36,7 @@ SOURCES: tuple[Source, ...] = (
         scope="NATIONAL",
         states=(),
         language="EN",
+        max_entries=100,
         rss_url="https://indianexpress.com/section/india/feed/",
     ),
     Source(
@@ -61,6 +64,7 @@ SOURCES: tuple[Source, ...] = (
         scope="NATIONAL",
         states=(),
         language="EN",
+        max_entries=100,
         rss_url="https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml",
     ),
     Source(
@@ -69,6 +73,7 @@ SOURCES: tuple[Source, ...] = (
         scope="NATIONAL",
         states=(),
         language="EN",
+        max_entries=100,
         rss_url="https://feeds.feedburner.com/ndtvnews-india-news",
     ),
     Source(
@@ -77,6 +82,7 @@ SOURCES: tuple[Source, ...] = (
         scope="NATIONAL",
         states=(),
         language="EN",
+        max_entries=100,
         rss_url="https://timesofindia.indiatimes.com/rssfeeds/-2128936835.cms",
     ),
     Source(
@@ -85,6 +91,7 @@ SOURCES: tuple[Source, ...] = (
         scope="NATIONAL",
         states=(),
         language="EN",
+        max_entries=100,
         rss_url="https://theprint.in/feed/",
     ),
     Source(

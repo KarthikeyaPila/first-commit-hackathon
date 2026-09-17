@@ -66,6 +66,7 @@ def run_ingestion() -> dict[str, object]:
             "scope": source.scope,
             "states": list(source.states),
             "rss_url": source.rss_url,
+            "max_entries": source.max_entries,
             "status": "fetching",
             "feed_health": source.feed_health,
             "fetched_at": None,
@@ -74,7 +75,7 @@ def run_ingestion() -> dict[str, object]:
             "error": source.last_error,
         }
         try:
-            articles = fetch_source(source, config.max_entries_per_source)
+            articles = fetch_source(source, source.max_entries)
             all_articles.extend(articles)
             report["status"] = "ok"
             report["feed_health"] = "OK"

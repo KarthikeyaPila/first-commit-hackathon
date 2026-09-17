@@ -96,3 +96,10 @@ def test_deduplication_canonicalizes_urls_and_merges_provenance() -> None:
     assert len(unique) == 1
     assert removed == 1
     assert unique[0].provenance_source_ids == ("source-a", "source-b")
+
+
+def test_high_volume_national_sources_have_higher_caps() -> None:
+    national = {source.source_id: source for source in SOURCES if source.scope == "NATIONAL"}
+    assert national["the-hindu-india"].max_entries == 100
+    assert national["ndtv-india"].max_entries == 100
+    assert next(source for source in SOURCES if source.scope == "STATE").max_entries == 50

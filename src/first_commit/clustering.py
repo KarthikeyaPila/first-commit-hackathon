@@ -15,7 +15,7 @@ from .state_routing import route_article
 def build_global_stories(
     snapshot_path: Path,
     *,
-    max_articles: int = 2000,
+    max_articles: int = 4000,
     max_neighbors_per_source: int = 12,
     max_stories: int = 80,
     use_embeddings: bool = False,
