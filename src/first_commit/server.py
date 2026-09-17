@@ -111,7 +111,12 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
-        self.wfile.write(body)
+        try:
+            self.wfile.write(body)
+        except (BrokenPipeError, ConnectionResetError):
+            # The browser may navigate away or time out while a long ingestion
+            # response is being prepared. The work can finish without a client.
+            return
 
     def _benchmark_payload(self) -> dict[str, object]:
         if not LABELS_PATH.exists():
