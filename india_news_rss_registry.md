@@ -448,3 +448,49 @@ The exact entries are kept in the source registry. Local parser validation found
 13 feeds with parseable articles; National Herald responded but returned no
 parseable articles and is retained inactive for later rechecking. These publishers' RSS terms
 should be reviewed before public AWS deployment.
+
+
+## Deep RSS audit — 17 September 2026
+
+A second official-directory sweep was completed to maximize practical RSS coverage
+without adding guessed endpoints. The sweep added 57 registry records:
+
+| Publisher | Registry records | Active | Inactive | Official directory |
+|---|---:|---:|---:|---|
+| ABP News | 17 | 16 | 1 | https://www.abplive.com/rss |
+| Amar Ujala | 22 | 15 | 7 | https://www.amarujala.com/rss |
+| Live Hindustan | 16 | 15 | 1 | https://www.livehindustan.com/rss |
+| Oneindia | 2 | 2 | 0 | https://www.oneindia.com/rss/ |
+
+All 48 active additions returned parseable articles in a final live validation pass
+using the project parser. The nine inactive records remain in the registry so the
+failed checks are recoverable and visible to future maintenance:
+
+- ABP News — Assam: no parseable articles during validation.
+- Amar Ujala — Arunachal Pradesh, Assam, Meghalaya, Mizoram, Nagaland, Sikkim, and Tripura: HTTP 404 during validation.
+- Live Hindustan — Uttar Pradesh: HTTP 200 response with no parseable articles.
+
+The new layer is primarily Hindi and state-scoped. It adds coverage for Andhra
+Pradesh, Arunachal Pradesh, Assam (inactive ABP record retained), Bihar,
+Chhattisgarh, Delhi, Gujarat, Haryana, Himachal Pradesh, Jammu & Kashmir,
+Jharkhand, Madhya Pradesh, Maharashtra, Odisha, Punjab, Rajasthan, Sikkim,
+Tripura, Uttar Pradesh, Uttarakhand, and West Bengal, plus Oneindia's Chennai
+feed for Tamil Nadu. A feed covering a combined region, such as ABP's UP-UK
+feed, is represented with both states rather than duplicated under two URLs.
+
+City-level feeds were intentionally not bulk-added from Live Hindustan or Amar
+Ujala: their official directories list hundreds of city/category endpoints, and
+adding all of them would multiply duplicate articles without improving national
+or state coverage proportionally. They can be added later for a targeted state's
+locality experiment.
+
+Official source directories used:
+
+- ABP News RSS: https://www.abplive.com/rss
+- Amar Ujala RSS: https://www.amarujala.com/rss
+- Live Hindustan RSS: https://www.livehindustan.com/rss
+- Oneindia RSS: https://www.oneindia.com/rss/
+
+Technical availability still does not grant public redistribution rights. The
+existing personal/non-commercial RSS-use caveats continue to apply before the
+required AWS deployment is made public.

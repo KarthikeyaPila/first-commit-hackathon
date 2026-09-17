@@ -761,3 +761,119 @@ SOURCES: tuple[Source, ...] = (
         rss_url="https://publish.tribuneindia.com/city/delhi/feed/",
     ),
 )
+
+
+# Deep-search additions from official publisher RSS directories (17 September 2026).
+# Failed directory entries stay inactive with the validation reason preserved.
+def _make_audited_sources(prefix, publisher, base_url, feeds, language="HI"):
+    return tuple(
+        Source(
+            source_id=f"{prefix}-{slug}",
+            name=f"{publisher} — {label}",
+            scope=scope,
+            states=states,
+            language=language,
+            rss_url=base_url.format(slug=slug),
+            active=active,
+            last_error=last_error,
+        )
+        for slug, label, states, scope, active, last_error in feeds
+    )
+
+
+_ABP_FEEDS = (
+    ("andhra-pradesh", "Andhra Pradesh", ("Andhra Pradesh",), "STATE", True, None),
+    ("arunachal-pradesh", "Arunachal Pradesh", ("Arunachal Pradesh",), "STATE", True, None),
+    ("assam", "Assam", ("Assam",), "STATE", False, "Official RSS directory URL returned no parseable articles during validation"),
+    ("bihar", "Bihar", ("Bihar",), "STATE", True, None),
+    ("chhattisgarh", "Chhattisgarh", ("Chhattisgarh",), "STATE", True, None),
+    ("delhi-ncr", "Delhi NCR", ("Delhi",), "UT", True, None),
+    ("gujarat", "Gujarat", ("Gujarat",), "STATE", True, None),
+    ("haryana", "Haryana", ("Haryana",), "STATE", True, None),
+    ("himachal-pradesh", "Himachal Pradesh", ("Himachal Pradesh",), "STATE", True, None),
+    ("jammu-and-kashmir", "Jammu & Kashmir", ("Jammu & Kashmir",), "UT", True, None),
+    ("jharkhand", "Jharkhand", ("Jharkhand",), "STATE", True, None),
+    ("madhya-pradesh", "Madhya Pradesh", ("Madhya Pradesh",), "STATE", True, None),
+    ("maharashtra", "Maharashtra", ("Maharashtra",), "STATE", True, None),
+    ("punjab", "Punjab", ("Punjab",), "STATE", True, None),
+    ("rajasthan", "Rajasthan", ("Rajasthan",), "STATE", True, None),
+    ("up-uk", "Uttar Pradesh & Uttarakhand", ("Uttar Pradesh", "Uttarakhand"), "REGIONAL", True, None),
+)
+
+_AMAR_UJALA_FEEDS = (
+    ("arunachal-pradesh", "Arunachal Pradesh", ("Arunachal Pradesh",), "STATE", False, "Official RSS directory URL returned HTTP 404 during validation"),
+    ("assam", "Assam", ("Assam",), "STATE", False, "Official RSS directory URL returned HTTP 404 during validation"),
+    ("bihar", "Bihar", ("Bihar",), "STATE", True, None),
+    ("chhattisgarh", "Chhattisgarh", ("Chhattisgarh",), "STATE", True, None),
+    ("delhi", "Delhi", ("Delhi",), "UT", True, None),
+    ("gujarat", "Gujarat", ("Gujarat",), "STATE", True, None),
+    ("haryana", "Haryana", ("Haryana",), "STATE", True, None),
+    ("himachal-pradesh", "Himachal Pradesh", ("Himachal Pradesh",), "STATE", True, None),
+    ("jammu-and-kashmir", "Jammu & Kashmir", ("Jammu & Kashmir",), "UT", True, None),
+    ("jharkhand", "Jharkhand", ("Jharkhand",), "STATE", True, None),
+    ("madhya-pradesh", "Madhya Pradesh", ("Madhya Pradesh",), "STATE", True, None),
+    ("maharashtra", "Maharashtra", ("Maharashtra",), "STATE", True, None),
+    ("meghalaya", "Meghalaya", ("Meghalaya",), "STATE", False, "Official RSS directory URL returned HTTP 404 during validation"),
+    ("mizoram", "Mizoram", ("Mizoram",), "STATE", False, "Official RSS directory URL returned HTTP 404 during validation"),
+    ("nagaland", "Nagaland", ("Nagaland",), "STATE", False, "Official RSS directory URL returned HTTP 404 during validation"),
+    ("punjab", "Punjab", ("Punjab",), "STATE", True, None),
+    ("rajasthan", "Rajasthan", ("Rajasthan",), "STATE", True, None),
+    ("sikkim", "Sikkim", ("Sikkim",), "STATE", False, "Official RSS directory URL returned HTTP 404 during validation"),
+    ("tripura", "Tripura", ("Tripura",), "STATE", False, "Official RSS directory URL returned HTTP 404 during validation"),
+    ("uttar-pradesh", "Uttar Pradesh", ("Uttar Pradesh",), "STATE", True, None),
+    ("uttarakhand", "Uttarakhand", ("Uttarakhand",), "STATE", True, None),
+    ("west-bengal", "West Bengal", ("West Bengal",), "STATE", True, None),
+)
+
+_LIVE_HINDUSTAN_FEEDS = (
+    ("bihar", "Bihar", ("Bihar",), "STATE", True, None),
+    ("chandigarh", "Chandigarh", ("Chandigarh",), "UT", True, None),
+    ("chhattisgarh", "Chhattisgarh", ("Chhattisgarh",), "STATE", True, None),
+    ("gujarat", "Gujarat", ("Gujarat",), "STATE", True, None),
+    ("haryana", "Haryana", ("Haryana",), "STATE", True, None),
+    ("himachal-pradesh", "Himachal Pradesh", ("Himachal Pradesh",), "STATE", True, None),
+    ("jammu-and-kashmir", "Jammu & Kashmir", ("Jammu & Kashmir",), "UT", True, None),
+    ("madhya-pradesh", "Madhya Pradesh", ("Madhya Pradesh",), "STATE", True, None),
+    ("maharashtra", "Maharashtra", ("Maharashtra",), "STATE", True, None),
+    ("odisha", "Odisha", ("Odisha",), "STATE", True, None),
+    ("punjab", "Punjab", ("Punjab",), "STATE", True, None),
+    ("rajasthan", "Rajasthan", ("Rajasthan",), "STATE", True, None),
+    ("tripura", "Tripura", ("Tripura",), "STATE", True, None),
+    ("uttar-pradesh", "Uttar Pradesh", ("Uttar Pradesh",), "STATE", False, "Official RSS directory URL returned HTTP 200 with no parseable articles during validation"),
+    ("uttarakhand", "Uttarakhand", ("Uttarakhand",), "STATE", True, None),
+    ("west-bengal", "West Bengal", ("West Bengal",), "STATE", True, None),
+)
+
+_AUDITED_ADDITIONAL_SOURCES = (
+    Source(
+        source_id="abp-news-india",
+        name="ABP News — India",
+        scope="NATIONAL",
+        states=(),
+        language="HI",
+        max_entries=100,
+        rss_url="https://www.abplive.com/news/india/feed",
+    ),
+    *_make_audited_sources("abp-news", "ABP News", "https://www.abplive.com/news/states/{slug}/feed", _ABP_FEEDS),
+    *_make_audited_sources("amar-ujala", "Amar Ujala", "https://www.amarujala.com/rss/{slug}.xml", _AMAR_UJALA_FEEDS),
+    *_make_audited_sources("live-hindustan", "Live Hindustan", "https://api.livehindustan.com/feeds/rss/{slug}/rssfeed.xml", _LIVE_HINDUSTAN_FEEDS),
+    Source(
+        source_id="oneindia-india",
+        name="Oneindia — India",
+        scope="NATIONAL",
+        states=(),
+        language="EN",
+        max_entries=100,
+        rss_url="https://www.oneindia.com/rss/feeds/news-india-fb.xml",
+    ),
+    Source(
+        source_id="oneindia-chennai",
+        name="Oneindia — Chennai",
+        scope="STATE",
+        states=("Tamil Nadu",),
+        language="EN",
+        rss_url="https://www.oneindia.com/rss/feeds/chennai-fb.xml",
+    ),
+)
+
+SOURCES = SOURCES + _AUDITED_ADDITIONAL_SOURCES
