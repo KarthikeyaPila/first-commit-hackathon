@@ -61,3 +61,22 @@ def test_matching_rejects_conflicting_states() -> None:
 
     assert decision.outcome == "NEW_STORY"
     assert decision.signals["state_conflict"] is True
+
+
+def test_weighted_similarity_prioritizes_headline_and_handles_missing_context() -> None:
+    from first_commit.matching import weighted_tfidf_similarities
+
+    first = Article(
+        source_id="first",
+        url="https://example.com/1",
+        headline="Major bridge opens in Vijayawada",
+        summary="Officials discuss unrelated agricultural plans.",
+    )
+    second = Article(
+        source_id="second",
+        url="https://example.com/2",
+        headline="Major bridge opens in Vijayawada",
+    )
+
+    score = weighted_tfidf_similarities([first, second], [(0, 1)])[0]
+    assert score > 0.50

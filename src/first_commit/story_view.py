@@ -6,7 +6,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from .benchmark import LABELS_PATH, _evaluate_scores, _labeled_rows, lexical_similarity
-from .matching import score_pair
+from .matching import score_pair, weighted_tfidf_similarities
 from .models import Article
 from .sources import SOURCES
 
@@ -42,24 +42,9 @@ def build_demo_stories(
             "stories": [],
             "articles_considered": len(articles),
             "matched_groups": 0,
-            "matching_method": (
-            "state-anchor → national-coverage matching with TF-IDF"
-            if use_tfidf else
-            "state-anchor → national-coverage matching with lexical fallback"
-        ),
+            "matching_method": "no benchmark candidates available",
         }
 
-    try:
-        from sklearn.feature_extraction.text import TfidfVectorizer
-        from sklearn.metrics.pairwise import cosine_similarity
-        use_tfidf = True
-        matrix = TfidfVectorizer(
-            stop_words="english",
-            ngram_range=(1, 2),
-        ).fit_transform([article.clustering_text for article in articles])
-    except ImportError:
-        use_tfidf = False
-        matrix = None
     parents = list(range(len(articles)))
     edges: list[tuple[int, int, object]] = []
     scores: list[float] = []
@@ -76,17 +61,28 @@ def build_demo_stories(
         if first_root != second_root:
             parents[second_root] = first_root
 
+    row_indexes = []
     for row in rows:
         first = article_index.get(row.get("first_url", ""))
         second = article_index.get(row.get("second_url", ""))
-        if first is None or second is None:
-            continue
+        if first is not None and second is not None:
+            row_indexes.append((row, first, second))
+    try:
+        weighted_scores = weighted_tfidf_similarities(
+            articles,
+            [(first, second) for _, first, second in row_indexes],
+        )
+        use_tfidf = True
+    except RuntimeError:
+        weighted_scores = [
+            lexical_similarity(articles[first], articles[second])
+            for _, first, second in row_indexes
+        ]
+        use_tfidf = False
+
+    for (row, first, second), similarity in zip(row_indexes, weighted_scores):
         # National reports may match each other, but their group must
         # eventually connect to a state/regional anchor to appear in a state view.
-        if use_tfidf:
-            similarity = float(cosine_similarity(matrix[first], matrix[second])[0, 0])
-        else:
-            similarity = lexical_similarity(articles[first], articles[second])
         decision = score_pair(
             articles[first],
             articles[second],

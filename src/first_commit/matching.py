@@ -53,6 +53,55 @@ def _time_signal(first: Article, second: Article) -> tuple[float | None, str | N
     hours = abs((first.published_at - second.published_at).total_seconds()) / 3600
     return max(0.0, 1.0 - min(hours, 48.0) / 48.0), f"published {hours:.1f} hours apart"
 
+def weighted_tfidf_similarities(
+    articles: list[Article],
+    pairs: list[tuple[int, int]],
+) -> list[float]:
+    """Compare fields with headline-first weights and missing-field renormalization."""
+
+    try:
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        from sklearn.metrics.pairwise import cosine_similarity
+    except ImportError as error:
+        raise RuntimeError("Install the research extras for weighted text similarity") from error
+
+    fields = (
+        ("headline", 0.65),
+        ("summary", 0.25),
+        ("lead", 0.10),
+    )
+    field_scores: dict[str, list[float]] = {}
+    for field, _ in fields:
+        values = [getattr(article, field).strip() for article in articles]
+        if not any(values):
+            continue
+        try:
+            matrix = TfidfVectorizer(
+                stop_words="english", ngram_range=(1, 2)
+            ).fit_transform(values)
+        except ValueError:
+            continue
+        field_scores[field] = [
+            float(cosine_similarity(matrix[first], matrix[second])[0, 0])
+            for first, second in pairs
+        ]
+
+    scores = []
+    for pair_index, (first, second) in enumerate(pairs):
+        available = [
+            (weight, field_scores[field][pair_index])
+            for field, weight in fields
+            if field in field_scores
+            and getattr(articles[first], field).strip()
+            and getattr(articles[second], field).strip()
+        ]
+        weight_total = sum(weight for weight, _ in available)
+        scores.append(
+            sum(weight * score for weight, score in available) / weight_total
+            if weight_total else 0.0
+        )
+    return scores
+
 
 def score_pair(
     first: Article,
