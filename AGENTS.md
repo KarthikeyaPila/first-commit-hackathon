@@ -47,6 +47,25 @@ Branch: main
 
 Latest pushed commits:
 
+- f0d221d — add expandable feed summaries and tune story headings
+- 8f2ee09 — enlarge state feed cards and site typography
+- 1493cef — enlarge AWS architecture labels and arrows
+- 6cf6ba3 — isolate the pipeline graph from state-wise output
+- f453091 — show minimized state maps in output feeds
+- c6d344e — collapse empty pipeline output until completion
+- 39e3b1f — anchor pipeline exit control in scrollable content
+- 246fc17 — emphasize pipeline actions with matte red controls
+- 30bbebd — balance pipeline header action placement
+- 612cbd6 — place pipeline action in header
+- 327559f — add AWS architecture visualization and explicit pipeline exit
+- b06b36d — expose exact Lambda handlers in architecture UI
+- e8a730a — stack AWS architecture service groups vertically
+- d9dde13 — improve small text readability
+- 57e4d1c — mute pipeline action color
+- 9808725 — make pipeline execution explicit
+- 126665f — polish article reading and national navigation
+- 44ca1d9 — polish press and live national desk
+
 - 872f9fd — visualize live AWS processing pipeline
 - 612e7eb — add Sutradhar printing press interaction
 - 134d4c4 — connect Sutradhar stories to AWS API
@@ -72,7 +91,13 @@ Latest pushed commits:
 
 User-owned untracked files may exist:
 
-- Explore-India.html
+- SUTRADHAR_AWS_pipeline_press_refined.html
+- SUTRADHAR_AWS_pipeline_press_visible.html
+- SUTRADHAR_Sutradhar_pipeline_final.html
+- SUTRADHAR_aws_pipeline_updated.html
+- SUTRADHAR_targeted_fixes.html
+- final.html
+- printer.png
 - error.md
 
 Do not delete, overwrite, or stage those files unless explicitly requested.
@@ -141,6 +166,27 @@ research and development packages are optional dependencies in pyproject.toml.
   persisted telemetry; it does not use a local progress timer. `final.html` and
   root mockups remain untouched references.
   The older `frontend/` rewrite is not the source of truth for the current UI.
+
+### Current frontend behavior
+
+- The press opens the pipeline without starting a run. `RUN PIPELINE` is an
+  explicit action and starts `POST /process`; the button is matte YouTube red.
+- The pipeline remains open after completion. `EXIT PIPELINE` is a large,
+  centered, in-flow control at the bottom of the scrollable pipeline panel.
+- Pipeline output is hidden while queued/running and appears after completion.
+  State cards contain larger minimized silhouettes, names, and counts; the
+  large India thumbnail in that output is intentionally hidden.
+- The AWS architecture panel has horizontal service groups with vertically
+  stacked boxes: Entry, Compute, and Persistence. It displays exact handlers
+  `first_commit.lambda_handlers.api_handler` and
+  `first_commit.lambda_handlers.processing_handler`. EventBridge is marked
+  disabled, matching the deployed stack.
+- Utility text across the site was enlarged for demo readability. AWS labels
+  and arrows are especially enlarged.
+- State and national cards support seven-line summary truncation with inline
+  `Read more` / `Read less`; story card headlines were slightly reduced.
+- Original article links are clickable in the reader. National News uses the
+  live `/national/stories` endpoint and National → Switch state works.
 
 ## RSS coverage
 
