@@ -31,7 +31,7 @@ def _report_stage(
 def build_global_stories(
     snapshot_path: Path,
     *,
-    max_articles: int = 4000,
+    max_articles: int | None = None,
     max_neighbors_per_source: int = 12,
     max_stories: int = 80,
     use_embeddings: bool = False,
@@ -46,7 +46,8 @@ def build_global_stories(
         key=lambda article: article.published_at.timestamp() if article.published_at else 0,
         reverse=True,
     )
-    articles = articles[:max_articles]
+    if max_articles is not None:
+        articles = articles[:max_articles]
     source_by_id = {source.source_id: source for source in SOURCES}
     articles = [article for article in articles if article.source_id in source_by_id]
     if not articles:

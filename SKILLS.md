@@ -71,7 +71,7 @@ Preserve these invariants:
 - Feed reports include status, feed_health, error, articles_found, and cap.
 - active=False sources are skipped during normal ingestion.
 - High-volume national feeds generally cap at 100; normal feeds at 50.
-- Clustering ceiling is 4,000 articles.
+- Clustering processes the full eligible snapshot; bounded sparse neighbor retrieval prevents a dense pair matrix.
 - Do not add an age cutoff without revisiting the original decision.
 - RSS discovery retention and the 48-hour clustering window are separate.
 

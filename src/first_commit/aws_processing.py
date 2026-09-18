@@ -171,7 +171,6 @@ def _build_story_records(
     with _snapshot_file(run_id, articles) as snapshot_path:
         output = build_global_stories(
             snapshot_path,
-            max_articles=4000,
             max_stories=80,
             progress_callback=progress_callback,
         )

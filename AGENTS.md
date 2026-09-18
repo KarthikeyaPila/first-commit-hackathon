@@ -111,7 +111,7 @@ research and development packages are optional dependencies in pyproject.toml.
 - src/first_commit/matching.py: explainable weighted TF-IDF similarity, entities,
   keywords, state, and time.
 - src/first_commit/clustering.py: global story graph clustering and state
-  projections; current ceiling is 4,000 articles. Outputs carry run and
+  projections; There is no fixed article-count ceiling in the sparse grouping path. Outputs carry run and
   algorithm-version metadata. Headline TF-IDF artifacts and
   bounded sparse nearest-neighbor results are cached per snapshot. Candidate
   retrieval avoids a dense article-by-article cosine matrix; weighted pair scoring

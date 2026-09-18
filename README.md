@@ -21,7 +21,7 @@ The AWS backend is deployed in Mumbai (`ap-south-1`) and includes:
 - Parallel RSS ingestion from the active source registry
 - Stable article IDs and GUID -> canonical URL -> content-hash deduplication
 - State routing for 28 states and 8 Union Territories
-- Sparse nearest-neighbor retrieval for up to 4,000 articles
+- Sparse nearest-neighbor retrieval across the full eligible snapshot
 - Explainable weighted TF-IDF matching using headline, summary, lead, entities,
   keywords, source/state signals, and publication time
 - Global story graph clustering with state projections
