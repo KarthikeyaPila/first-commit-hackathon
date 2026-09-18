@@ -185,6 +185,13 @@ def _build_story_records(
             if item.get("url") in article_ids_by_url
         ]
         enriched = {**story, "article_ids": article_ids}
+        published_at = [
+            item.get("published_at")
+            for item in story.get("articles", [])
+            if item.get("published_at")
+        ]
+        if published_at:
+            enriched["latest_published_at"] = max(published_at)
         records.append(story_record(enriched, run_id, str(output.get("algorithm_version", "unknown"))))
         for article_id in article_ids:
             records.append(story_membership_record(str(story["story_id"]), run_id, article_id))

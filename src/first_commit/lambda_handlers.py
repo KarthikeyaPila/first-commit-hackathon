@@ -51,6 +51,23 @@ def _latest_completed_run_id(table: Any, projections: list[dict[str, Any]]) -> s
     return latest[1] if latest else None
 
 
+def _with_latest_published_at(table: Any, story: dict[str, Any]) -> dict[str, Any]:
+    """Expose the newest article time even for stories persisted before the field existed."""
+
+    if story.get("latest_published_at"):
+        return story
+    published = []
+    for article_id in story.get("article_ids", []):
+        article = table.get_item(
+            Key={"PK": f"ARTICLE#{article_id}", "SK": "META"}
+        ).get("Item") or {}
+        if article.get("published_at"):
+            published.append(str(article["published_at"]))
+    if published:
+        story["latest_published_at"] = max(published)
+    return story
+
+
 def api_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     """Serve the first read-only health and run-status API endpoints."""
 
@@ -97,6 +114,7 @@ def api_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
             sources = [name for name in story.get("sources", []) if name in national_names]
             if not sources:
                 continue
+            story = _with_latest_published_at(table, story)
             story["sources"] = sources
             story["state"] = "National"
             stories.append(story)
@@ -179,6 +197,7 @@ def api_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
                 Key={"PK": f"STORY#{run_id}#{story_id}", "SK": "META"}
             ).get("Item")
             if story:
+                story = _with_latest_published_at(table, story)
                 story["state"] = state
                 stories.append(story)
         return _response(200, {"state": state, "run_id": latest_run_id, "stories": stories})

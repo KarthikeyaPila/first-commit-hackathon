@@ -106,6 +106,7 @@ def story_record(story: dict[str, Any], run_id: str, algorithm_version: str) -> 
         story_title=story.get("story_title", "Untitled story"),
         states=story.get("states", []),
         article_count=story.get("article_count", 0),
+        latest_published_at=story.get("latest_published_at"),
         sources=story.get("sources", []),
         reasons=story.get("reasons", []),
         article_ids=story.get("article_ids", []),

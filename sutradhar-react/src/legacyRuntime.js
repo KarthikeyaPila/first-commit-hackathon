@@ -1037,15 +1037,22 @@ function escapeHtml(value){
   return String(value ?? "").replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch]));
 }
 
+function formatRetrievedTime(value){
+  if(!value) return "TIME UNAVAILABLE";
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return "TIME UNAVAILABLE";
+  return date.toLocaleString("en-IN", {day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit", hour12:false, timeZone:"Asia/Kolkata"}).replace(",", " ·") + " IST";
+}
+
 function backendStory(summary){
   const sourceNames = (summary.sources || []).join(" · ");
   return {
     cat: "Coverage",
-    date: "LIVE",
+    date: formatRetrievedTime(summary.latest_published_at),
     read: "Compare",
     by: sourceNames || "Sutradhar desk",
     h: summary.story_title || "Untitled story",
-    dek: sourceNames ? "Covered by " + sourceNames + "." : "Grouped coverage from the Sutradhar story graph.",
+    dek: "Grouped coverage from the Sutradhar story graph.",
     body: ["This story is backed by the live Sutradhar story API.", sourceNames ? "Sources: " + sourceNames + "." : "Open the original publisher links to inspect the coverage."],
     articleCount: Math.max(Number(summary.article_count || 0), Array.isArray(summary.article_ids) ? summary.article_ids.length : 0),
     articleIds: Array.isArray(summary.article_ids) ? summary.article_ids : [],
@@ -1058,7 +1065,7 @@ function backendArticle(article){
   const source = article.source?.name || article.source_id || "Sutradhar desk";
   return {
     cat: "Latest feed",
-    date: "LIVE",
+    date: formatRetrievedTime(article.published_at),
     read: "Read original",
     by: source,
     h: article.headline || "Untitled article",
@@ -1177,7 +1184,7 @@ function showReadout(k){
   readout.style.setProperty("--a",s.a);
   roEp.textContent = s.ep;
   roName.innerHTML = s.name;
-  roMeta.textContent = `${INDEX[k]} / ${PAD2}  ·  ${s.cap}  ·  ` +
+  roMeta.textContent = `${s.cap}  ·  ` +
     (isLive(k) ? `${s.stories.length} dispatches` : "not filed yet");
   readout.classList.add("on");
 }
@@ -1659,10 +1666,20 @@ function renderStoriesData(stories,key,limit=12){
 }
 function openNationalReader(st){
   rdKicker.textContent=`National Desk · ${st.cat} · ${st.date}`;
-  rdBody.innerHTML=`<h2>${st.h}</h2><div class="reader-rule"></div><p class="dek">${st.dek}</p>`+
-    st.body.map(p=>`<p class="b">${p}</p>`).join("")+`<p class="reader-note">Demo copy · ${st.by} · ${st.read} read</p>`+
-    `<p class="reader-fine">Written to show how a national dispatch reads inside SUTRADHAR. None of it is real reporting.</p>`;
+  rdBody.innerHTML=`<h2>${escapeHtml(st.h)}</h2><div class="reader-rule"></div>`+
+    (st.kind === "latest" ? articleSummaryMarkup(st.dek) + articleLinkMarkup(st.body[1]) : `<p class="dek">${escapeHtml(st.dek)}</p>` + st.body.map(p=>`<p class="b">${escapeHtml(p)}</p>`).join(""))+
+    `<p class="reader-note">${st.kind === "latest" ? "Latest retrieved article" : "Live comparison"} · ${escapeHtml(st.by)} · ${escapeHtml(st.read)}</p>`;
   reader.setAttribute("data-open","1"); reader.setAttribute("aria-hidden","false"); scrim.setAttribute("data-open","1"); rdBody.scrollTop=0;
+  if(st.api){
+    getStory(st.api.runId, st.api.storyId).then(payload => {
+      const articles = payload.articles || [];
+      rdBody.innerHTML =
+        "<h2>" + escapeHtml(payload.story?.story_title || st.h) + "</h2><div class=\"reader-rule\"></div>" +
+        "<p class=\"dek\">Grouped coverage across " + articles.length + " publisher reports.</p>" +
+        articles.map(article => "<p class=\"b\"><strong>" + escapeHtml(article.source?.name || "Publisher") + "</strong><br>" + escapeHtml(article.headline) + "</p>" + articleSummaryMarkup(article.summary) + articleLinkMarkup(article.url)).join("") +
+        "<p class=\"reader-note\">Live national comparison · Sutradhar story API</p>";
+    }).catch(error => console.warn("Sutradhar national story detail unavailable.", error));
+  }
 }
 
 async function selectNational(){
