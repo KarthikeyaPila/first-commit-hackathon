@@ -14,7 +14,7 @@ from .story_titles import choose_story_title
 
 
 STORY_ALGORITHM_VERSION = "global-story-graph-v1"
-_HEADLINE_MATRIX_CACHE: dict[tuple[str, int, int], object] = {}
+_HEADLINE_MATRIX_CACHE: dict[tuple[str, int, int], tuple[object, object]] = {}
 
 
 def build_global_stories(
@@ -54,14 +54,17 @@ def build_global_stories(
         from sklearn.metrics.pairwise import cosine_similarity
 
         cache_key = (str(snapshot_path.resolve()), snapshot_path.stat().st_mtime_ns, len(articles))
-        headline_matrix = _HEADLINE_MATRIX_CACHE.get(cache_key)
-        if headline_matrix is None:
+        cached = _HEADLINE_MATRIX_CACHE.get(cache_key)
+        if cached is None:
             headline_matrix = TfidfVectorizer(
                 stop_words="english",
                 ngram_range=(1, 2),
             ).fit_transform([article.headline for article in articles])
+            headline_similarities = cosine_similarity(headline_matrix)
             _HEADLINE_MATRIX_CACHE.clear()
-            _HEADLINE_MATRIX_CACHE[cache_key] = headline_matrix
+            _HEADLINE_MATRIX_CACHE[cache_key] = (headline_matrix, headline_similarities)
+        else:
+            headline_matrix, headline_similarities = cached
         use_tfidf = True
     except ImportError:
         use_tfidf = False
@@ -82,29 +85,22 @@ def build_global_stories(
             return True
         return abs((first_time - second_time).total_seconds()) / 3600 <= 48
 
-    def nearest_candidates(index: int, indexes: list[int]) -> list[int]:
-        if use_tfidf and indexes:
-            scores = cosine_similarity(headline_matrix[index], headline_matrix[indexes])[0]
-            ranked = sorted(
-                zip(indexes, scores),
-                key=lambda item: float(item[1]),
-                reverse=True,
-            )
-            return [candidate for candidate, _ in ranked[:max_neighbors_per_source]]
-        return sorted(
-            indexes,
-            key=lambda other: lexical_similarity(articles[index], articles[other]),
-            reverse=True,
-        )[:max_neighbors_per_source]
-
     candidate_pairs: set[tuple[int, int]] = set()
     for index in range(len(articles)):
         for source_id, indexes in source_indexes.items():
             if articles[index].source_id == source_id:
                 continue
-            for other in nearest_candidates(index, [
-                other for other in indexes if time_compatible(index, other)
-            ]):
+            compatible = [other for other in indexes if time_compatible(index, other)]
+            ranked = sorted(
+                compatible,
+                key=lambda other: float(headline_similarities[index, other]),
+                reverse=True,
+            ) if use_tfidf else sorted(
+                compatible,
+                key=lambda other: lexical_similarity(articles[index], articles[other]),
+                reverse=True,
+            )
+            for other in ranked[:max_neighbors_per_source]:
                 candidate_pairs.add(tuple(sorted((index, other))))
 
     pairs = sorted(candidate_pairs)
