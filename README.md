@@ -34,10 +34,11 @@ The AWS backend is deployed in Mumbai (`ap-south-1`) and includes:
 - Disabled-by-default hourly EventBridge rule
 - Cached NIFTY 50, Sensex, USD/INR, gold, and silver market context
 
-The frontend is still the next major phase. The intended Sutradhar experience
-will connect an India map to a MERIDIAN-style printing press, let the user
-"look inside" the machine, animate the real processing graph, and return
-processed stories to the state map.
+The React/Vite frontend foundation is now implemented. It recreates the editorial
+map and printing-press experience, loads market context and state stories from
+the deployed API, displays article comparison cards, and exposes the live
+twelve-stage processing telemetry with the AWS infrastructure lane. Frontend
+hosting and final visual polish remain.
 
 ## Repository layout
 
@@ -57,7 +58,13 @@ src/first_commit/
   aws_processing.py      AWS processing pipeline
   lambda_handlers.py     AWS API and processing handlers
   server.py             Local verification API/UI server
+frontend/                React/TypeScript/Vite Sutradhar frontend
+  src/components/         map, press, story, pipeline, and AWS views
+  src/lib/                typed API client and response models
+  src/hooks/              market, story, and run-status hooks
+  public/printer.png      uploaded printing press asset
 web/index.html           Current helper UI
+final.html               untouched visual reference/mockup
 infra/template.yaml      SAM/CloudFormation deployment
 tests/                   Automated tests
 docs/                    Product, resource, registry, and checkpoint records
@@ -159,14 +166,35 @@ is `karthikeya-pila` in `ap-south-1`.
 The hourly EventBridge rule exists but is explicitly disabled. Do not enable it
 until hourly cost and failure behavior are deliberately accepted.
 
-## Next implementation phase
+## Frontend development
 
-1. Add state fallback coverage for recent unmatched articles.
-2. Build the Sutradhar homepage around the India map and printing press.
-3. Connect the real `/runs/{run_id}` stage telemetry to the animated pipeline.
-4. Return completed story outputs to the map and state feeds.
-5. Add story comparison and market context presentation.
-6. Deploy the frontend to AWS and run the final multi-source demo.
+Run the new frontend locally:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Optional environment variable:
+
+```text
+VITE_API_BASE_URL=https://nechnrnjk0.execute-api.ap-south-1.amazonaws.com
+```
+
+The current frontend supports:
+
+1. Editorial India map with keyboard-accessible state selection.
+2. Live market ticker from `/market`.
+3. State stories from `/states/{state}/stories`.
+4. Story detail and article comparison cards.
+5. Original headlines, publisher names, RSS descriptions when present, timestamps, and original links.
+6. Interactive uploaded printing press at `/printer.png`.
+7. Live `/process` trigger and `/runs/{run_id}` polling.
+8. Twelve real processing stages and truthful AWS infrastructure nodes.
+
+Remaining frontend work is state-output highlighting after a completed run,
+visual polish/responsive review, and static hosting against the deployed API.
 
 ## Handoff rules
 

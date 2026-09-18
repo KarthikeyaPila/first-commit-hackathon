@@ -1,6 +1,6 @@
 # Sutradhar Frontend Conversion Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Convert the approved `final.html` visual concept into a maintainable React/TypeScript/Vite frontend that uses real Sutradhar APIs, the uploaded `printer.png`, and live AWS processing telemetry.
 
@@ -43,24 +43,24 @@
 - `App` renders the homepage shell and receives no backend data directly.
 - CSS tokens expose the reference palette, typography, spacing, and motion curves.
 
-- [ ] **Step 1: Write the Vite package and TypeScript configuration.**
+- [x] **Step 1: Write the Vite package and TypeScript configuration.**
 
 Use React 18+, TypeScript, Vite, and Framer Motion. Define scripts `dev`, `build`, and `preview`.
 
-- [ ] **Step 2: Create the root app and global visual tokens.**
+- [x] **Step 2: Create the root app and global visual tokens.**
 
 Port the reference variables for ink, ivory, paper, brass/red accent, display/sans/mono font stacks, focus rings, and reduced-motion behavior.
 
-- [ ] **Step 3: Copy the press asset without editing the source.**
+- [x] **Step 3: Copy the press asset without editing the source.**
 
 The frontend must reference `/printer.png`; the repository-root `printer.png` remains the source asset.
 
-- [ ] **Step 4: Run the first frontend build.**
+- [x] **Step 4: Run the first frontend build.**
 
 Run: `cd frontend && npm install && npm run build`
 Expected: Vite produces `frontend/dist/` without TypeScript errors.
 
-- [ ] **Step 5: Commit the shell.**
+- [x] **Step 5: Commit the shell.**
 
 ```bash
 git add frontend .gitignore
@@ -83,27 +83,27 @@ git commit -m "feat: scaffold Sutradhar frontend"
 - `MarketTicker({ items, loading })` renders market values supplied by the parent.
 - `MapHome({ onSelectState, onOpenPress })` composes the ticker, masthead, map, editorial flanks, and press section trigger.
 
-- [ ] **Step 1: Extract state identifiers and display metadata from the reference map model.**
+- [x] **Step 1: Extract state identifiers and display metadata from the reference map model.**
 
 Preserve state labels, accent colors, and state IDs; do not copy hardcoded story bodies. Mark unsupported or unavailable states as empty rather than inventing stories.
 
-- [ ] **Step 2: Render the map as an inline SVG component.**
+- [x] **Step 2: Render the map as an inline SVG component.**
 
 Port the existing map geometry/data into a typed module or preserve it as a static SVG asset. Add keyboard-focusable state regions, visible hover/focus states, and selected-state styling.
 
-- [ ] **Step 3: Recreate the ticker, masthead, ghost wordmark, and flanking editorial copy.**
+- [x] **Step 3: Recreate the ticker, masthead, ghost wordmark, and flanking editorial copy.**
 
 Use the reference layout and typography but remove hardcoded market values.
 
-- [ ] **Step 4: Add responsive and reduced-motion behavior.**
+- [x] **Step 4: Add responsive and reduced-motion behavior.**
 
 The map must remain usable on narrow screens; decorative animations must stop under `prefers-reduced-motion`.
 
-- [ ] **Step 5: Build and visually inspect the homepage.**
+- [x] **Step 5: Build and visually inspect the homepage.**
 
 Run `npm run build`, open the Vite preview, and compare the map composition against `final.html`.
 
-- [ ] **Step 6: Commit the homepage slice.**
+- [x] **Step 6: Commit the homepage slice.**
 
 ```bash
 git add frontend
@@ -130,31 +130,31 @@ git commit -m "feat: recreate Sutradhar editorial map"
 - `getStory(storyId: string): Promise<StoryResponse>` and `getStoryComparisons(storyId: string): Promise<ComparisonResponse>` call the story endpoints.
 - Article cards render `{ headline, source, description?, published_at?, url }`.
 
-- [ ] **Step 1: Define TypeScript response types from the existing Lambda/API payloads.**
+- [x] **Step 1: Define TypeScript response types from the existing Lambda/API payloads.**
 
 Model loading/error states explicitly; do not use `any` for API responses.
 
-- [ ] **Step 2: Implement the API client and hooks.**
+- [x] **Step 2: Implement the API client and hooks.**
 
 Use abortable requests and expose `{ data, loading, error, reload }`. Do not place AWS credentials in the browser.
 
-- [ ] **Step 3: Replace hardcoded story data with state story responses.**
+- [x] **Step 3: Replace hardcoded story data with state story responses.**
 
 Selecting a state opens the story panel; a state with no grouped stories gets a clear empty state and does not display fabricated content.
 
-- [ ] **Step 4: Build story and article comparison cards.**
+- [x] **Step 4: Build story and article comparison cards.**
 
 Show original headline, publisher/source, short RSS description when present, publication time, and a direct external link. Preserve source attribution.
 
-- [ ] **Step 5: Add API loading and failure UI.**
+- [x] **Step 5: Add API loading and failure UI.**
 
 Use finite states such as `Loading stories`, `No grouped stories yet`, and `Unable to load stories`. Never leave an indefinite spinner.
 
-- [ ] **Step 6: Build and test the API-connected UI with a configured API base.**
+- [x] **Step 6: Build and test the API-connected UI with a configured API base.**
 
 Run `VITE_API_BASE_URL=https://nechnrnjk0.execute-api.ap-south-1.amazonaws.com npm run build`.
 
-- [ ] **Step 7: Commit the data-connected story view.**
+- [x] **Step 7: Commit the data-connected story view.**
 
 ```bash
 git add frontend
@@ -173,19 +173,19 @@ git commit -m "feat: connect Sutradhar stories to AWS API"
 - `PrintingPress({ onLookInside, processing })` renders `/printer.png`, hover/focus copy, and a click target.
 - `PressTransition({ open, onClose, children })` controls the transition into the internal pipeline view.
 
-- [ ] **Step 1: Place `printer.png` in the press section.**
+- [x] **Step 1: Place `printer.png` in the press section.**
 
 Preserve the reference press section’s bridge wires and “LOOK INSIDE” interaction, replacing the old embedded image with the uploaded asset.
 
-- [ ] **Step 2: Add keyboard and touch interaction.**
+- [x] **Step 2: Add keyboard and touch interaction.**
 
 The press must be reachable by keyboard and usable without hover on touch devices.
 
-- [ ] **Step 3: Add a reduced-motion transition.**
+- [x] **Step 3: Add a reduced-motion transition.**
 
 Use a simple opacity/position transition when reduced motion is enabled.
 
-- [ ] **Step 4: Commit the press slice.**
+- [x] **Step 4: Commit the press slice.**
 
 ```bash
 git add frontend
@@ -209,31 +209,31 @@ git commit -m "feat: add Sutradhar printing press interaction"
 - `ProcessingPipeline({ stages, onComplete })` renders the twelve real stages.
 - `AwsInfrastructure({ activeStage })` renders truthful API Gateway, Lambda, DynamoDB, EventBridge, and SQS relationships.
 
-- [ ] **Step 1: Model the twelve backend stages and status values.**
+- [x] **Step 1: Model the twelve backend stages and status values.**
 
 Use `QUEUED`, `RUNNING`, `COMPLETE`, `FAILED`, and `SKIPPED`; map stage metrics directly from the API.
 
-- [ ] **Step 2: Implement manual processing and bounded polling.**
+- [x] **Step 2: Implement manual processing and bounded polling.**
 
 Start a run from the frontend, poll with a finite interval, stop on completion/failure, and show the last known status if polling fails.
 
-- [ ] **Step 3: Render product pipeline nodes and SVG wires.**
+- [x] **Step 3: Render product pipeline nodes and SVG wires.**
 
 Use real stage metrics and animate only the active wire/particle. Do not generate fake durations or fake counts.
 
-- [ ] **Step 4: Render the AWS infrastructure lane.**
+- [x] **Step 4: Render the AWS infrastructure lane.**
 
 Show API Gateway -> API Lambda -> Processing Lambda -> DynamoDB, with EventBridge as a disabled scheduled trigger and SQS as the failure path. Label the schedule as disabled.
 
-- [ ] **Step 5: Flow completed output back into the map.**
+- [x] **Step 5: Flow completed output back into the map.**
 
 Use returned state projections to highlight only states with actual output. Selecting a highlighted state opens its real stories.
 
-- [ ] **Step 6: Add failure, empty, and retry presentation.**
+- [x] **Step 6: Add failure, empty, and retry presentation.**
 
 Show the failing stage and persisted error information when available; provide a retry action that starts a new run.
 
-- [ ] **Step 7: Commit the telemetry pipeline.**
+- [x] **Step 7: Commit the telemetry pipeline.**
 
 ```bash
 git add frontend

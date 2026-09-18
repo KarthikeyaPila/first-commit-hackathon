@@ -47,6 +47,10 @@ Branch: main
 
 Latest pushed commits:
 
+- 872f9fd — visualize live AWS processing pipeline
+- 612e7eb — add Sutradhar printing press interaction
+- 134d4c4 — connect Sutradhar stories to AWS API
+- 5471303 — recreate Sutradhar editorial map
 - 4b43586 — soften publication time matching
 - 4d2b65c — process full article snapshots
 - 7f5cf50 — refresh Sutradhar project handoff
@@ -129,8 +133,10 @@ research and development packages are optional dependencies in pyproject.toml.
   GET routes: /, /api/benchmark, /api/feeds, /api/state-sources, /api/stories.
   POST routes: /api/candidates/label, /api/benchmark/label, /api/ingest.
   Story results are cached by snapshot modification time.
-- web/index.html: basic ingestion, source/state, candidate-labeling, and
-  story-card UI. Keep backend status real; do not use fake loading animation.
+- web/index.html: basic local helper UI. Keep backend status real; do not use fake loading animation.
+- frontend/: React/TypeScript/Vite Sutradhar frontend. `IndiaMap`, `PrintingPress`,
+  `StateStoryPanel`, `ProcessingPipeline`, and `AwsInfrastructure` use the real
+  API shapes; `final.html` and root mockups remain untouched references.
 
 ## RSS coverage
 
@@ -247,7 +253,7 @@ or translation.
 
 ## Exact current resume point
 
-The current project name is **Sutradhar**. The deployed AWS backend is complete through processing, persistence, API comparison views, retries, failure capture, detailed stage telemetry, and market context. The next implementation is the frontend/control-system experience: India map -> printing press -> real twelve-stage pipeline -> state-wise story output, followed by frontend hosting/polish. The hourly EventBridge schedule must remain disabled unless the operator deliberately enables it.
+The current project name is **Sutradhar**. The deployed AWS backend is complete through processing, persistence, API comparison views, retries, failure capture, detailed stage telemetry, and market context. The frontend/control-system experience is now implemented locally: India map -> printing press -> real twelve-stage pipeline -> AWS infrastructure -> API-backed stories. Remaining work is state-output highlighting, visual polish, and frontend hosting. The hourly EventBridge schedule must remain disabled unless the operator deliberately enables it.
 
 The market endpoint covers NIFTY 50, Sensex, USD/INR, gold, and silver. Gold and silver are converted from USD per troy ounce to INR per 10 grams. The current automated suite has 31 passing tests.
 

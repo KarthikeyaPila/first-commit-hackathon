@@ -137,7 +137,7 @@ For loading/story-card issues:
 - Keep state headings first-class.
 - Show source, scope, state, language, freshness, and error information where
   useful.
-- Preserve plain HTML/CSS/JavaScript unless a framework is justified.
+- The React/TypeScript/Vite frontend is now the justified framework path; preserve the basic helper UI separately.
 - Never add political-bias labels.
 
 ## Story-title skill
