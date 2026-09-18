@@ -1601,8 +1601,8 @@ async function selectNational(){
    ============================================================ */
 async function select(key){
   if(busy) return;
-  hydrateState(key);
   if(statePage.getAttribute("data-open") === "1"){ await switchTo(key); return; }
+  await hydrateState(key);
   busy = true;
   readout.classList.remove("on");
   document.documentElement.style.setProperty("--c",STATES[key].a);
@@ -1661,13 +1661,13 @@ async function backToIndia(){
 async function switchTo(key){
   if(key === "__back__"){ await backToIndia(); return; }
   if(busy) return;
+  await hydrateState(key);
   if(!isLive(key)){
     document.documentElement.style.setProperty("--c",STATES[key].a);
     openSoon(key);
     return;
   }
   if(key === current) return;
-  hydrateState(key);
   busy = true;
   closeReader();
   curtain.style.background = STATES[key].a;
