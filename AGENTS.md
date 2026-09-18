@@ -92,7 +92,9 @@ research and development packages are optional dependencies in pyproject.toml.
 - src/first_commit/lambda_handlers.py: AWS API and asynchronous processing Lambda
   entry points for health, run status, and manual latest-news triggers.
 - infra/template.yaml: deployed SAM/CloudFormation stack for DynamoDB, HTTP API,
-  API-to-processor invocation, stories index, and processing Lambda in ap-south-1.
+  API-to-processor invocation, stories index, processing Lambda, hourly schedule,
+  and retained SQS failure queue in ap-south-1. The schedule is explicitly disabled
+  by default; async failures retry twice before going to the queue.
 - src/first_commit/state_routing.py: state signals and support for 28 states plus
   8 Union Territories.
 - src/first_commit/matching.py: explainable weighted TF-IDF similarity, entities,
@@ -186,8 +188,8 @@ AWS is mandatory for the finished project.
 The initial foundation and real ingestion trigger are deployed in ap-south-1;
 story persistence, the first stories API, and AWS TF-IDF packaging are deployed;
 state and comparison APIs are deployed; the helper UI can connect to the AWS
-API, poll runs, and render comparison cards. Remaining work is scheduling and
-frontend hosting/polish.
+API, poll runs, and render comparison cards. Retries, failure capture, and the disabled-by-default hourly schedule are now
+deployed. Remaining work is frontend hosting/polish and optional schedule activation.
 
 Credential safety is non-negotiable:
 
@@ -255,8 +257,10 @@ Generated snapshots, labels, model caches, and raw captures are ignored.
 - Inspect API payloads and cache behavior before changing the UI.
 - Treat DEVELOPMENT_CHECKPOINTS.md as a local tracker, not something to blindly
   stage.
-- Continue with the AWS story/API phase. Ingestion and run status are deployed;
-  next persist story outputs, add state/story comparison endpoints, and schedule runs.
+- Continue with AWS frontend hosting/polish. Story persistence, state/comparison
+  APIs, retries, failure capture, and the disabled-by-default hourly rule are deployed.
+  Enable the rule only after an operator deliberately accepts hourly processing and
+  its cost.
   Multilingual matching is deliberately deferred; feed-health history and
   frontend work remain later follow-up options.
 

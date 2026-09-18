@@ -170,9 +170,13 @@ Implement in this order:
 2. Idempotent ingestion and processing.
 3. Source health and run status.
 4. Model/embedding loading strategy suitable for Lambda.
-5. Timeout, retry, and partial-failure handling.
+5. Timeout, retry, and partial-failure handling. The deployed processing Lambda
+   retries asynchronous failures twice within one hour; exhausted events go to a
+   retained SQS queue. The EventBridge rule is explicitly disabled by default.
 6. Story/state/comparison/run APIs.
-7. Hourly EventBridge schedule.
+7. Hourly EventBridge schedule. The rule exists in the deployed SAM stack with
+   `rate(1 hour)` but is disabled by default; enable it deliberately only after
+   cost and failure monitoring are accepted.
    Story records now use RunStoriesIndex for run-scoped API queries, and state
    projections are queryable through /states/{state}/stories.
 8. Thin vertical deployment with a small source set.

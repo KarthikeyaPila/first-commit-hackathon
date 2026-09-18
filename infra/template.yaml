@@ -86,6 +86,25 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
+  ProcessingFailureQueue:
+    Type: AWS::SQS::Queue
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: dead-letter destination for exhausted asynchronous processing retries
+        must:
+          - retain failure messages for debugging
+          - never contain credentials or raw secrets
+        mutable: change-with-constraints
+    Properties:
+      MessageRetentionPeriod: 1209600
+      Tags:
+        - Key: Project
+          Value: first-commit-news
+        - Key: Environment
+          Value: !Ref Environment
+
   HttpApi:
     Type: AWS::Serverless::HttpApi
     Metadata:
@@ -185,9 +204,26 @@ Resources:
       Handler: first_commit.lambda_handlers.processing_handler
       Timeout: 900
       MemorySize: 2048
+      EventInvokeConfig:
+        MaximumEventAgeInSeconds: 3600
+        MaximumRetryAttempts: 2
+        DestinationConfig:
+          OnFailure:
+            Type: SQS
+            Destination: !GetAtt ProcessingFailureQueue.Arn
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref NewsTable
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt ProcessingFailureQueue.QueueName
+      Events:
+        HourlySchedule:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 hour)
+            # Intentionally disabled until the operator explicitly enables the rule.
+            Enabled: false
+            Input: '{"source":"eventbridge","detail-type":"hourly-process"}'
 
 Outputs:
   ApiUrl:
@@ -197,5 +233,8 @@ Outputs:
     Description: DynamoDB table name for project records.
     Value: !Ref NewsTable
   ProcessingFunctionName:
-    Description: Lambda function reserved for RSS processing.
+    Description: Lambda function used for RSS processing.
     Value: !Ref ProcessingFunction
+  ProcessingFailureQueueName:
+    Description: SQS dead-letter queue for exhausted processing retries.
+    Value: !GetAtt ProcessingFailureQueue.QueueName
