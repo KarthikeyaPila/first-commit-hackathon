@@ -169,7 +169,8 @@ Implement in this order:
    adapter and the deployed processor both use the same record contract.
 2. Idempotent ingestion and processing.
 3. Source health and run status.
-4. Model/embedding loading strategy suitable for Lambda.
+4. Keep the deployed weighted TF-IDF path explainable and Lambda-suitable;
+   embeddings remain a separate future experiment, not a live UI stage.
 5. Timeout, retry, and partial-failure handling. The deployed processing Lambda
    retries asynchronous failures twice within one hour; exhausted events go to a
    retained SQS queue. The EventBridge rule is explicitly disabled by default.

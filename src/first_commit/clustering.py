@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from pathlib import Path
+from typing import Any, Callable
 
 from .benchmark import load_snapshot, load_snapshot_metadata, lexical_similarity
 from .matching import score_pair, weighted_tfidf_similarities
@@ -17,6 +18,16 @@ STORY_ALGORITHM_VERSION = "global-story-graph-v2-sparse-retrieval"
 _HEADLINE_MATRIX_CACHE: dict[tuple[str, int, int], tuple[object, object, object, object]] = {}
 
 
+def _report_stage(
+    callback: Callable[[str, str, dict[str, Any]], None] | None,
+    stage_id: str,
+    status: str,
+    metrics: dict[str, Any] | None = None,
+) -> None:
+    if callback is not None:
+        callback(stage_id, status, metrics or {})
+
+
 def build_global_stories(
     snapshot_path: Path,
     *,
@@ -24,6 +35,7 @@ def build_global_stories(
     max_neighbors_per_source: int = 12,
     max_stories: int = 80,
     use_embeddings: bool = False,
+    progress_callback: Callable[[str, str, dict[str, Any]], None] | None = None,
 ) -> dict[str, object]:
     """Build global story clusters, then project their articles to states."""
 
@@ -38,6 +50,12 @@ def build_global_stories(
     source_by_id = {source.source_id: source for source in SOURCES}
     articles = [article for article in articles if article.source_id in source_by_id]
     if not articles:
+        for stage_id in (
+            "tfidf_vectorization", "neighbor_retrieval",
+            "weighted_tfidf_scoring", "keyword_entity_signals",
+            "graph_clustering", "rank_stories",
+        ):
+            _report_stage(progress_callback, stage_id, "SKIPPED", {"reason": "no eligible articles"})
         return {
             "stories": [],
             "articles_considered": 0,
@@ -49,6 +67,7 @@ def build_global_stories(
             "run_config": snapshot_metadata.get("run_config", {}),
         }
 
+    _report_stage(progress_callback, "tfidf_vectorization", "RUNNING", {"documents": len(articles)})
     try:
         from sklearn.feature_extraction.text import TfidfVectorizer
         from sklearn.neighbors import NearestNeighbors
@@ -84,9 +103,16 @@ def build_global_stories(
         else:
             headline_matrix, headline_distances, headline_neighbors, neighbor_count = cached
         use_tfidf = True
+        _report_stage(
+            progress_callback,
+            "tfidf_vectorization",
+            "COMPLETE",
+            {"documents": len(articles), "features": int(headline_matrix.shape[1]), "cached": cached is not None},
+        )
     except ImportError:
         use_tfidf = False
         headline_matrix = None
+        _report_stage(progress_callback, "tfidf_vectorization", "SKIPPED", {"reason": "scikit-learn unavailable"})
 
     source_indexes = {
         source_id: [
@@ -104,6 +130,7 @@ def build_global_stories(
         return abs((first_time - second_time).total_seconds()) / 3600 <= 48
 
     candidate_pairs: set[tuple[int, int]] = set()
+    _report_stage(progress_callback, "neighbor_retrieval", "RUNNING", {"articles": len(articles)})
     if use_tfidf:
         # Walk a bounded global neighbor list instead of materializing the full
         # article-by-article cosine matrix. Retain up to the configured number
@@ -139,16 +166,20 @@ def build_global_stories(
                 for other in ranked[:max_neighbors_per_source]:
                     candidate_pairs.add(tuple(sorted((index, other))))
 
+    _report_stage(progress_callback, "neighbor_retrieval", "COMPLETE", {"candidate_pairs": len(candidate_pairs)})
     pairs = sorted(candidate_pairs)
+    _report_stage(progress_callback, "weighted_tfidf_scoring", "RUNNING", {"candidate_pairs": len(pairs)})
     try:
         text_scores = weighted_tfidf_similarities(articles, pairs)
         score_method = "weighted TF-IDF"
+        _report_stage(progress_callback, "weighted_tfidf_scoring", "COMPLETE", {"pairs": len(pairs), "method": score_method})
     except RuntimeError:
         text_scores = [
             lexical_similarity(articles[first], articles[second])
             for first, second in pairs
         ]
         score_method = "lexical fallback"
+        _report_stage(progress_callback, "weighted_tfidf_scoring", "SKIPPED", {"pairs": len(pairs), "method": score_method})
 
     semantic_scores: list[float | None] = [None] * len(pairs)
     embeddings = None
@@ -191,6 +222,7 @@ def build_global_stories(
         if first_root != second_root:
             parents[second_root] = first_root
 
+    _report_stage(progress_callback, "keyword_entity_signals", "RUNNING", {"pairs": len(pairs)})
     for (first, second), text_score, semantic_score in zip(
         pairs, text_scores, semantic_scores
     ):
@@ -222,6 +254,8 @@ def build_global_stories(
                 "second_url": articles[second].url,
             })
 
+    _report_stage(progress_callback, "keyword_entity_signals", "COMPLETE", {"matches": decision_counts["MATCH"], "candidates": decision_counts["CANDIDATE"], "new_stories": decision_counts["NEW_STORY"]})
+    _report_stage(progress_callback, "graph_clustering", "RUNNING", {"matched_edges": len(edges)})
     groups: dict[int, list[int]] = defaultdict(list)
     for index in range(len(articles)):
         groups[find(index)].append(index)
@@ -268,7 +302,10 @@ def build_global_stories(
             ],
         })
 
+    _report_stage(progress_callback, "graph_clustering", "COMPLETE", {"connected_components": len(groups), "matched_edges": len(edges)})
+    _report_stage(progress_callback, "rank_stories", "RUNNING", {"stories": len(stories)})
     stories.sort(key=lambda story: (story["article_count"], story["sources"]), reverse=True)
+    _report_stage(progress_callback, "rank_stories", "COMPLETE", {"stories": len(stories), "visible_stories": min(len(stories), max_stories)})
     review_candidates.sort(key=lambda candidate: candidate["score"], reverse=True)
     visible_stories = stories[:max_stories]
     return {

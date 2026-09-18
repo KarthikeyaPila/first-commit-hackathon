@@ -1,16 +1,20 @@
-"""Pipeline stage boundaries for the first research iteration."""
+"""Actual processing stages emitted to the run-status API and UI."""
 
 
 def pipeline_stages() -> tuple[str, ...]:
-    """Return the planned stages in execution order."""
+    """Return only stages executed by the current deployed pipeline."""
 
     return (
-        "fetch_rss",
-        "extract_articles",
+        "fetch_sources",
+        "parse_articles",
         "normalize_articles",
-        "classify_state",
-        "classify_genre",
-        "generate_embeddings",
-        "cluster_stories",
-        "write_outputs",
+        "deduplicate_articles",
+        "classify_states",
+        "tfidf_vectorization",
+        "neighbor_retrieval",
+        "weighted_tfidf_scoring",
+        "keyword_entity_signals",
+        "graph_clustering",
+        "rank_stories",
+        "persist_outputs",
     )

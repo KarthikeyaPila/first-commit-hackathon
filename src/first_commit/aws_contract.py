@@ -40,6 +40,8 @@ def run_record(run: dict[str, Any]) -> dict[str, Any]:
         error=run.get("error"),
         story_count=run.get("story_count", 0),
         grouping_summary=run.get("grouping_summary", {}),
+        current_stage=run.get("current_stage"),
+        stage_progress=run.get("stage_progress", []),
     )
 
 

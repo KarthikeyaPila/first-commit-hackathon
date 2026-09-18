@@ -24,10 +24,10 @@ def test_clustering_text_uses_headline_summary_and_lead() -> None:
 def test_pipeline_stages_are_explicit_and_ordered() -> None:
     stages = pipeline_stages()
 
-    assert stages[0] == "fetch_rss"
-    assert stages[-1] == "write_outputs"
-    assert "generate_embeddings" in stages
-    assert "cluster_stories" in stages
+    assert stages[0] == "fetch_sources"
+    assert stages[-1] == "persist_outputs"
+    assert "tfidf_vectorization" in stages
+    assert "generate_embeddings" not in stages
 
 
 def test_rss_parser_extracts_article_metadata() -> None:
@@ -237,6 +237,11 @@ def test_aws_processor_persists_articles_and_is_idempotent(monkeypatch) -> None:
 
     assert result["status"] == "completed"
     assert result["articles_unique"] == 1
+    assert result["current_stage"] == "persist_outputs"
+    stages = {stage["stage_id"]: stage for stage in result["stage_progress"]}
+    assert stages["tfidf_vectorization"]["status"] == "SKIPPED"
+    assert stages["tfidf_vectorization"]["metrics"]["reason"] == "no eligible articles"
+    assert stages["persist_outputs"]["status"] == "COMPLETE"
     assert table.items[("ARTICLE#" + article.article_id, "META")]["candidate_states"] == ["Kerala"]
     assert aws_processing.process_latest_news(table, {"run_id": "run-test"})["status"] == "completed"
 
@@ -267,11 +272,14 @@ def test_story_clustering_groups_a_clear_cross_source_event(tmp_path) -> None:
     snapshot = tmp_path / "snapshot.json"
     save_snapshot(articles, snapshot, run_id="run-test-story")
 
-    result = build_global_stories(snapshot)
+    progress = []
+    result = build_global_stories(snapshot, progress_callback=lambda stage, status, metrics: progress.append((stage, status, metrics)))
 
     assert result["story_count"] == 1
     assert result["matched_edges"] == 1
     assert result["stories"][0]["article_count"] == 2
+    completed = {stage for stage, status, _metrics in progress if status == "COMPLETE"}
+    assert {"tfidf_vectorization", "neighbor_retrieval", "weighted_tfidf_scoring", "keyword_entity_signals", "graph_clustering", "rank_stories"} <= completed
 
 
 def test_lambda_state_directory_and_state_story_validation() -> None:
