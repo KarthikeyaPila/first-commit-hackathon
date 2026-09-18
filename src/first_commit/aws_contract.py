@@ -38,6 +38,8 @@ def run_record(run: dict[str, Any]) -> dict[str, Any]:
         run_config=run.get("run_config", {}),
         feeds=run.get("feeds", []),
         error=run.get("error"),
+        story_count=run.get("story_count", 0),
+        grouping_summary=run.get("grouping_summary", {}),
     )
 
 
@@ -78,6 +80,10 @@ def story_record(story: dict[str, Any], run_id: str, algorithm_version: str) -> 
         states=story.get("states", []),
         article_count=story.get("article_count", 0),
         sources=story.get("sources", []),
+        reasons=story.get("reasons", []),
+        article_ids=story.get("article_ids", []),
+        GSI1PK=f"RUN#{run_id}",
+        GSI1SK=f"STORY#{story_id}",
     )
 
 

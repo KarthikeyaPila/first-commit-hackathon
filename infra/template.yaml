@@ -62,6 +62,19 @@ Resources:
           AttributeType: S
         - AttributeName: SK
           AttributeType: S
+        - AttributeName: GSI1PK
+          AttributeType: S
+        - AttributeName: GSI1SK
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: RunStoriesIndex
+          KeySchema:
+            - AttributeName: GSI1PK
+              KeyType: HASH
+            - AttributeName: GSI1SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
       KeySchema:
         - AttributeName: PK
           KeyType: HASH
@@ -132,6 +145,12 @@ Resources:
             ApiId: !Ref HttpApi
             Path: /process
             Method: POST
+        Stories:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /stories/{run_id}
+            Method: GET
 
   ProcessingFunction:
     Type: AWS::Serverless::Function

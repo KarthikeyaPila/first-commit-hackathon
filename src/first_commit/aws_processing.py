@@ -3,12 +3,23 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from datetime import datetime, timezone
+import json
 import os
+from pathlib import Path
+import tempfile
 from typing import Any
 import uuid
 
-from .aws_contract import article_record, run_record
+from .aws_contract import (
+    article_record,
+    run_record,
+    state_story_record,
+    story_membership_record,
+    story_record,
+)
+from .clustering import build_global_stories
 from .dedupe import deduplicate_articles
 from .feeds import fetch_source
 from .models import Article
@@ -63,6 +74,55 @@ def _write_records(table: Any, records: list[dict[str, Any]]) -> None:
             batch.put_item(Item=record)
 
 
+@contextmanager
+def _snapshot_file(run_id: str, articles: list[Article]):
+    payload = {
+        "run_id": run_id,
+        "run_config": {},
+        "articles": [_serialize_article(article) for article in articles],
+    }
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".json", prefix="first-commit-", delete=False
+    ) as handle:
+        json.dump(payload, handle, ensure_ascii=False)
+        path = Path(handle.name)
+    try:
+        yield path
+    finally:
+        path.unlink(missing_ok=True)
+
+
+def _build_story_records(
+    run_id: str, articles: list[Article]
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    with _snapshot_file(run_id, articles) as snapshot_path:
+        output = build_global_stories(snapshot_path, max_articles=4000, max_stories=80)
+    article_ids_by_url = {article.url: article.article_id for article in articles}
+    records: list[dict[str, Any]] = []
+    for story in output.get("stories", []):
+        story_articles = story.get("articles", [])
+        article_ids = [
+            article_ids_by_url[item["url"]]
+            for item in story_articles
+            if item.get("url") in article_ids_by_url
+        ]
+        enriched = {**story, "article_ids": article_ids}
+        records.append(story_record(enriched, run_id, str(output.get("algorithm_version", "unknown"))))
+        for article_id in article_ids:
+            records.append(story_membership_record(str(story["story_id"]), run_id, article_id))
+        for state in story.get("states", []):
+            records.append(state_story_record(str(state), run_id, str(story["story_id"])))
+    summary = {
+        key: output.get(key, 0)
+        for key in (
+            "articles_considered", "candidate_pairs", "matched_edges",
+            "matched_groups", "articles_in_groups", "articles_ungrouped",
+        )
+    }
+    summary["matching_method"] = output.get("matching_method")
+    return records, summary
+
+
 def process_latest_news(table: Any, event: dict[str, Any]) -> dict[str, Any]:
     """Fetch active feeds and persist an idempotent run plus article records."""
 
@@ -105,7 +165,8 @@ def process_latest_news(table: Any, event: dict[str, Any]) -> dict[str, Any]:
             payload["candidate_states"] = list(routing.states)
             payload["state_confidence"] = routing.confidence
             article_records.append(article_record(payload, run_id))
-        _write_records(table, article_records)
+        story_records, grouping_summary = _build_story_records(run_id, unique_articles)
+        _write_records(table, article_records + story_records)
 
         completed = {
             **initial,
@@ -115,6 +176,8 @@ def process_latest_news(table: Any, event: dict[str, Any]) -> dict[str, Any]:
             "articles_unique": len(unique_articles),
             "duplicates_removed": duplicates_removed,
             "feeds": reports,
+            "story_count": sum(1 for record in story_records if record.get("entity_type") == "story"),
+            "grouping_summary": grouping_summary,
         }
         table.put_item(Item=run_record(completed))
         return completed

@@ -166,6 +166,8 @@ def test_aws_records_have_stable_single_table_keys() -> None:
 
     assert article["PK"] == "ARTICLE#article-1"
     assert story["PK"] == "STORY#run-1#story-1"
+    assert story["GSI1PK"] == "RUN#run-1"
+    assert story["GSI1SK"] == "STORY#story-1"
     assert membership["SK"] == "ARTICLE#article-1"
     assert projection["PK"] == "STATE#Kerala"
     assert {item["schema_version"] for item in (article, story, membership, projection)} == {"1"}

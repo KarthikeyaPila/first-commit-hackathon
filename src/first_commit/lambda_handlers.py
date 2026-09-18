@@ -53,6 +53,20 @@ def api_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         )
         return _response(202, {"run_id": run_id, "status": "queued"})
 
+    if path.startswith("/stories/"):
+        run_id = path.rsplit("/", 1)[-1]
+        if not run_id or not os.environ.get("TABLE_NAME"):
+            return _response(400, {"error": "run_id is required"})
+        import boto3
+        from boto3.dynamodb.conditions import Key
+
+        table = boto3.resource("dynamodb").Table(os.environ["TABLE_NAME"])
+        result = table.query(
+            IndexName="RunStoriesIndex",
+            KeyConditionExpression=Key("GSI1PK").eq(f"RUN#{run_id}"),
+        )
+        return _response(200, {"run_id": run_id, "stories": result.get("Items", [])})
+
     if path.startswith("/runs/"):
         run_id = path.rsplit("/", 1)[-1]
         if not run_id or not os.environ.get("TABLE_NAME"):
