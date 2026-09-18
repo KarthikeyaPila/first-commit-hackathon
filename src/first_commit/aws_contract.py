@@ -36,6 +36,8 @@ def run_record(run: dict[str, Any]) -> dict[str, Any]:
         articles_unique=run.get("articles_unique", 0),
         duplicates_removed=run.get("duplicates_removed", 0),
         run_config=run.get("run_config", {}),
+        feeds=run.get("feeds", []),
+        error=run.get("error"),
     )
 
 
@@ -57,6 +59,9 @@ def article_record(article: dict[str, Any], run_id: str) -> dict[str, Any]:
         state=article.get("state"),
         genre=article.get("genre"),
         content_hash=article.get("content_hash"),
+        provenance_source_ids=article.get("provenance_source_ids", []),
+        candidate_states=article.get("candidate_states", []),
+        state_confidence=article.get("state_confidence"),
     )
 
 

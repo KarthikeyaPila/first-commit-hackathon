@@ -3,15 +3,23 @@
 from __future__ import annotations
 
 import json
+from decimal import Decimal
 import os
+import uuid
 from typing import Any
+
+
+def _json_default(value: Any) -> int | float | str:
+    if isinstance(value, Decimal):
+        return int(value) if value == value.to_integral_value() else float(value)
+    return str(value)
 
 
 def _response(status_code: int, body: dict[str, Any]) -> dict[str, Any]:
     return {
         "statusCode": status_code,
         "headers": {"Content-Type": "application/json"},
-        "body": json.dumps(body),
+        "body": json.dumps(body, default=_json_default),
     }
 
 
@@ -21,6 +29,29 @@ def api_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     path = event.get("rawPath", "")
     if path == "/health":
         return _response(200, {"ok": True, "service": "first-commit-api"})
+
+    if path == "/process":
+        function_name = os.environ.get("PROCESSOR_FUNCTION_NAME")
+        if not function_name:
+            return _response(500, {"error": "PROCESSOR_FUNCTION_NAME is not configured"})
+        import boto3
+
+        run_id = f"run-{uuid.uuid4().hex}"
+        payload = {"run_id": run_id}
+        raw_body = event.get("body")
+        if raw_body:
+            try:
+                requested = json.loads(raw_body)
+            except (TypeError, json.JSONDecodeError):
+                return _response(400, {"error": "body must be valid JSON"})
+            if isinstance(requested, dict) and isinstance(requested.get("source_ids"), list):
+                payload["source_ids"] = requested["source_ids"]
+        boto3.client("lambda").invoke(
+            FunctionName=function_name,
+            InvocationType="Event",
+            Payload=json.dumps(payload).encode("utf-8"),
+        )
+        return _response(202, {"run_id": run_id, "status": "queued"})
 
     if path.startswith("/runs/"):
         run_id = path.rsplit("/", 1)[-1]
@@ -38,9 +69,18 @@ def api_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
 
 def processing_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
-    """Placeholder entry point until RSS packaging and scheduling are added."""
+    """Run one real RSS ingestion and persist its records in DynamoDB."""
 
-    return _response(501, {
-        "error": "processing pipeline is not deployed yet",
-        "message": "The AWS foundation is deployed before RSS execution is connected.",
-    })
+    table_name = os.environ.get("TABLE_NAME")
+    if not table_name:
+        return _response(500, {"error": "TABLE_NAME is not configured"})
+    import boto3
+
+    from .aws_processing import process_latest_news
+
+    try:
+        result = process_latest_news(boto3.resource("dynamodb").Table(table_name), event or {})
+    except Exception as error:  # noqa: BLE001 - failed runs are persisted for inspection
+        return _response(500, {"error": "processing failed", "detail": str(error)})
+    status = 202 if result.get("status") == "running" else 200
+    return _response(status, result)

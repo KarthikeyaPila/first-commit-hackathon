@@ -192,3 +192,48 @@ def test_lambda_health_handler_is_local_and_json() -> None:
     response = api_handler({"rawPath": "/health"}, None)
     assert response["statusCode"] == 200
     assert '"ok": true' in response["body"]
+
+
+def test_aws_processor_persists_articles_and_is_idempotent(monkeypatch) -> None:
+    from first_commit import aws_processing
+    from first_commit.models import Article
+    from first_commit.sources import Source
+
+    class BatchWriter:
+        def __init__(self, table):
+            self.table = table
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def put_item(self, *, Item):
+            self.table.put_item(Item=Item)
+
+    class FakeTable:
+        def __init__(self):
+            self.items = {}
+
+        def get_item(self, *, Key):
+            return {"Item": self.items.get((Key["PK"], Key["SK"]))}
+
+        def put_item(self, *, Item):
+            self.items[(Item["PK"], Item["SK"])] = Item
+
+        def batch_writer(self):
+            return BatchWriter(self)
+
+    source = Source("test-source", "Test", "STATE", ("Kerala",), "EN", "https://example.test/rss")
+    article = Article(source_id="test-source", url="https://example.test/story", headline="A story")
+    monkeypatch.setattr(aws_processing, "SOURCES", (source,))
+    monkeypatch.setattr(aws_processing, "_fetch_report", lambda _source: ({"source_id": "test-source", "feed_health": "OK", "articles_found": 1, "error": None}, [article]))
+
+    table = FakeTable()
+    result = aws_processing.process_latest_news(table, {"run_id": "run-test"})
+
+    assert result["status"] == "completed"
+    assert result["articles_unique"] == 1
+    assert table.items[("ARTICLE#" + article.article_id, "META")]["candidate_states"] == ["Kerala"]
+    assert aws_processing.process_latest_news(table, {"run_id": "run-test"})["status"] == "completed"

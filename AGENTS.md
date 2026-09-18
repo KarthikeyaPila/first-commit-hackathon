@@ -85,11 +85,10 @@ research and development packages are optional dependencies in pyproject.toml.
   contract for runs, articles, stories, memberships, and state projections.
 - src/first_commit/aws_adapter.py: local adapter that exports completed runs
   and normalized articles in the AWS record shape.
-- src/first_commit/lambda_handlers.py: first AWS API and processing Lambda entry
-  points; processing remains an explicit placeholder until packaging is ready.
-- infra/template.yaml: SAM/CloudFormation foundation for DynamoDB, HTTP API,
-  and Lambda resources; deployed as stack first-commit-news-dev in ap-south-1
-  after reviewing the change set.
+- src/first_commit/lambda_handlers.py: AWS API and asynchronous processing Lambda
+  entry points for health, run status, and manual latest-news triggers.
+- infra/template.yaml: deployed SAM/CloudFormation stack for DynamoDB, HTTP API,
+  API-to-processor invocation, and processing Lambda in ap-south-1.
 - src/first_commit/state_routing.py: state signals and support for 28 states plus
   8 Union Territories.
 - src/first_commit/matching.py: explainable weighted TF-IDF similarity, entities,
@@ -180,8 +179,8 @@ Do not hide the source headline or present a synthesized title as fact.
 ## Required next phase
 
 AWS is mandatory for the finished project.
-The initial foundation stack is now deployed in ap-south-1; remaining work is
-the real processing path, APIs, and scheduling.
+The initial foundation and real ingestion trigger are deployed in ap-south-1;
+remaining work is story persistence, richer APIs, scheduling, and frontend wiring.
 
 Credential safety is non-negotiable:
 
@@ -249,8 +248,8 @@ Generated snapshots, labels, model caches, and raw captures are ignored.
 - Inspect API payloads and cache behavior before changing the UI.
 - Treat DEVELOPMENT_CHECKPOINTS.md as a local tracker, not something to blindly
   stage.
-- Continue with the AWS processing/API phase. The foundation stack is deployed;
-  next wire the real processing Lambda and verify persisted run records.
+- Continue with the AWS story/API phase. Ingestion and run status are deployed;
+  next persist story outputs, add state/story comparison endpoints, and schedule runs.
   Multilingual matching is deliberately deferred; feed-health history and
   frontend work remain later follow-up options.
 

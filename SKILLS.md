@@ -165,8 +165,8 @@ Preferred shape:
 Implement in this order:
 
 1. Stable DynamoDB keys and records (the local contract is in aws_contract.py).
-   The initial SAM foundation is in infra/template.yaml; validate before deploy.
-   The local adapter in aws_adapter.py verifies pipeline-to-record conversion before AWS.
+   The SAM stack in infra/template.yaml is deployed in ap-south-1. The local
+   adapter and the deployed processor both use the same record contract.
 2. Idempotent ingestion and processing.
 3. Source health and run status.
 4. Model/embedding loading strategy suitable for Lambda.
@@ -174,6 +174,7 @@ Implement in this order:
 6. Story/state/comparison/run APIs.
 7. Hourly EventBridge schedule.
 8. Thin vertical deployment with a small source set.
+   The deployed POST /process trigger accepts optional source_ids for controlled runs.
 9. Expand source volume after observability works.
 
 Avoid unnecessary microservices, permanent raw archives, credentials in Git,

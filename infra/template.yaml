@@ -108,6 +108,11 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref NewsTable
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ProcessingFunction
+      Environment:
+        Variables:
+          PROCESSOR_FUNCTION_NAME: !Ref ProcessingFunction
       Events:
         Health:
           Type: HttpApi
@@ -121,6 +126,12 @@ Resources:
             ApiId: !Ref HttpApi
             Path: /runs/{run_id}
             Method: GET
+        ProcessLatest:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /process
+            Method: POST
 
   ProcessingFunction:
     Type: AWS::Serverless::Function
