@@ -27,7 +27,7 @@ function App() {
   };
   return <div className="app-root">
     <div className="grain" aria-hidden="true" /><div className="vignette" aria-hidden="true" />
-    <div className={`overture${overture ? " is-visible" : ""}`} aria-hidden={!overture}><div className="ov-mark">SUTRADHAR</div><div className="ov-sub micro">Drawing twenty-eight states and six territories</div><div className="ov-track"><i /></div></div>
+    <div className="overture" data-done={overture ? "0" : "1"} aria-hidden={!overture}><div className="ov-mark">SUTRADHAR</div><div className="ov-sub micro">Drawing twenty-eight states and six territories</div><div className="ov-track"><i /></div></div>
     <MapHome selectedState={selectedState} marketItems={marketItems} marketLoading={market.loading} onSelectState={selectState} onOpenPress={() => setPressOpen(true)} />
     <div className={`state-curtain${stateCurtain ? " is-active" : ""}`} style={{ "--c": selectedState ? STATES[selectedState]?.a : "#D92243" } as CSSProperties} aria-hidden="true" />
     <StateStoryPanel state={selectedState} onClose={() => setSelectedState(null)} />
