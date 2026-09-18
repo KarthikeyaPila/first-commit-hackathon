@@ -1,0 +1,23 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap");
+
+:root {
+  --ink: #0a0908;
+  --ink-2: #13100c;
+  --ink-3: #1d1813;
+  --ivory: #ede4d3;
+  --ivory-dim: rgba(237, 228, 211, 0.58);
+  --ivory-faint: rgba(237, 228, 211, 0.16);
+  --paper: #e9e0ce;
+  --paper-2: #dfd4be;
+  --paper-ink: #171310;
+  --paper-dim: rgba(23, 19, 16, 0.58);
+  --faded: #8e8577;
+  --brass: #b64232;
+  --teal: #2e6f6b;
+  --display: "Fraunces", Georgia, "Times New Roman", serif;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ease: cubic-bezier(0.16, 0.84, 0.24, 1);
+  --ease-cine: cubic-bezier(0.62, 0.02, 0.18, 1);
+  --pad: clamp(16px, 3.2vw, 44px);
+}

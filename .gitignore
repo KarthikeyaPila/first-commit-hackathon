@@ -34,3 +34,5 @@ error.md
 aws-credentials*
 *.tfstate
 *.tfstate.*
+frontend/node_modules/
+frontend/dist/
