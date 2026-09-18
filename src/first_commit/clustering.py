@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from .benchmark import load_snapshot, load_snapshot_metadata, lexical_similarity
@@ -24,6 +25,7 @@ def build_global_stories(
     max_neighbors_per_source: int = 12,
     max_stories: int = 80,
     use_embeddings: bool = False,
+    max_workers: int = 5,
 ) -> dict[str, object]:
     """Build global story clusters, then project their articles to states."""
 
@@ -85,23 +87,43 @@ def build_global_stories(
             return True
         return abs((first_time - second_time).total_seconds()) / 3600 <= 48
 
-    candidate_pairs: set[tuple[int, int]] = set()
-    for index in range(len(articles)):
-        for source_id, indexes in source_indexes.items():
-            if articles[index].source_id == source_id:
-                continue
-            compatible = [other for other in indexes if time_compatible(index, other)]
-            ranked = sorted(
-                compatible,
-                key=lambda other: float(headline_similarities[index, other]),
-                reverse=True,
-            ) if use_tfidf else sorted(
-                compatible,
-                key=lambda other: lexical_similarity(articles[index], articles[other]),
-                reverse=True,
-            )
-            for other in ranked[:max_neighbors_per_source]:
-                candidate_pairs.add(tuple(sorted((index, other))))
+    def collect_anchor_pairs(anchor_indexes: list[int]) -> set[tuple[int, int]]:
+        pairs: set[tuple[int, int]] = set()
+        for index in anchor_indexes:
+            for source_id, indexes in source_indexes.items():
+                if articles[index].source_id == source_id:
+                    continue
+                compatible = [other for other in indexes if time_compatible(index, other)]
+                ranked = sorted(
+                    compatible,
+                    key=lambda other: float(headline_similarities[index, other]),
+                    reverse=True,
+                ) if use_tfidf else sorted(
+                    compatible,
+                    key=lambda other: lexical_similarity(articles[index], articles[other]),
+                    reverse=True,
+                )
+                for other in ranked[:max_neighbors_per_source]:
+                    pairs.add(tuple(sorted((index, other))))
+        return pairs
+
+    # State/regional anchors are independent during candidate retrieval. A
+    # shared national pool is read by every worker; the final graph remains
+    # global, so national chaining and cross-state stories are preserved.
+    state_anchor_indexes: dict[str, list[int]] = defaultdict(list)
+    for index, article in enumerate(articles):
+        source = source_by_id[article.source_id]
+        if source.scope == "NATIONAL":
+            continue
+        routed_states = route_article(article, source).states or source.states
+        for state in routed_states:
+            state_anchor_indexes[state].append(index)
+    anchor_batches = list(state_anchor_indexes.values())
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = [executor.submit(collect_anchor_pairs, batch) for batch in anchor_batches]
+        candidate_pairs: set[tuple[int, int]] = set()
+        for future in futures:
+            candidate_pairs.update(future.result())
 
     pairs = sorted(candidate_pairs)
     try:

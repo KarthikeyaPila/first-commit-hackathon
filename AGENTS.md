@@ -91,9 +91,9 @@ research and development packages are optional dependencies in pyproject.toml.
   keywords, state, and time.
 - src/first_commit/clustering.py: global story graph clustering and state
   projections; current ceiling is 4,000 articles. Outputs carry run and
-  algorithm-version metadata. Headline TF-IDF artifacts are cached per snapshot. The interactive API uses the
-  full configured snapshot ceiling and neighbor budget; state-batch parallelism is
-  the next performance optimization.
+  algorithm-version metadata. Headline TF-IDF artifacts are cached per snapshot. State-anchor candidate retrieval
+  uses up to 5 workers with a shared national pool, followed by global scoring and
+  reconciliation. Full-snapshot runtime still needs further profiling.
 - src/first_commit/story_view.py: story formatting, explanations, source metadata,
   and article cards.
 - src/first_commit/benchmark.py: pair generation, labeling, TF-IDF evaluation,
@@ -237,7 +237,7 @@ Generated snapshots, labels, model caches, and raw captures are ignored.
 
 - Read AGENTS.md, SKILLS.md, and the relevant docs.
 - Check git status and recent commits.
-- Run the 24-test suite before changing behavior.
+- Run the 25-test suite before changing behavior.
 - Read error.md when the user reports a browser/runtime issue.
 - Inspect API payloads and cache behavior before changing the UI.
 - Treat DEVELOPMENT_CHECKPOINTS.md as a local tracker, not something to blindly

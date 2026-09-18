@@ -184,3 +184,10 @@ def test_ingestion_config_uses_bounded_feed_workers() -> None:
     from first_commit.config import PrototypeConfig
 
     assert PrototypeConfig().feed_workers == 8
+
+
+def test_global_story_builder_exposes_bounded_worker_setting() -> None:
+    from inspect import signature
+    from first_commit.clustering import build_global_stories
+
+    assert signature(build_global_stories).parameters["max_workers"].default == 5
