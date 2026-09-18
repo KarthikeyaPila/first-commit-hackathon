@@ -131,6 +131,7 @@ GET  /runs/{run_id}
 GET  /stories/{run_id}
 GET  /stories/{run_id}/{story_id}
 GET  /states/{state}/stories
+GET  /national/stories
 GET  /market
 POST /process
 ```

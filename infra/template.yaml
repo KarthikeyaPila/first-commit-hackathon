@@ -164,6 +164,12 @@ Resources:
             ApiId: !Ref HttpApi
             Path: /states
             Method: GET
+        NationalStories:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /national/stories
+            Method: GET
         StateStories:
           Type: HttpApi
           Properties:

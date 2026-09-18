@@ -43,7 +43,7 @@ export const HOME_MARKUP = String.raw`
     <div class="mh-l">
       <span class="wordmark">SUTRADHAR</span>
       <span class="micro">Edition 01 · September 2026</span>
-      <span class="tag-demo">DEMO CONTENT</span>
+      <span class="tag-demo">LIVE STATE DESKS</span>
     </div>
     <div class="mh-r micro">An atlas of the present tense</div>
   </header>
@@ -79,18 +79,6 @@ export const HOME_MARKUP = String.raw`
        Deliberately below the initial map viewport. This is a frontend-only
        visual simulation; it does not connect to or depend on backend telemetry. -->
   <section class="press-section" id="pressSection" aria-label="Printing press and internal processing">
-    <div class="press-connector" aria-hidden="true">
-      <svg viewBox="0 0 1000 190" preserveAspectRatio="none">
-        <path class="press-wire" d="M150 0 C155 55 265 72 300 175"/>
-        <path class="press-wire" d="M500 0 C500 60 500 105 500 178"/>
-        <path class="press-wire" d="M850 0 C845 55 735 72 700 175"/>
-        <path class="press-wire press-wire-faint" d="M300 0 C315 42 360 64 390 174"/>
-        <path class="press-wire press-wire-faint" d="M700 0 C685 42 640 64 610 174"/>
-        <circle class="press-wire-dot" cx="150" cy="0" r="3"/>
-        <circle class="press-wire-dot" cx="500" cy="0" r="3"/>
-        <circle class="press-wire-dot" cx="850" cy="0" r="3"/>
-      </svg>
-    </div>
     <div class="press-intro">
       <span class="press-section-kicker">THE MACHINE BEHIND THE PAPER</span>
       <span class="press-section-rule"></span>
@@ -109,8 +97,8 @@ export const HOME_MARKUP = String.raw`
         <div class="press-story-kicker">SUTRADHAR · INSIDE THE MACHINE</div>
         <h2>Look what happens<br><em>inside.</em></h2>
         <p>Raw news enters the press as a stream of reports. Inside, it is sorted, understood, clustered and turned into stories for every corner of India.</p>
-        <div class="press-story-action"><span class="press-story-dot"></span><span>Click the press to enter the processing system</span><b>→</b></div>
-        <div class="press-story-meta">FRONTEND VISUAL SIMULATION · FOLLOW THE SIGNAL</div>
+        <button class="press-story-action" id="pressStoryAction" type="button"><span class="press-story-dot"></span><span>Click the press to enter the processing system</span><b>→</b></button>
+        <div class="press-story-meta">LIVE PROCESSING SYSTEM · FOLLOW THE SIGNAL</div>
       </div>
     </div>
   </section>
@@ -170,7 +158,7 @@ export const HOME_MARKUP = String.raw`
     <div class="stories" id="spStories"></div>
 
     <footer class="sp-foot">
-      <span class="micro">All headlines and reporting on this page are fictional demo content.</span>
+      <span class="micro">Original publisher headlines · grouped coverage · latest state reports</span>
       <button class="next-state" id="nextState">Next state <i>→</i></button>
     </footer>
   </div>
@@ -262,7 +250,7 @@ export const HOME_MARKUP = String.raw`
       <div><div class="pipeline-kicker">SUTRADHAR · Internal Processing</div><h2 class="pipeline-title">Processing Pipeline</h2></div>
     </div>
     <div class="pipeline-meta">Live system view · AWS run telemetry<br>Backend stages and metrics</div>
-    <button class="pipeline-close" id="pipelineClose" type="button">Return to press ×</button>
+    <button class="pipeline-close" id="pipelineClose" type="button" aria-label="Return to press">←</button>
   </header>
   <div class="pipeline-shell">
     <div class="pipeline-legend"><span class="legend-item"><i class="legend-dot"></i> queued</span><span class="legend-item"><i class="legend-dot run"></i> running</span><span class="legend-item"><i class="legend-dot done"></i> complete</span><span class="legend-item">data packets / directional flow</span></div>

@@ -60,6 +60,36 @@ def api_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
         return _response(200, {"states": state_source_directory()})
 
+    if path == "/national/stories":
+        import boto3
+        from boto3.dynamodb.conditions import Key
+
+        if not os.environ.get("TABLE_NAME"):
+            return _response(500, {"error": "TABLE_NAME is not configured"})
+        table = boto3.resource("dynamodb").Table(os.environ["TABLE_NAME"])
+        seed = table.query(
+            KeyConditionExpression=Key("PK").eq("STATE#Jammu & Kashmir"),
+        ).get("Items", [])
+        latest_run_id = _latest_completed_run_id(table, seed)
+        if not latest_run_id:
+            return _response(200, {"run_id": None, "stories": []})
+        from .sources import SOURCES
+        national_names = {source.name for source in SOURCES if source.scope == "NATIONAL"}
+        result = table.query(
+            IndexName="RunStoriesIndex",
+            KeyConditionExpression=Key("GSI1PK").eq(f"RUN#{latest_run_id}"),
+        ).get("Items", [])
+        stories = []
+        for story in result:
+            sources = [name for name in story.get("sources", []) if name in national_names]
+            if not sources:
+                continue
+            story["sources"] = sources
+            story["state"] = "National"
+            stories.append(story)
+        stories.sort(key=lambda story: int(story.get("article_count", 0)), reverse=True)
+        return _response(200, {"run_id": latest_run_id, "stories": stories})
+
     if path.startswith("/states/") and path.endswith("/articles"):
         state = unquote(path[len("/states/") : -len("/articles")].strip("/"))
         if not state or not os.environ.get("TABLE_NAME"):

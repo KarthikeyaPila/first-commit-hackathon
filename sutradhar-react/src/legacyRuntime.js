@@ -1,4 +1,4 @@
-import { getMarket, getRunStatus, getStateArticles, getStateStories, getStory, startProcessing } from "./backendApi";
+import { getMarket, getNationalStories, getRunStatus, getStateArticles, getStateStories, getStory, startProcessing } from "./backendApi";
 
 export function initLegacy(){
 
@@ -1551,7 +1551,7 @@ function buildNationalArt(){
   const n=document.createElement("div"); n.className="art-num"; n.textContent="00"; spArt.appendChild(n);
 }
 
-function renderNational(){
+async function renderNational(){
   current="__national__";
   statePage.style.setProperty("--c","#D92243");
   document.documentElement.style.setProperty("--c","#D92243");
@@ -1563,6 +1563,13 @@ function renderNational(){
   spFacts.innerHTML=NATIONAL.facts.map(f=>`<div class="fact"><dt>${f[0]}</dt><dd>${f[1]}</dd></div>`).join("");
   buildNationalArt();
   mini.innerHTML="";
+  try {
+    const payload = await getNationalStories();
+    const stories = Array.isArray(payload.stories) ? payload.stories.map(backendStory) : [];
+    if(stories.length > 0) NATIONAL.stories = stories;
+  } catch(error) {
+    console.warn("Sutradhar national API unavailable; keeping reference fallback.", error);
+  }
   renderStoriesData(NATIONAL.stories,"national");
   spScroll.scrollTop=0;
   nextState.innerHTML=`Back to states <i>→</i>`;
@@ -1573,10 +1580,10 @@ function renderNational(){
   statePage.setAttribute("data-open","1");
 }
 
-function renderStoriesData(stories,key){
+function renderStoriesData(stories,key,limit=12){
   spStories.innerHTML="";
-  spCount.textContent=`${stories.length} filed · edition 01`;
-  stories.forEach((st,i)=>{
+  spCount.textContent=`${stories.length} dispatches · edition 01`;
+  stories.slice(0,Math.min(limit,30)).forEach((st,i)=>{
     const b=document.createElement("button"); b.type="button"; b.className="story"+(i===0?" lead":"");
     const meta=`<p class="dek">${st.dek}</p><span class="by">${st.by} · ${st.read} read</span>`;
     b.innerHTML=`<span class="idx">${String(i+1).padStart(2,"0")}</span>`+
@@ -1585,6 +1592,14 @@ function renderStoriesData(stories,key){
     b.addEventListener("click",()=>openNationalReader(st));
     spStories.appendChild(b);
   });
+  if(stories.length > 12 && limit < 30){
+    const more=document.createElement("button");
+    more.type="button";
+    more.className="story-more";
+    more.textContent=`Read more · show up to ${Math.min(stories.length,30)} dispatches`;
+    more.addEventListener("click",()=>renderStoriesData(stories,key,30));
+    spStories.appendChild(more);
+  }
 }
 function openNationalReader(st){
   rdKicker.textContent=`National Desk · ${st.cat} · ${st.date}`;
@@ -1818,6 +1833,7 @@ document.getElementById("swClose").addEventListener("click",()=>switcher.removeA
    The AWS run-status API is the source of truth for this view.
    ============================================================ */
 const printPress = document.getElementById("printPress");
+const pressStoryAction = document.getElementById("pressStoryAction");
 const pipelineView = document.getElementById("pipelineView");
 const pipelineGrid = document.getElementById("pipelineGrid");
 const pipelineBoard = document.getElementById("pipelineBoard");
@@ -2042,6 +2058,7 @@ async function closePipeline(){
   busy=false;
 }
 printPress.addEventListener("click",enterPipeline);
+pressStoryAction.addEventListener("click",enterPipeline);
 pipelineClose.addEventListener("click",closePipeline);
 window.addEventListener("resize",()=>{if(pipelineView.getAttribute("data-open")==="1") drawPipelineWires();});
 

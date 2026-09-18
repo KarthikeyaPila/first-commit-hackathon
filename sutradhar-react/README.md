@@ -19,6 +19,7 @@ The existing India map, state navigation, newspaper pages, reader, national-news
 
 - \`GET /market\` refreshes the market ticker.
 - \`GET /states/{state}/stories\` refreshes a state desk when opened.
+- \`GET /national/stories\` refreshes the national desk using only national publishers.
 - \`GET /stories/{run_id}/{story_id}\` fills the article comparison reader.
 - \`POST /process\` and \`GET /runs/{run_id}\` connect the press pipeline to live AWS processing telemetry.
 
