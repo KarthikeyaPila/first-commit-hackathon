@@ -81,10 +81,14 @@ def weighted_tfidf_similarities(
             ).fit_transform(values)
         except ValueError:
             continue
-        field_scores[field] = [
-            float(matrix[first].multiply(matrix[second]).sum())
-            for first, second in pairs
-        ]
+        if pairs:
+            first_indexes, second_indexes = zip(*pairs)
+            pair_scores = matrix[list(first_indexes)].multiply(
+                matrix[list(second_indexes)]
+            ).sum(axis=1)
+            field_scores[field] = [float(score) for score in pair_scores.A1]
+        else:
+            field_scores[field] = []
 
     scores = []
     for pair_index, (first, second) in enumerate(pairs):
