@@ -678,8 +678,11 @@ svg :focus-visible{outline:none}
   padding-bottom:10px;
 }
 .wordmark{
-  letter-spacing:.30em;
-  font-size:clamp(18px,2vw,23px);
+  font-size:clamp(30px,3.4vw,52px);
+  font-weight:300;
+  line-height:.96;
+  letter-spacing:-.025em;
+  text-indent:0;
 }
 .mh-l,.mh-r{color:#171310}
 .micro{color:rgba(23,19,16,.58)}
