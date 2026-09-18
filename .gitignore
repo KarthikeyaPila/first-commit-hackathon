@@ -30,6 +30,7 @@ error.md
 
 # AWS credentials and deployment state
 .aws/
+.aws-sam/
 aws-credentials*
 *.tfstate
 *.tfstate.*

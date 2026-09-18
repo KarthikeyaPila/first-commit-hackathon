@@ -88,7 +88,8 @@ research and development packages are optional dependencies in pyproject.toml.
 - src/first_commit/lambda_handlers.py: first AWS API and processing Lambda entry
   points; processing remains an explicit placeholder until packaging is ready.
 - infra/template.yaml: SAM/CloudFormation foundation for DynamoDB, HTTP API,
-  and Lambda resources; do not deploy without reviewing the change set.
+  and Lambda resources; deployed as stack first-commit-news-dev in ap-south-1
+  after reviewing the change set.
 - src/first_commit/state_routing.py: state signals and support for 28 states plus
   8 Union Territories.
 - src/first_commit/matching.py: explainable weighted TF-IDF similarity, entities,
@@ -179,6 +180,8 @@ Do not hide the source headline or present a synthesized title as fact.
 ## Required next phase
 
 AWS is mandatory for the finished project.
+The initial foundation stack is now deployed in ap-south-1; remaining work is
+the real processing path, APIs, and scheduling.
 
 Credential safety is non-negotiable:
 
@@ -246,8 +249,8 @@ Generated snapshots, labels, model caches, and raw captures are ignored.
 - Inspect API payloads and cache behavior before changing the UI.
 - Treat DEVELOPMENT_CHECKPOINTS.md as a local tracker, not something to blindly
   stage.
-- Continue with AWS deployment as the required next phase. The first local SAM
-  foundation is present; next validate and deploy only the foundation stack.
+- Continue with the AWS processing/API phase. The foundation stack is deployed;
+  next wire the real processing Lambda and verify persisted run records.
   Multilingual matching is deliberately deferred; feed-health history and
   frontend work remain later follow-up options.
 
