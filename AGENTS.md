@@ -85,6 +85,10 @@ research and development packages are optional dependencies in pyproject.toml.
   contract for runs, articles, stories, memberships, and state projections.
 - src/first_commit/aws_adapter.py: local adapter that exports completed runs
   and normalized articles in the AWS record shape.
+- src/first_commit/lambda_handlers.py: first AWS API and processing Lambda entry
+  points; processing remains an explicit placeholder until packaging is ready.
+- infra/template.yaml: SAM/CloudFormation foundation for DynamoDB, HTTP API,
+  and Lambda resources; do not deploy without reviewing the change set.
 - src/first_commit/state_routing.py: state signals and support for 28 states plus
   8 Union Territories.
 - src/first_commit/matching.py: explainable weighted TF-IDF similarity, entities,
@@ -242,9 +246,10 @@ Generated snapshots, labels, model caches, and raw captures are ignored.
 - Inspect API payloads and cache behavior before changing the UI.
 - Treat DEVELOPMENT_CHECKPOINTS.md as a local tracker, not something to blindly
   stage.
-- Continue with AWS deployment as the required next phase. Multilingual matching
-  is deliberately deferred; feed-health history and frontend work remain later
-  follow-up options.
+- Continue with AWS deployment as the required next phase. The first local SAM
+  foundation is present; next validate and deploy only the foundation stack.
+  Multilingual matching is deliberately deferred; feed-health history and
+  frontend work remain later follow-up options.
 
 <!-- BEGIN AWS Agent Toolkit rules -->
 # AWS Guidance

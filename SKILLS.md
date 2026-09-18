@@ -165,6 +165,7 @@ Preferred shape:
 Implement in this order:
 
 1. Stable DynamoDB keys and records (the local contract is in aws_contract.py).
+   The initial SAM foundation is in infra/template.yaml; validate before deploy.
    The local adapter in aws_adapter.py verifies pipeline-to-record conversion before AWS.
 2. Idempotent ingestion and processing.
 3. Source health and run status.

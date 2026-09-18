@@ -184,3 +184,11 @@ def test_ingestion_config_uses_bounded_feed_workers() -> None:
     from first_commit.config import PrototypeConfig
 
     assert PrototypeConfig().feed_workers == 8
+
+
+def test_lambda_health_handler_is_local_and_json() -> None:
+    from first_commit.lambda_handlers import api_handler
+
+    response = api_handler({"rawPath": "/health"}, None)
+    assert response["statusCode"] == 200
+    assert '"ok": true' in response["body"]

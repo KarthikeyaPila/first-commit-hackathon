@@ -1,0 +1,153 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >-
+  First Commit news comparison backend - stores versioned runs, articles, and
+  stories in DynamoDB behind small Lambda and HTTP API entry points.
+
+Metadata:
+  AWSToolsMetrics:
+    AWSAgentToolkit: aws-cloudformation@3
+  com.aws.cloudformation.Context:
+    arch: HTTP API -> Lambda -> DynamoDB; scheduled processing is added later
+    must:
+      - no credentials in template, source, or parameters
+      - table data survives stack deletion or replacement
+      - API Lambda is read-only against the data table
+    ref:
+      - at: AGENTS.md
+        has: project AWS, credential, and deployment constraints
+        scope: repository
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - demo
+    Description: Deployment environment label.
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 30
+    MemorySize: 512
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref NewsTable
+
+Resources:
+  NewsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: durable store for runs, articles, stories, memberships, and state projections; on-demand capacity fits hackathon traffic
+        must:
+          - PK + SK key shape must remain compatible with aws_contract.py
+          - retain data when stack is deleted or table replacement is required
+        mutable: change-with-constraints
+        mutability:
+          KeySchema: must-never-change
+          AttributeDefinitions: must-never-change
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      Tags:
+        - Key: Project
+          Value: first-commit-news
+        - Key: Environment
+          Value: !Ref Environment
+
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: simple browser-facing HTTP boundary; HTTP API is sufficient for the demo and avoids REST API complexity
+        must:
+          - keep backend responses JSON and compatible with the local API shapes
+          - do not expose DynamoDB directly to browsers
+        mutable: change-with-constraints
+    Properties:
+      StageName: $default
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowHeaders:
+          - content-type
+        AllowMethods:
+          - GET
+          - POST
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: read-focused API adapter for health and run-status requests; separate from processing so browser traffic cannot write arbitrary records
+        must:
+          - use read-only access to NewsTable
+          - keep secrets out of responses and logs
+        mutable: change-with-constraints
+    Properties:
+      CodeUri: ../src/
+      Handler: first_commit.lambda_handlers.api_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref NewsTable
+      Events:
+        Health:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /health
+            Method: GET
+        RunStatus:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /runs/{run_id}
+            Method: GET
+
+  ProcessingFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: future RSS processing entry point; kept separate from API to allow scheduled invocation and longer processing configuration
+        must:
+          - write only through the repository and AWS record contract
+          - be idempotent by run_id and article_id
+          - no long-lived credentials in code or environment variables
+        mutable: change-with-constraints
+    Properties:
+      CodeUri: ../src/
+      Handler: first_commit.lambda_handlers.processing_handler
+      Timeout: 900
+      MemorySize: 2048
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref NewsTable
+
+Outputs:
+  ApiUrl:
+    Description: HTTP API base URL for the first backend endpoints.
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com
+  NewsTableName:
+    Description: DynamoDB table name for project records.
+    Value: !Ref NewsTable
+  ProcessingFunctionName:
+    Description: Lambda function reserved for RSS processing.
+    Value: !Ref ProcessingFunction
