@@ -1035,6 +1035,19 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
 .aws-wire{font-style:normal;color:#D92243;font-family:var(--mono);font-size:28px}
 .aws-architecture-support{display:flex;justify-content:center;gap:28px;margin-top:14px}
 .aws-architecture-support b{color:#171310;font-weight:500}
+.aws-architecture-page{width:min(1500px,calc(100% - 2 * var(--pad)));max-width:none;margin:0 auto;padding:72px 0 86px;border-top:3px solid #171310;border-bottom:1px solid rgba(23,19,16,.24)}
+.aws-architecture-page .aws-architecture-head{align-items:flex-end;margin-bottom:30px;padding-bottom:18px;border-bottom:1px solid rgba(23,19,16,.22)}
+.aws-architecture-title{margin:9px 0 0;font-family:var(--display);font-size:clamp(38px,5.2vw,76px);font-weight:300;line-height:.92;letter-spacing:-.035em;color:#171310}
+.aws-architecture-page .aws-architecture-note{max-width:270px;padding-bottom:5px;text-align:right;line-height:1.7}
+.aws-architecture-page .aws-architecture-flow{column-gap:24px}
+.aws-architecture-page .aws-column{min-width:245px;gap:14px}
+.aws-architecture-page .aws-column-lambda{min-width:310px}
+.aws-architecture-page .aws-column-label{font-size:11px;letter-spacing:.22em}
+.aws-architecture-page .aws-node{min-height:126px;padding:20px;gap:9px;border-width:1.5px}
+.aws-architecture-page .aws-node strong{font-size:clamp(25px,2.2vw,34px)}
+.aws-architecture-page .aws-node span{font-size:11px;line-height:1.45}
+.aws-architecture-page .aws-wire{font-size:36px}
+.aws-architecture-page .aws-architecture-support{justify-content:space-between;gap:24px;margin-top:25px;padding-top:18px;border-top:1px solid rgba(23,19,16,.15);font-size:11px;line-height:1.5}
 .pipeline-exit{position:relative;z-index:4;display:flex;align-items:center;justify-content:center;gap:18px;width:min(300px,100%);margin:30px auto 8px;padding:15px 20px;background:#B23A48;border:1px solid #B23A48;color:#FFF5E5;font-family:var(--mono);font-size:11px;letter-spacing:.19em;cursor:pointer;box-shadow:0 10px 24px rgba(112,30,42,.24);transition:background .3s var(--ease),color .3s var(--ease),transform .3s var(--ease),box-shadow .3s var(--ease)}
 .pipeline-exit b{font-size:18px;font-weight:400;color:#FFF5E5}
 .pipeline-exit:hover,.pipeline-exit:focus-visible{background:#171310;border-color:#171310;box-shadow:0 12px 28px rgba(23,19,16,.2);transform:translateY(-2px)}

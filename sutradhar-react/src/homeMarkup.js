@@ -105,7 +105,7 @@ export const HOME_MARKUP = String.raw`
 
   <!-- AWS INFRASTRUCTURE — BELOW THE PRESS, OUTSIDE THE LOOK-INSIDE RUN -->
   <section class="aws-architecture aws-architecture-page" aria-label="AWS architecture">
-    <div class="aws-architecture-head"><span class="pipeline-kicker">SUTRADHAR · AWS infrastructure</span><span class="aws-architecture-note">The deployed services behind the paper</span></div>
+    <div class="aws-architecture-head"><div><span class="pipeline-kicker">SUTRADHAR · THE NEWSROOM ENGINE</span><h2 class="aws-architecture-title">The machinery behind the morning paper</h2></div><span class="aws-architecture-note">AWS services carrying every story from source to state desk</span></div>
     <div class="aws-architecture-flow">
       <div class="aws-column"><div class="aws-column-label">DELIVERY</div><div class="aws-node aws-node-main"><small>STATIC WEBSITE HOSTING</small><strong>S3</strong><span>Frontend assets · live HTTP endpoint</span></div><div class="aws-node aws-node-event"><small>OBJECT STORAGE</small><strong>S3 bucket</strong><span>Compiled app files</span></div></div>
       <i class="aws-wire">→</i>
