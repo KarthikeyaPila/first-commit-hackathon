@@ -82,6 +82,8 @@ research and development packages are optional dependencies in pyproject.toml.
   article store, and append-only run history.
 - src/first_commit/aws_contract.py: dependency-free DynamoDB record and key
   contract for runs, articles, stories, memberships, and state projections.
+- src/first_commit/aws_adapter.py: local adapter that exports completed runs
+  and normalized articles in the AWS record shape.
 - src/first_commit/state_routing.py: state signals and support for 28 states plus
   8 Union Territories.
 - src/first_commit/matching.py: explainable weighted TF-IDF similarity, entities,
@@ -221,7 +223,7 @@ Generated snapshots, labels, model caches, and raw captures are ignored.
 
 - Read AGENTS.md, SKILLS.md, and the relevant docs.
 - Check git status and recent commits.
-- Run the 22-test suite before changing behavior.
+- Run the 23-test suite before changing behavior.
 - Read error.md when the user reports a browser/runtime issue.
 - Inspect API payloads and cache behavior before changing the UI.
 - Treat DEVELOPMENT_CHECKPOINTS.md as a local tracker, not something to blindly

@@ -163,6 +163,7 @@ Preferred shape:
 Implement in this order:
 
 1. Stable DynamoDB keys and records (the local contract is in aws_contract.py).
+   The local adapter in aws_adapter.py verifies pipeline-to-record conversion before AWS.
 2. Idempotent ingestion and processing.
 3. Source health and run status.
 4. Model/embedding loading strategy suitable for Lambda.

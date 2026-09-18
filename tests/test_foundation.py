@@ -169,3 +169,12 @@ def test_aws_records_have_stable_single_table_keys() -> None:
     assert membership["SK"] == "ARTICLE#article-1"
     assert projection["PK"] == "STATE#Kerala"
     assert {item["schema_version"] for item in (article, story, membership, projection)} == {"1"}
+
+
+def test_local_aws_adapter_exports_run_and_article_records() -> None:
+    from first_commit.aws_adapter import build_ingestion_records
+
+    article = Article(source_id="source-a", url="https://example.com/story", headline="Headline")
+    records = build_ingestion_records({"run_id": "run-1", "status": "completed"}, [article])
+    assert [record["entity_type"] for record in records] == ["run", "article"]
+    assert records[1]["PK"] == f"ARTICLE#{article.article_id}"

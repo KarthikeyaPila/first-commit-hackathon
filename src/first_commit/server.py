@@ -10,6 +10,7 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
+from .aws_adapter import build_ingestion_records, save_local_records
 from .benchmark import LABELS_PATH, label_candidate, label_pair, prepare_labels, read_label_rows
 from .config import PROCESSED_DATA_DIR, PrototypeConfig
 from .dedupe import deduplicate_articles
@@ -111,6 +112,7 @@ def run_ingestion() -> dict[str, object]:
         "feeds": reports,
     }
     append_run(_last_run)
+    save_local_records(build_ingestion_records(_last_run, unique_articles))
     return _last_run
 
 
