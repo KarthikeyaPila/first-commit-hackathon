@@ -502,6 +502,10 @@ svg :focus-visible{outline:none}
 .reader-body .dek{font-family:var(--display);font-style:italic;font-size:18px;line-height:1.6;color:rgba(23,19,16,.82);margin:0 0 26px;max-width:46ch}
 .reader-rule{height:1px;background:var(--c);width:64px;margin:0 0 26px}
 .reader-body p.b{font-family:var(--display);font-size:17px;line-height:1.75;max-width:62ch;margin:0 0 20px}
+.grouped-article{padding:22px 0 24px;border-bottom:1px solid rgba(23,19,16,.16);max-width:62ch}
+.grouped-source{margin:0 0 8px;font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#D92243}
+.grouped-article h3{font-family:var(--display);font-size:clamp(22px,3vw,32px);font-weight:300;line-height:1.12;margin:0 0 14px;letter-spacing:-.012em}
+.grouped-article h3::first-letter{font-size:1.8em;line-height:.7;font-weight:500;color:var(--c);float:left;padding:.04em .07em 0 0}
 .reader-body .dek + p.b:first-letter{
   font-family:var(--display);font-weight:500;font-size:3.6em;line-height:.78;
   float:left;padding:.03em .07em 0 0;color:var(--c);

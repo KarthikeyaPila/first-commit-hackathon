@@ -1501,6 +1501,14 @@ function articleLinkMarkup(url){
   return url ? `<p class="article-source-link"><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Read original article ↗</a></p>` : "";
 }
 
+function groupedArticleMarkup(article){
+  return `<article class="grouped-article">` +
+    `<p class="grouped-source">${escapeHtml(article.source?.name || "Publisher")}</p>` +
+    `<h3>${escapeHtml(article.headline || "Untitled article")}</h3>` +
+    articleSummaryMarkup(article.summary) + articleLinkMarkup(article.url) +
+    `</article>`;
+}
+
 function feedSummaryMarkup(text){
   const value = String(text || "");
   if(value.split(/\s+/).length < 42 && value.length < 260) return `<span class="dek">${escapeHtml(value)}</span>`;
@@ -1676,7 +1684,7 @@ function openNationalReader(st){
       rdBody.innerHTML =
         "<h2>" + escapeHtml(payload.story?.story_title || st.h) + "</h2><div class=\"reader-rule\"></div>" +
         "<p class=\"dek\">Grouped coverage across " + articles.length + " publisher reports.</p>" +
-        articles.map(article => "<p class=\"b\"><strong>" + escapeHtml(article.source?.name || "Publisher") + "</strong><br>" + escapeHtml(article.headline) + "</p>" + articleSummaryMarkup(article.summary) + articleLinkMarkup(article.url)).join("") +
+        articles.map(groupedArticleMarkup).join("") +
         "<p class=\"reader-note\">Live national comparison · Sutradhar story API</p>";
     }).catch(error => console.warn("Sutradhar national story detail unavailable.", error));
   }
@@ -1823,8 +1831,7 @@ function openReader(key,i){
       rdBody.innerHTML =
         "<h2>" + escapeHtml(payload.story?.story_title || st.h) + "</h2><div class=\"reader-rule\"></div>" +
         "<p class=\"dek\">Grouped coverage across " + articles.length + " publisher reports.</p>" +
-        articles.map(article => "<p class=\"b\"><strong>" + escapeHtml(article.source?.name || "Publisher") + "</strong><br>" + escapeHtml(article.headline) + "</p>" +
-          articleSummaryMarkup(article.summary) + articleLinkMarkup(article.url)).join("") +
+        articles.map(groupedArticleMarkup).join("") +
         "<p class=\"reader-note\">Live comparison · Sutradhar story API</p>";
     }).catch(error => console.warn("Sutradhar story detail unavailable.", error));
   }
