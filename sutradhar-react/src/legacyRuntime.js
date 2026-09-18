@@ -1188,6 +1188,13 @@ function showReadout(k){
     (isLive(k) ? `${s.stories.length} dispatches` : "not filed yet");
   readout.classList.add("on");
 }
+function showNationalReadout(){
+  readout.style.setProperty("--a", "#D92243");
+  roEp.textContent = "National desk";
+  roName.textContent = "Get National News";
+  roMeta.textContent = "Click to open nationwide dispatches";
+  readout.classList.add("on");
+}
 function placeReadout(e){
   if(window.matchMedia("(max-width:760px)").matches) return;
   const r = readout.getBoundingClientRect();
@@ -1889,6 +1896,9 @@ document.getElementById("soonMH").addEventListener("click",async()=>{
    ============================================================ */
 const nationalBtn = document.getElementById("nationalBtn");
 nationalBtn.addEventListener("click",selectNational);
+nationalBtn.addEventListener("pointerenter",e=>{showNationalReadout();placeReadout(e);});
+nationalBtn.addEventListener("pointermove",placeReadout);
+nationalBtn.addEventListener("pointerleave",()=>readout.classList.remove("on"));
 
 /* ============================================================
    SWITCHER
