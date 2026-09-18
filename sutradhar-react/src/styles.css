@@ -1037,7 +1037,7 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
 .aws-architecture-support b{color:#171310;font-weight:500}
 .aws-architecture-page{width:min(1500px,calc(100% - 2 * var(--pad)));max-width:none;margin:0 auto;padding:72px 0 86px;border-top:3px solid #171310;border-bottom:1px solid rgba(23,19,16,.24)}
 .aws-architecture-page .aws-architecture-head{align-items:flex-end;margin-bottom:30px;padding-bottom:18px;border-bottom:1px solid rgba(23,19,16,.22)}
-.aws-architecture-title{margin:9px 0 0;font-family:var(--display);font-size:clamp(38px,5.2vw,76px);font-weight:300;line-height:.92;letter-spacing:-.035em;color:#171310}
+.aws-architecture-title{margin:9px 0 0;font-family:var(--display);font-size:clamp(30px,3.4vw,52px);font-weight:300;line-height:.96;letter-spacing:-.025em;color:#171310}
 .aws-architecture-page .aws-architecture-note{max-width:270px;padding-bottom:5px;text-align:right;line-height:1.7}
 .aws-architecture-page .aws-architecture-flow{column-gap:24px}
 .aws-architecture-page .aws-column{min-width:245px;gap:14px}
