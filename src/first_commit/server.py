@@ -158,11 +158,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             return {"stories": [], "articles_considered": 0, "matched_groups": 0}
         snapshot_mtime = snapshot.stat().st_mtime
         if _story_cache["snapshot_mtime"] != snapshot_mtime:
-            _story_cache["payload"] = build_global_stories(
-                snapshot,
-                max_articles=1200,
-                max_neighbors_per_source=4,
-            )
+            _story_cache["payload"] = build_global_stories(snapshot)
             _story_cache["snapshot_mtime"] = snapshot_mtime
         return _story_cache["payload"]
 
