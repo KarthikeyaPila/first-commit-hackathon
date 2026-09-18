@@ -254,6 +254,7 @@ export const HOME_MARKUP = String.raw`
   </header>
   <div class="pipeline-shell">
     <div class="pipeline-legend"><span class="legend-item"><i class="legend-dot"></i> queued</span><span class="legend-item"><i class="legend-dot run"></i> running</span><span class="legend-item"><i class="legend-dot done"></i> complete</span><span class="legend-item">data packets / directional flow</span></div>
+    <button class="pipeline-run" id="pipelineRun" type="button"><span>RUN PIPELINE</span><b>→</b></button>
     <div class="pipeline-board" id="pipelineBoard">
       <svg class="pipeline-wire-svg" id="pipelineWires" aria-hidden="true"></svg>
       <div class="pipeline-grid" id="pipelineGrid"></div>

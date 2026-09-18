@@ -1855,6 +1855,7 @@ const outputIndia = document.getElementById("outputIndia");
 const outputRail = document.getElementById("outputRail");
 const outputFeeds = document.getElementById("outputFeeds");
 const pipelineClose = document.getElementById("pipelineClose");
+const pipelineRun = document.getElementById("pipelineRun");
 const PIPE_STAGES = [
   ["fetch_sources","FETCH RSS SOURCES"],
   ["parse_articles","PARSE ARTICLE ENTRIES"],
@@ -2022,6 +2023,9 @@ function startPipeline(){
   clearPipelineTimers();
   backendRunFinished = false;
   delete pipelineView.dataset.backendError;
+  pipelineRun.disabled = true;
+  pipelineRun.classList.add("is-running");
+  pipelineRun.querySelector("span").textContent = "PIPELINE RUNNING";
   buildPipeline();
   beginBackendRun();
 }
@@ -2035,8 +2039,8 @@ async function enterPipeline(){
   pipelineView.setAttribute("aria-hidden","false");
   pipelineView.setAttribute("data-open","1");
   await wait(820);
+  buildPipeline();
   drawPipelineWires();
-  startPipeline();
   busy=false;
 }
 async function endPipelineToMap(){
@@ -2056,6 +2060,9 @@ async function endPipelineToMap(){
   await wait(1050);
   pulse.forEach(k=>{ if(vis[k]) vis[k].classList.remove("pipeline-hit"); });
   pipelineView.classList.remove("pipeline-done");
+  pipelineRun.disabled = false;
+  pipelineRun.classList.remove("is-running");
+  pipelineRun.querySelector("span").textContent = "RUN PIPELINE";
   busy=false;
 }
 async function closePipeline(){
@@ -2067,10 +2074,14 @@ async function closePipeline(){
   stage.removeAttribute("data-hidden");
   printPress.classList.remove("press-active");
   pipelineView.classList.remove("pipeline-done");
+  pipelineRun.disabled = false;
+  pipelineRun.classList.remove("is-running");
+  pipelineRun.querySelector("span").textContent = "RUN PIPELINE";
   busy=false;
 }
 printPress.addEventListener("click",enterPipeline);
 pressStoryAction.addEventListener("click",enterPipeline);
+pipelineRun.addEventListener("click",startPipeline);
 pipelineClose.addEventListener("click",closePipeline);
 window.addEventListener("resize",()=>{if(pipelineView.getAttribute("data-open")==="1") drawPipelineWires();});
 
