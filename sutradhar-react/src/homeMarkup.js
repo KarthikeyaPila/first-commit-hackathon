@@ -54,10 +54,6 @@ export const HOME_MARKUP = String.raw`
     <!-- SVG map is generated in the DATA + MAP sections of the script -->
 
     <div class="flank flank-l">
-      <div class="fl-kick"><span class="bar"></span><span class="micro">Front page</span></div>
-      <p class="lede">Every state<br>keeps its own<br><em>record.</em></p>
-      <p class="sub">Every state and territory keeps a desk. Pick a shape and read what it sent.</p>
-
       <div class="national-cta">
         <button class="national-btn" id="nationalBtn" type="button">
           <span class="national-btn-kick">National desk</span>
@@ -66,6 +62,10 @@ export const HOME_MARKUP = String.raw`
           <span class="national-btn-arrow">→</span>
         </button>
       </div>
+
+      <div class="fl-kick"><span class="bar"></span><span class="micro">Front page</span></div>
+      <p class="lede">Every state<br>keeps its own<br><em>record.</em></p>
+      <p class="sub">Every state and territory keeps a desk. Pick a shape and read what it sent.</p>
     </div>
 
     <div class="flank flank-r">
