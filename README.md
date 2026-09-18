@@ -98,6 +98,22 @@ Open http://127.0.0.1:8000. The local helper can fetch RSS feeds, show feed
 health, inspect state/source mappings, label candidate pairs, and preview local
 story cards.
 
+## Run the full local project
+
+From the repository root:
+
+```bash
+./run_project.sh
+```
+
+This starts both services and stops them together with `Ctrl+C`:
+
+- Backend: http://127.0.0.1:8000
+- React frontend: http://127.0.0.1:5173
+
+The script expects the Python virtual environment at `.venv/` and React
+dependencies installed in `sutradhar-react/node_modules/`.
+
 ## AWS API
 
 Current deployed API base:
