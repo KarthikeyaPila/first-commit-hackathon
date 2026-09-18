@@ -1108,13 +1108,13 @@ async function hydrateState(key, force = false){
       .filter(story=>story.kind === "grouped")
       .reduce((total, story)=>total + Math.max(0, Number(story.articleCount || 0)), 0);
     const latestCount = stories.filter(story=>story.kind === "latest").length;
-    STATES[key].facts = [["Total dispatches", String(stories.length)], ["Grouped articles", String(groupedArticleCount)], ["Latest reports", String(latestCount)], ["Capital", STATES[key].cap]];
+    STATES[key].facts = [["Total articles", String(groupedArticleCount + latestCount)], ["Grouped articles", String(groupedArticleCount)], ["Latest reports", String(latestCount)], ["Capital", STATES[key].cap]];
     if(current === key) refreshStateContent(key);
   } catch (error) {
     console.warn("Sutradhar state API unavailable.", error);
     stateStoryCache.delete(key);
     STATES[key].stories = [];
-    STATES[key].facts = [["Total dispatches", "Unavailable"], ["Grouped articles", "Unavailable"], ["Latest reports", "Unavailable"], ["Capital", STATES[key].cap]];
+    STATES[key].facts = [["Total articles", "Unavailable"], ["Grouped articles", "Unavailable"], ["Latest reports", "Unavailable"], ["Capital", STATES[key].cap]];
     if(current === key) refreshStateContent(key);
   }
 }
@@ -2178,7 +2178,7 @@ function hydrateBackend(){
   // remains navigable, but no fictional dispatch is shown as current news.
   KEYS.forEach(key=>{
     STATES[key].stories = [];
-    STATES[key].facts = [["Total dispatches", "Loading"], ["Grouped articles", "Loading"], ["Latest reports", "Loading"], ["Capital", STATES[key].cap]];
+    STATES[key].facts = [["Total articles", "Loading"], ["Grouped articles", "Loading"], ["Latest reports", "Loading"], ["Capital", STATES[key].cap]];
   });
   // Load the latest persisted state projections quietly. The printing press
   // remains the explicit action that starts a fresh processing run.
