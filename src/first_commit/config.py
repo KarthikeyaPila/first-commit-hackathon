@@ -19,3 +19,4 @@ class PrototypeConfig:
 
     cluster_time_window_hours: int = CLUSTER_TIME_WINDOW_HOURS
     max_entries_per_source: int = MAX_ENTRIES_PER_SOURCE
+    feed_workers: int = 8

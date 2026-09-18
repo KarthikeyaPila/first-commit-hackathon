@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 import json
 import uuid
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
@@ -60,40 +61,44 @@ def run_ingestion() -> dict[str, object]:
     _last_run = {"run_id": run_id, "status": "running", "started_at": started_at, "completed_at": None, "feeds": reports}
 
     config = PrototypeConfig()
-    for source in SOURCES:
-        if not source.active:
-            continue
-        report: dict[str, object] = {
-            "source_id": source.source_id,
-            "name": source.name,
-            "scope": source.scope,
-            "states": list(source.states),
-            "rss_url": source.rss_url,
-            "max_entries": source.max_entries,
-            "status": "fetching",
-            "feed_health": source.feed_health,
-            "fetched_at": None,
-            "articles_found": 0,
-            "articles": [],
-            "error": source.last_error,
+    active_sources = [source for source in SOURCES if source.active]
+    with ThreadPoolExecutor(max_workers=config.feed_workers) as executor:
+        futures = {
+            source.source_id: executor.submit(fetch_source, source, source.max_entries)
+            for source in active_sources
         }
-        try:
-            articles = fetch_source(source, source.max_entries)
-            all_articles.extend(articles)
-            report["status"] = "ok"
-            report["feed_health"] = "OK"
-            report["fetched_at"] = _now()
-            report["articles_found"] = len(articles)
-            report["articles"] = [_article_payload(article, source) for article in articles[:10]]
-        except Exception as error:  # noqa: BLE001 - a failed feed must not stop other feeds
-            report["status"] = "error"
-            report["feed_health"] = "ERROR"
-            report["error"] = f"{type(error).__name__}: {error}"
-        reports.append(report)
+        for source in active_sources:
+            report: dict[str, object] = {
+                "source_id": source.source_id,
+                "name": source.name,
+                "scope": source.scope,
+                "states": list(source.states),
+                "rss_url": source.rss_url,
+                "max_entries": source.max_entries,
+                "status": "fetching",
+                "feed_health": source.feed_health,
+                "fetched_at": None,
+                "articles_found": 0,
+                "articles": [],
+                "error": source.last_error,
+            }
+            try:
+                articles = futures[source.source_id].result()
+                all_articles.extend(articles)
+                report["status"] = "ok"
+                report["feed_health"] = "OK"
+                report["fetched_at"] = _now()
+                report["articles_found"] = len(articles)
+                report["articles"] = [_article_payload(article, source) for article in articles[:10]]
+            except Exception as error:  # noqa: BLE001 - a failed feed must not stop other feeds
+                report["status"] = "error"
+                report["feed_health"] = "ERROR"
+                report["error"] = f"{type(error).__name__}: {error}"
+            reports.append(report)
 
     unique_articles, duplicates_removed = deduplicate_articles(all_articles)
     persistence = upsert_articles(unique_articles)
-    run_config = {"cluster_time_window_hours": config.cluster_time_window_hours, "max_entries_per_source": config.max_entries_per_source}
+    run_config = {"cluster_time_window_hours": config.cluster_time_window_hours, "max_entries_per_source": config.max_entries_per_source, "feed_workers": config.feed_workers}
     snapshot_path = save_snapshot(unique_articles, run_id=run_id, run_config=run_config)
     _last_run = {
         "run_id": run_id,

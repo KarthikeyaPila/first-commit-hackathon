@@ -66,7 +66,8 @@ Preserve these invariants:
 - GUID → canonical URL → content hash dedupe order. Persist the resulting deterministic
   article_id so repeated fetches can upsert the same publisher article.
 - Duplicate provenance remains available.
-- A failed feed does not abort the run.
+- A failed feed does not abort the run. Active feeds are fetched with a bounded
+  worker pool (currently 8) and reports remain deterministic in source order.
 - Feed reports include status, feed_health, error, articles_found, and cap.
 - active=False sources are skipped during normal ingestion.
 - High-volume national feeds generally cap at 100; normal feeds at 50.

@@ -178,3 +178,9 @@ def test_local_aws_adapter_exports_run_and_article_records() -> None:
     records = build_ingestion_records({"run_id": "run-1", "status": "completed"}, [article])
     assert [record["entity_type"] for record in records] == ["run", "article"]
     assert records[1]["PK"] == f"ARTICLE#{article.article_id}"
+
+
+def test_ingestion_config_uses_bounded_feed_workers() -> None:
+    from first_commit.config import PrototypeConfig
+
+    assert PrototypeConfig().feed_workers == 8

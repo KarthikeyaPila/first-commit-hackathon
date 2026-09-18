@@ -74,7 +74,8 @@ research and development packages are optional dependencies in pyproject.toml.
 - src/first_commit/sources.py: Source registry with source_id, name, scope,
   states, language, rss_url, max_entries, active, feed_health, and last_error.
 - src/first_commit/feeds.py: RSS/Atom fetch, XML parsing, text cleanup, dates,
-  GUIDs, URLs, and content hashes.
+  GUIDs, URLs, and content hashes. Ingestion fetches active feeds with a bounded
+  pool of 8 workers while preserving report order.
 - src/first_commit/dedupe.py: GUID → canonical URL → content hash deduplication;
   duplicate provenance is preserved.
 - src/first_commit/storage.py: latest normalized snapshot in ignored
@@ -234,7 +235,7 @@ Generated snapshots, labels, model caches, and raw captures are ignored.
 
 - Read AGENTS.md, SKILLS.md, and the relevant docs.
 - Check git status and recent commits.
-- Run the 23-test suite before changing behavior.
+- Run the 24-test suite before changing behavior.
 - Read error.md when the user reports a browser/runtime issue.
 - Inspect API payloads and cache behavior before changing the UI.
 - Treat DEVELOPMENT_CHECKPOINTS.md as a local tracker, not something to blindly
