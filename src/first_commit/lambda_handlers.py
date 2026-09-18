@@ -24,6 +24,20 @@ def _response(status_code: int, body: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _latest_completed_run_id(table: Any, projections: list[dict[str, Any]]) -> str | None:
+    """Return the newest completed run represented by state projections."""
+
+    latest: tuple[str, str] | None = None
+    for run_id in {str(item.get("run_id")) for item in projections if item.get("run_id")}:
+        run = table.get_item(Key={"PK": f"RUN#{run_id}", "SK": "META"}).get("Item") or {}
+        if run.get("status") != "completed":
+            continue
+        completed_at = str(run.get("completed_at") or "")
+        if latest is None or completed_at > latest[0]:
+            latest = (completed_at, run_id)
+    return latest[1] if latest else None
+
+
 def api_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     """Serve the first read-only health and run-status API endpoints."""
 
@@ -57,6 +71,13 @@ def api_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         projections = table.query(
             KeyConditionExpression=Key("PK").eq(f"STATE#{state}"),
         ).get("Items", [])
+        latest_run_id = _latest_completed_run_id(table, projections)
+        if latest_run_id:
+            projections = [
+                projection
+                for projection in projections
+                if projection.get("run_id") == latest_run_id
+            ]
         stories = []
         for projection in projections:
             run_id = projection.get("run_id")
@@ -69,7 +90,7 @@ def api_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
             if story:
                 story["state"] = state
                 stories.append(story)
-        return _response(200, {"state": state, "stories": stories})
+        return _response(200, {"state": state, "run_id": latest_run_id, "stories": stories})
 
     if path == "/process":
         function_name = os.environ.get("PROCESSOR_FUNCTION_NAME")

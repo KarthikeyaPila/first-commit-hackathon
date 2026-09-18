@@ -3,6 +3,31 @@ from first_commit.pipeline import pipeline_stages
 from first_commit.feeds import parse_feed_xml
 from first_commit.sources import SOURCES
 from first_commit.state_routing import route_article, state_source_directory
+from first_commit.lambda_handlers import _latest_completed_run_id
+
+
+class _RunTable:
+    def __init__(self, runs: dict[str, dict[str, str]]) -> None:
+        self.runs = runs
+
+    def get_item(self, *, Key: dict[str, str]) -> dict[str, object]:
+        run_id = Key["PK"].removeprefix("RUN#")
+        return {"Item": self.runs.get(run_id)}
+
+
+def test_latest_completed_run_filters_historical_state_runs() -> None:
+    projections = [
+        {"run_id": "run-old"},
+        {"run_id": "run-new"},
+        {"run_id": "run-failed"},
+    ]
+    table = _RunTable({
+        "run-old": {"status": "completed", "completed_at": "2026-09-18T10:00:00+00:00"},
+        "run-new": {"status": "completed", "completed_at": "2026-09-18T11:00:00+00:00"},
+        "run-failed": {"status": "failed", "completed_at": "2026-09-18T12:00:00+00:00"},
+    })
+
+    assert _latest_completed_run_id(table, projections) == "run-new"
 
 
 def test_clustering_text_uses_headline_summary_and_lead() -> None:
