@@ -10,7 +10,7 @@ export function ProcessingPipeline({ stages = [], status }: { stages?: RunStage[
     <div className="pipeline-heading"><div><span className="micro">Sutradhar · internal processing</span><h2>From reports<br /><em>to stories.</em></h2></div><span className="pipeline-run-status">{status ?? "READY"}</span></div>
     <div className="pipeline-legend"><span><i className="queued" /> Queued</span><span><i className="running" /> Running</span><span><i className="complete" /> Complete</span><span><i className="failed" /> Failed</span></div>
     <div className="pipeline-grid">{FALLBACK_STAGES.map(([id, label], index) => { const stage = byId.get(id); const stageStatus = stage?.status ?? "QUEUED"; return <article className={`pipeline-node status-${stageStatus.toLowerCase()}`} key={id}>
-      <span className="pipeline-node-number">NODE {String(index + 1).padStart(2, "0")} / 12</span><h3>{label}</h3><p>{metric(stage)}</p><strong>{stageStatus}</strong>{index < FALLBACK_STAGES.length - 1 && <span className="pipeline-arrow" aria-hidden="true">→</span>}
+      <span className="pipeline-node-number">NODE {String(index + 1).padStart(2, "0")} / 12</span><h3>{label}</h3><p>{metric(stage)}</p><strong>{stageStatus}</strong><span className="flow-packet" aria-hidden="true" />{index < FALLBACK_STAGES.length - 1 && <span className="pipeline-arrow" aria-hidden="true">→</span>}
     </article>; })}</div>
   </section>;
 }
