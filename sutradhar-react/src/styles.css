@@ -863,6 +863,7 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
 .pipe-status{position:absolute;right:15px;bottom:13px;font-family:var(--mono);font-size:7px;letter-spacing:.16em;color:rgba(255,245,229,.38)}
 .pipe-node[data-status="running"] .pipe-status{color:#D92243}
 .pipe-node[data-status="complete"] .pipe-status{color:#E0C375}
+.pipe-node[data-status="failed"]{border-color:#D92243}.pipe-node[data-status="failed"]::before{width:100%;background:#D92243}.pipe-node[data-status="failed"]::after{background:#D92243}.pipe-node[data-status="failed"] .pipe-status{color:#D92243}
 .pipe-micro{margin-top:7px;font-family:var(--mono);font-size:7px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,245,229,.32)}
 .pipeline-legend{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin:0 0 20px;font-family:var(--mono);font-size:7px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,245,229,.42)}
 .legend-item{display:flex;align-items:center;gap:7px}.legend-dot{width:5px;height:5px;border-radius:50%;background:#777}.legend-dot.run{background:#D92243}.legend-dot.done{background:#E0C375}

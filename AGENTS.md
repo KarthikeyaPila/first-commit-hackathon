@@ -137,7 +137,9 @@ research and development packages are optional dependencies in pyproject.toml.
 - sutradhar-react/: the current React/Vite Sutradhar frontend. It preserves the
   working reference implementation through `src/homeMarkup.js`,
   `src/legacyRuntime.js`, and `src/styles.css`, with the backend bridge in
-  `src/backendApi.js`. `final.html` and root mockups remain untouched references.
+  `src/backendApi.js`. The pipeline renders the backend's exact stage IDs and
+  persisted telemetry; it does not use a local progress timer. `final.html` and
+  root mockups remain untouched references.
   The older `frontend/` rewrite is not the source of truth for the current UI.
 
 ## RSS coverage

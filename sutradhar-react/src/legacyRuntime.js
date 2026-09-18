@@ -1747,7 +1747,7 @@ document.getElementById("swClose").addEventListener("click",()=>switcher.removeA
 
 /* ============================================================
    PRINTING PRESS → INTERNAL PROCESSING
-   UI-only simulation. No API/backend dependency.
+   The AWS run-status API is the source of truth for this view.
    ============================================================ */
 const printPress = document.getElementById("printPress");
 const pipelineView = document.getElementById("pipelineView");
@@ -1760,26 +1760,26 @@ const outputRail = document.getElementById("outputRail");
 const outputFeeds = document.getElementById("outputFeeds");
 const pipelineClose = document.getElementById("pipelineClose");
 const PIPE_STAGES = [
-  ["NEWS SOURCES","184 ARTICLES","184 SOURCES SCANNED"],
-  ["INGESTION","184 RECEIVED","INGEST QUEUE / 184"],
-  ["NORMALIZATION","184 DOCUMENTS","CLEAN TEXT / UTF-8"],
-  ["LANGUAGE DETECTION","EN / HI / TA / BN / …","LANGUAGE MIX / 8"],
-  ["DEDUPLICATION","184 → 137 UNIQUE","47 DUPLICATES REMOVED"],
-  ["TF-IDF VECTORIZATION","137 DOCS / 4,817 FEATURES","SPARSE FEATURE MATRIX"],
-  ["KEYWORD EXTRACTION","1,092 KEYWORDS","TOP TERMS / DOCUMENT"],
-  ["ENTITY EXTRACTION","612 ENTITIES","PEOPLE / PLACE / ORG"],
-  ["STORY CLUSTERING","38 STORY CLUSTERS","SIMILARITY GRAPH"],
-  ["STATE CLASSIFICATION","28 STATE DESKS","GEO RELEVANCE PASS"],
-  ["RELEVANCE RANKING","137 STORIES SCORED","SIGNAL / CONTEXT / RECENCY"],
-  ["FEED GENERATION","33 STATE FEEDS","READY FOR DISPATCH"],
+  ["fetch_sources","FETCH RSS SOURCES"],
+  ["parse_articles","PARSE ARTICLE ENTRIES"],
+  ["normalize_articles","NORMALIZE ARTICLE METADATA"],
+  ["deduplicate_articles","DEDUPLICATE ARTICLES"],
+  ["classify_states","CLASSIFY STATE RELEVANCE"],
+  ["tfidf_vectorization","BUILD TF-IDF FEATURES"],
+  ["neighbor_retrieval","RETRIEVE SPARSE HEADLINE NEIGHBORS"],
+  ["weighted_tfidf_scoring","SCORE WEIGHTED TF-IDF CANDIDATES"],
+  ["keyword_entity_signals","EVALUATE KEYWORD / ENTITY / TIME SIGNALS"],
+  ["graph_clustering","BUILD STORY GRAPH CLUSTERS"],
+  ["rank_stories","RANK AND NAME STORIES"],
+  ["persist_outputs","PERSIST RESULTS TO DYNAMODB"],
 ];
 let pipelineTimer=[];
 function clearPipelineTimers(){pipelineTimer.forEach(clearTimeout);pipelineTimer=[];}
 function buildPipeline(){
   pipelineGrid.innerHTML="";
   PIPE_STAGES.forEach((d,i)=>{
-    const n=document.createElement("article"); n.className="pipe-node"; n.dataset.i=i; n.dataset.status="queued";
-    n.innerHTML=`<div class="pipe-num">NODE ${String(i+1).padStart(2,"0")} / ${String(PIPE_STAGES.length).padStart(2,"0")}</div><div class="pipe-name">${d[0]}</div><div class="pipe-data">${d[1]}</div><div class="pipe-micro">${d[2]}</div><div class="pipe-status">QUEUED</div>`;
+    const n=document.createElement("article"); n.className="pipe-node"; n.dataset.i=i; n.dataset.stageId=d[0]; n.dataset.status="queued";
+    n.innerHTML=`<div class="pipe-num">NODE ${String(i+1).padStart(2,"0")} / ${String(PIPE_STAGES.length).padStart(2,"0")}</div><div class="pipe-name">${d[1]}</div><div class="pipe-data">AWAITING TELEMETRY</div><div class="pipe-micro">BACKEND STAGE / ${d[0].replaceAll("_"," ")}</div><div class="pipe-status">QUEUED</div>`;
     pipelineGrid.appendChild(n);
   });
   outputFeeds.innerHTML="";
@@ -1839,20 +1839,48 @@ function highlightOutput(){
   pipelineView.classList.add("pipeline-done");
 }
 let backendPollTimer = null;
+let backendRunFinished = false;
+function setPipelineError(message){
+  pipelineView.dataset.backendError="1";
+  const first = pipelineGrid.children[0];
+  if(first) {
+    setPipeStatus(0,"failed");
+    const data = first.querySelector(".pipe-data");
+    const micro = first.querySelector(".pipe-micro");
+    if(data) data.textContent = "BACKEND RUN UNAVAILABLE";
+    if(micro) micro.textContent = message.slice(0, 90).toUpperCase();
+  }
+  console.error("Sutradhar backend processing unavailable:", message);
+}
 function applyBackendRun(run){
   const stages = Array.isArray(run.stage_progress) ? run.stage_progress : [];
-  stages.forEach((stage,i)=>{
-    const node = pipelineGrid.children[i];
+  stages.forEach((stage)=>{
+    const node = [...pipelineGrid.children].find(item => item.dataset.stageId === stage.stage_id);
     if(!node) return;
+    const i = Number(node.dataset.i);
     const status = String(stage.status || "queued").toLowerCase();
     setPipeStatus(i, status);
+    if(status === "running" && !node.dataset.packetSent){
+      node.dataset.packetSent = "1";
+      const incoming=pipelineWires.querySelector(`.pipeline-wire[data-i="${i-1}"]`);
+      if(incoming) addPacket(incoming);
+    }
     const metrics = Object.entries(stage.metrics || {}).slice(0,2).map(pair => pair[0].replaceAll("_"," ") + ": " + pair[1]);
     const data = node.querySelector(".pipe-data");
     const micro = node.querySelector(".pipe-micro");
     if(metrics[0] && data) data.textContent = metrics[0].toUpperCase();
     if(metrics[1] && micro) micro.textContent = metrics[1].toUpperCase();
   });
-  if(run.status === "completed" || run.status === "failed" || run.status === "error"){
+  const runStatus = String(run.status || "").toLowerCase();
+  if(runStatus === "completed" && !backendRunFinished){
+    backendRunFinished = true;
+    highlightOutput();
+    setTimeout(endPipelineToMap,1700);
+  } else if((runStatus === "failed" || runStatus === "error") && !backendRunFinished){
+    backendRunFinished = true;
+    setPipelineError(run.error || "PROCESSING RUN FAILED");
+  }
+  if(runStatus === "completed" || runStatus === "failed" || runStatus === "error"){
     if(backendPollTimer) clearTimeout(backendPollTimer);
     backendPollTimer = null;
   }
@@ -1860,7 +1888,7 @@ function applyBackendRun(run){
 async function beginBackendRun(){
   try {
     const accepted = await startProcessing();
-    if(!accepted.run_id) return;
+    if(!accepted.run_id) throw new Error("No run ID returned by the processing API");
     const poll = async () => {
       try {
         const run = await getRunStatus(accepted.run_id);
@@ -1869,12 +1897,12 @@ async function beginBackendRun(){
           backendPollTimer = setTimeout(poll, 900);
         }
       } catch(error) {
-        console.warn("Sutradhar processing telemetry unavailable; keeping visual pipeline running.", error);
+        setPipelineError(error.message || "RUN STATUS REQUEST FAILED");
       }
     };
     poll();
   } catch(error) {
-    console.warn("Sutradhar processing trigger unavailable; keeping visual pipeline as a local fallback.", error);
+    setPipelineError(error.message || "PROCESSING TRIGGER FAILED");
   }
 }
 const pressSection = document.getElementById("pressSection");
@@ -1887,27 +1915,10 @@ if(pressSection && "IntersectionObserver" in window){
 
 function startPipeline(){
   clearPipelineTimers();
+  backendRunFinished = false;
+  delete pipelineView.dataset.backendError;
   buildPipeline();
   beginBackendRun();
-  const nodes=[...pipelineGrid.children];
-  nodes.forEach((_,i)=>{
-    const t=i*520;
-    pipelineTimer.push(setTimeout(()=>{
-      setPipeStatus(i,"running");
-      const incoming=pipelineWires.querySelector(`.pipeline-wire[data-i="${i-1}"]`);
-      if(incoming) addPacket(incoming);
-    },t));
-    pipelineTimer.push(setTimeout(()=>{
-      setPipeStatus(i,"complete");
-      if(i===nodes.length-1){
-        pipelineTimer.push(setTimeout(()=>{
-          highlightOutput();
-          // Output returns to the real homepage map after the control view completes.
-          pipelineTimer.push(setTimeout(endPipelineToMap,1700));
-        },450));
-      }
-    },t+390));
-  });
 }
 async function enterPipeline(){
   if(busy || pipelineView.getAttribute("data-open")==="1") return;

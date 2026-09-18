@@ -36,9 +36,9 @@ The AWS backend is deployed in Mumbai (`ap-south-1`) and includes:
 
 The React/Vite frontend foundation is now implemented. It recreates the editorial
 map and printing-press experience, loads market context and state stories from
-the deployed API, displays article comparison cards, and exposes the live
-twelve-stage processing telemetry with the AWS infrastructure lane. Frontend
-hosting and final visual polish remain.
+the deployed API, displays article comparison cards, and exposes the twelve
+actual backend processing stages using live run telemetry and the AWS
+infrastructure lane. Frontend hosting and final visual polish remain.
 
 ## Repository layout
 
@@ -207,7 +207,9 @@ The current frontend supports:
 5. Original headlines, publisher names, RSS descriptions when present, timestamps, and original links.
 6. Interactive uploaded printing press at `/printer.png`.
 7. Live `/process` trigger and `/runs/{run_id}` polling.
-8. Twelve real processing stages and truthful AWS infrastructure nodes.
+8. Twelve backend processing stages and truthful AWS infrastructure nodes. The
+   pipeline view uses the persisted run status as its source of truth rather
+   than a local timer animation.
 
 Remaining frontend work is state-output highlighting after a completed run,
 visual polish/responsive review, and static hosting against the deployed API.

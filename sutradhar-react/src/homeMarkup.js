@@ -253,7 +253,7 @@ export const HOME_MARKUP = String.raw`
 
 
 <!-- ============================================================
-     INTERNAL PROCESSING — FRONTEND VISUAL SIMULATION ONLY
+     INTERNAL PROCESSING — LIVE AWS RUN TELEMETRY
      ============================================================ -->
 <section class="pipeline-view" id="pipelineView" aria-hidden="true">
   <header class="pipeline-head">
@@ -261,7 +261,7 @@ export const HOME_MARKUP = String.raw`
       <span class="pipeline-signal" aria-hidden="true"></span>
       <div><div class="pipeline-kicker">SUTRADHAR · Internal Processing</div><h2 class="pipeline-title">Processing Pipeline</h2></div>
     </div>
-    <div class="pipeline-meta">Visual system view · simulated data<br>Frontend demonstration · no live telemetry</div>
+    <div class="pipeline-meta">Live system view · AWS run telemetry<br>Backend stages and metrics</div>
     <button class="pipeline-close" id="pipelineClose" type="button">Return to press ×</button>
   </header>
   <div class="pipeline-shell">
@@ -277,7 +277,7 @@ export const HOME_MARKUP = String.raw`
       </div>
     </div>
   </div>
-  <div class="pipeline-sim-note">SIMULATION MODE · ALL COUNTERS ARE DEMO VALUES · NO BACKEND CONNECTION</div>
+  <div class="pipeline-sim-note">LIVE TELEMETRY · STATUS AND COUNTERS FROM THE PROCESSING RUN</div>
 </section>
 
 <div class="curtain" id="curtain" aria-hidden="true"></div>
