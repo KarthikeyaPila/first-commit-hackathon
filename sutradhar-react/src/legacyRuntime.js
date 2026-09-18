@@ -1891,6 +1891,8 @@ document.getElementById("swClose").addEventListener("click",()=>switcher.removeA
    The AWS run-status API is the source of truth for this view.
    ============================================================ */
 const printPress = document.getElementById("printPress");
+const pressFrame = printPress.querySelector(".print-press-frame");
+const pressLook = printPress.querySelector(".press-look");
 const pressStoryAction = document.getElementById("pressStoryAction");
 const pipelineView = document.getElementById("pipelineView");
 const pipelineGrid = document.getElementById("pipelineGrid");
@@ -2147,7 +2149,20 @@ async function closePipeline(){
   pipelineRun.querySelector("span").textContent = "RUN PIPELINE";
   busy=false;
 }
+function placePressLook(e){
+  if(!pressFrame || !pressLook || window.matchMedia("(max-width:760px)").matches) return;
+  const frame = pressFrame.getBoundingClientRect();
+  const card = pressLook.getBoundingClientRect();
+  let x = e.clientX - frame.left + 22;
+  let y = e.clientY - frame.top - card.height / 2;
+  if(x + card.width > frame.width - 12) x = e.clientX - frame.left - card.width - 22;
+  y = Math.max(12, Math.min(frame.height - card.height - 12, y));
+  pressLook.style.left = x + "px";
+  pressLook.style.top = y + "px";
+}
 printPress.addEventListener("click",enterPipeline);
+printPress.addEventListener("pointerenter",placePressLook);
+printPress.addEventListener("pointermove",placePressLook);
 pressStoryAction.addEventListener("click",enterPipeline);
 pipelineRun.addEventListener("click",startPipeline);
 pipelineExit.addEventListener("click",closePipeline);

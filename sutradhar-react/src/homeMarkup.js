@@ -89,8 +89,8 @@ export const HOME_MARKUP = String.raw`
       <span class="print-press-frame">
         <img class="print-press-img" alt="Illustrated newspaper printing press" src="/press.png" />
         <span class="press-look"><strong>LOOK INSIDE</strong><span>see how raw news becomes state-wise stories →</span></span>
-        <span class="print-press-caption"><span><span class="print-press-kicker">The machine behind the paper</span><span class="print-press-title">Printing Press</span></span><span class="print-press-arrow">→</span></span>
       </span>
+      <span class="press-image-label">PRINTING PRESS</span>
       </button>
       <div class="press-story">
         <div class="press-story-rule"></div>
