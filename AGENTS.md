@@ -47,6 +47,9 @@ Branch: main
 
 Latest pushed commits:
 
+- 4b43586 — soften publication time matching
+- 4d2b65c — process full article snapshots
+- 7f5cf50 — refresh Sutradhar project handoff
 - 8162910 — convert gold and silver to Indian units
 - 40bbeb5 — add cached market context
 - b2df03c — expose live processing stages
@@ -111,7 +114,7 @@ research and development packages are optional dependencies in pyproject.toml.
 - src/first_commit/matching.py: explainable weighted TF-IDF similarity, entities,
   keywords, state, and time.
 - src/first_commit/clustering.py: global story graph clustering and state
-  projections; There is no fixed article-count ceiling in the sparse grouping path. Outputs carry run and
+  projections; there is no fixed article-count ceiling in the sparse grouping path. Outputs carry run and
   algorithm-version metadata. Headline TF-IDF artifacts and
   bounded sparse nearest-neighbor results are cached per snapshot. Candidate
   retrieval avoids a dense article-by-article cosine matrix; weighted pair scoring
@@ -196,13 +199,23 @@ Do not hide the source headline or present a synthesized title as fact.
 
 ## Required next phase
 
-AWS is mandatory for the finished project.
-The initial foundation and real ingestion trigger are deployed in ap-south-1;
-story persistence, the first stories API, and AWS TF-IDF packaging are deployed;
-state and comparison APIs are deployed; the helper UI can connect to the AWS
-API, poll runs, and render comparison cards. Retries, failure capture, the disabled-by-default hourly schedule, and detailed
-run-stage telemetry are now deployed. Market context is now cached separately for the future UI. Remaining work is state
-fallback APIs, frontend hosting/polish, and optional schedule activation.
+The AWS backend is complete enough for frontend integration in `ap-south-1`.
+It includes ingestion, persistence, state/story/comparison APIs, retries, failure
+capture, detailed run-stage telemetry, and cached market context. The hourly
+EventBridge schedule remains disabled by default.
+
+The next phase is the Sutradhar frontend:
+
+1. India map and state selection.
+2. Real state-story API integration.
+3. Article comparison cards with source links and original headlines.
+4. Printing-press “look inside” transition.
+5. Animated twelve-stage pipeline driven by persisted run telemetry.
+6. State-wise output flowing back to the map.
+7. Frontend hosting against the deployed API.
+
+The 49 feeds with restrictive personal/non-commercial RSS terms remain a policy
+decision; do not remove them from the registry without an explicit choice.
 
 Credential safety is non-negotiable:
 

@@ -103,7 +103,7 @@ Sparse grouping diagnosis:
 2. Count candidates.
 3. Count MATCH, CANDIDATE, and ungrouped.
 4. Inspect state/source filtering.
-5. Inspect the 48-hour window.
+5. Inspect the weak publication-time signal; there is no hard time window.
 6. Inspect retrieval and lexical fallback.
 7. Check cross-language token mismatch.
 8. Review labels before lowering thresholds.
