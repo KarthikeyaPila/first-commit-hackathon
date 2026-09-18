@@ -152,6 +152,17 @@ Representative story headlines are implemented and exposed through the API/UI;
 future title changes must preserve the original publisher headlines for
 comparison.
 
+## Market-context skill
+
+Market data is a separate context branch, not an input to article matching or story
+clustering. The current prototype fetches NIFTY 50, Sensex, USD/INR, gold, and silver
+in parallel through the keyless Yahoo Finance chart endpoint, stores the latest
+snapshot at `MARKET#latest`, and exposes it through `GET /market`. Quote metadata
+is retained for freshness and debugging, but the future UI may display only values
+and changes. Provider failures must not fail the news run. Validate units carefully:
+index values are INR, USD/INR is INR per USD, and gold/silver futures are USD per
+troy ounce. This is market context, not investment advice.
+
 ## AWS skill
 
 AWS is required, not optional.

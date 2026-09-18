@@ -90,8 +90,11 @@ research and development packages are optional dependencies in pyproject.toml.
 - src/requirements.txt: pinned scikit-learn runtime dependency packaged into
   both Lambda functions; AWS grouping reports weighted TF-IDF when deployed.
 - src/first_commit/lambda_handlers.py: AWS API and asynchronous processing Lambda
-  entry points for health, run status, manual latest-news triggers, and detailed
-  persisted stage progress.
+  entry points for health, run status, manual latest-news triggers, detailed
+  persisted stage progress, and the cached market snapshot endpoint.
+- src/first_commit/market_data.py: isolated keyless market adapter for NIFTY 50,
+  Sensex, USD/INR, gold, and silver. It fetches quotes in parallel and isolates
+  provider failures from news processing.
 - infra/template.yaml: deployed SAM/CloudFormation stack for DynamoDB, HTTP API,
   API-to-processor invocation, stories index, processing Lambda, hourly schedule,
   and retained SQS failure queue in ap-south-1. The schedule is explicitly disabled
@@ -191,8 +194,8 @@ The initial foundation and real ingestion trigger are deployed in ap-south-1;
 story persistence, the first stories API, and AWS TF-IDF packaging are deployed;
 state and comparison APIs are deployed; the helper UI can connect to the AWS
 API, poll runs, and render comparison cards. Retries, failure capture, the disabled-by-default hourly schedule, and detailed
-run-stage telemetry are now deployed. Remaining work is state fallback APIs,
-frontend hosting/polish, and optional schedule activation.
+run-stage telemetry are now deployed. Market context is now cached separately for the future UI. Remaining work is state
+fallback APIs, frontend hosting/polish, and optional schedule activation.
 
 Credential safety is non-negotiable:
 

@@ -6,10 +6,21 @@ write these records through boto3 without changing the domain pipeline.
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import Any
 
 
 SCHEMA_VERSION = "1"
+
+
+def _dynamodb_safe(value: Any) -> Any:
+    if isinstance(value, float):
+        return Decimal(str(value))
+    if isinstance(value, list):
+        return [_dynamodb_safe(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _dynamodb_safe(item) for key, item in value.items()}
+    return value
 
 
 def _record(pk: str, sk: str, entity_type: str, **values: Any) -> dict[str, Any]:
@@ -18,7 +29,7 @@ def _record(pk: str, sk: str, entity_type: str, **values: Any) -> dict[str, Any]
         "SK": sk,
         "entity_type": entity_type,
         "schema_version": SCHEMA_VERSION,
-        **values,
+        **{key: _dynamodb_safe(value) for key, value in values.items()},
     }
 
 
@@ -42,6 +53,20 @@ def run_record(run: dict[str, Any]) -> dict[str, Any]:
         grouping_summary=run.get("grouping_summary", {}),
         current_stage=run.get("current_stage"),
         stage_progress=run.get("stage_progress", []),
+        market_context=run.get("market_context", {}),
+    )
+
+
+def market_record(snapshot: dict[str, Any], run_id: str) -> dict[str, Any]:
+    return _record(
+        "MARKET#latest",
+        "META",
+        "market_snapshot",
+        run_id=run_id,
+        status=snapshot.get("status", "ERROR"),
+        fetched_at=snapshot.get("fetched_at"),
+        provider=snapshot.get("provider"),
+        instruments=snapshot.get("instruments", []),
     )
 
 

@@ -247,3 +247,13 @@ publishers' RSS or source pages on 17 September 2026:
 - [The Indian Express RSS directory](https://indianexpress.com/rss/)
 - [Onmanorama RSS page and terms](https://www.onmanorama.com/rss.html)
 - [AP Herald feed directory](https://www.indiaherald.com/fan/en/)
+
+## Market context integration
+
+The AWS processing path now fetches a separate market snapshot in parallel across
+five configured instruments: NIFTY 50, Sensex, USD/INR, gold, and silver. The
+prototype uses the keyless Yahoo Finance chart endpoint, stores the latest
+snapshot in DynamoDB at MARKET#latest, and exposes it through GET /market.
+Market failures are isolated so they do not fail the news pipeline. The future UI
+can display only values and changes while retaining provider and fetched-at fields
+for internal freshness/debugging.

@@ -18,11 +18,13 @@ from .aws_contract import (
     state_story_record,
     story_membership_record,
     story_record,
+    market_record,
 )
 from .clustering import build_global_stories
 from .dedupe import deduplicate_articles
 from .feeds import fetch_source
 from .models import Article
+from .market_data import fetch_market_snapshot
 from .pipeline import pipeline_stages
 from .sources import SOURCES, Source
 from .state_routing import route_article
@@ -305,19 +307,22 @@ def process_latest_news(table: Any, event: dict[str, Any]) -> dict[str, Any]:
             unique_articles,
             progress_callback=mark_stage,
         )
+        market_snapshot = fetch_market_snapshot()
+        market_records = [market_record(market_snapshot, run_id)]
 
         mark_stage(
             "persist_outputs",
             "RUNNING",
-            {"records_to_write": len(article_records) + len(story_records)},
+            {"records_to_write": len(article_records) + len(story_records) + len(market_records)},
         )
-        _write_records(table, article_records + story_records)
+        _write_records(table, article_records + story_records + market_records)
         mark_stage(
             "persist_outputs",
             "COMPLETE",
             {
                 "article_records": len(article_records),
                 "story_records": len(story_records),
+                "market_records": len(market_records),
             },
         )
 
@@ -342,6 +347,7 @@ def process_latest_news(table: Any, event: dict[str, Any]) -> dict[str, Any]:
             "feeds": reports,
             "story_count": sum(1 for record in story_records if record.get("entity_type") == "story"),
             "grouping_summary": grouping_summary,
+            "market_context": market_snapshot,
         }
         table.put_item(Item=run_record(completed))
         return completed

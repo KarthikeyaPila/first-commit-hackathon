@@ -31,6 +31,16 @@ def api_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     if path == "/health":
         return _response(200, {"ok": True, "service": "first-commit-api"})
 
+    if path == "/market":
+        import boto3
+        if not os.environ.get("TABLE_NAME"):
+            return _response(500, {"error": "TABLE_NAME is not configured"})
+        table = boto3.resource("dynamodb").Table(os.environ["TABLE_NAME"])
+        item = table.get_item(Key={"PK": "MARKET#latest", "SK": "META"}).get("Item")
+        if item is None:
+            return _response(404, {"error": "market snapshot not found"})
+        return _response(200, item)
+
     if path == "/states":
         from .state_routing import state_source_directory
 
