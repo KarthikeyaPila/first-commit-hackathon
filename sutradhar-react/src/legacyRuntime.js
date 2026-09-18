@@ -1927,7 +1927,14 @@ function addPacket(path){
   requestAnimationFrame(f);
 }
 function highlightOutput(){
-  const feeds=["MAHARASHTRA — 14 STORIES","KARNATAKA — 9 STORIES","WEST BENGAL — 7 STORIES","TAMIL NADU — 11 STORIES","UTTAR PRADESH — 18 STORIES","ASSAM — 5 STORIES"];
+  const feeds=[
+    ["maharashtra","Maharashtra","14 STORIES"],
+    ["karnataka","Karnataka","9 STORIES"],
+    ["west-bengal","West Bengal","7 STORIES"],
+    ["tamil-nadu","Tamil Nadu","11 STORIES"],
+    ["uttar-pradesh","Uttar Pradesh","18 STORIES"],
+    ["assam","Assam","5 STORIES"]
+  ];
   pipelineOutput.classList.add("is-visible");
   outputIndia.classList.add("live");
   outputRail.classList.add("live");
@@ -1935,7 +1942,13 @@ function highlightOutput(){
   [...outputIndia.querySelectorAll(".hit,.marks,.patfill")].forEach(e=>e.remove());
   const nodes=[...outputIndia.querySelectorAll(".st")];
   nodes.forEach((n,i)=>{ if(i%4===0) n.classList.add("hot"); });
-  feeds.forEach((f,i)=>setTimeout(()=>{const chip=document.createElement("span");chip.className="output-chip";chip.innerHTML=`<b>${f.split(" — ")[0]}</b> — ${f.split(" — ")[1]}`;outputFeeds.appendChild(chip);requestAnimationFrame(()=>chip.classList.add("show"));},i*180));
+  feeds.forEach(([key,name,count],i)=>setTimeout(()=>{
+    const chip=document.createElement("span");
+    chip.className="output-chip";
+    chip.innerHTML=`<svg class="output-state-map" viewBox="0 0 ${VB.w} ${VB.h}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><path d="${pathOf(key)}"></path></svg><b>${name}</b><span>${count}</span>`;
+    outputFeeds.appendChild(chip);
+    requestAnimationFrame(()=>chip.classList.add("show"));
+  },i*180));
   pipelineView.classList.add("pipeline-done");
 }
 let backendPollTimer = null;
