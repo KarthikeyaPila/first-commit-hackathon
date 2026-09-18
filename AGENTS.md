@@ -217,7 +217,7 @@ Generated snapshots, labels, model caches, and raw captures are ignored.
 
 - Read AGENTS.md, SKILLS.md, and the relevant docs.
 - Check git status and recent commits.
-- Run the 17-test suite before changing behavior.
+- Run the 18-test suite before changing behavior.
 - Read error.md when the user reports a browser/runtime issue.
 - Inspect API payloads and cache behavior before changing the UI.
 - Treat DEVELOPMENT_CHECKPOINTS.md as a local tracker, not something to blindly
