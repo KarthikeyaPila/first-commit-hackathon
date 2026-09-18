@@ -272,3 +272,14 @@ def test_story_clustering_groups_a_clear_cross_source_event(tmp_path) -> None:
     assert result["story_count"] == 1
     assert result["matched_edges"] == 1
     assert result["stories"][0]["article_count"] == 2
+
+
+def test_lambda_state_directory_and_state_story_validation() -> None:
+    from first_commit.lambda_handlers import api_handler
+
+    directory = api_handler({"rawPath": "/states"}, None)
+    assert directory["statusCode"] == 200
+    assert "Kerala" in directory["body"]
+
+    stories = api_handler({"rawPath": "/states/Kerala/stories"}, None)
+    assert stories["statusCode"] == 400

@@ -173,7 +173,8 @@ Implement in this order:
 5. Timeout, retry, and partial-failure handling.
 6. Story/state/comparison/run APIs.
 7. Hourly EventBridge schedule.
-   Story records now use RunStoriesIndex for run-scoped API queries.
+   Story records now use RunStoriesIndex for run-scoped API queries, and state
+   projections are queryable through /states/{state}/stories.
 8. Thin vertical deployment with a small source set.
    The deployed POST /process trigger accepts optional source_ids for controlled runs.
 9. Expand source volume after observability works.

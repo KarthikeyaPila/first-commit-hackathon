@@ -7,6 +7,7 @@ from decimal import Decimal
 import os
 import uuid
 from typing import Any
+from urllib.parse import unquote
 
 
 def _json_default(value: Any) -> int | float | str:
@@ -29,6 +30,36 @@ def api_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     path = event.get("rawPath", "")
     if path == "/health":
         return _response(200, {"ok": True, "service": "first-commit-api"})
+
+    if path == "/states":
+        from .state_routing import state_source_directory
+
+        return _response(200, {"states": state_source_directory()})
+
+    if path.startswith("/states/") and path.endswith("/stories"):
+        state = unquote(path[len("/states/") : -len("/stories")].strip("/"))
+        if not state or not os.environ.get("TABLE_NAME"):
+            return _response(400, {"error": "state is required"})
+        import boto3
+        from boto3.dynamodb.conditions import Key
+
+        table = boto3.resource("dynamodb").Table(os.environ["TABLE_NAME"])
+        projections = table.query(
+            KeyConditionExpression=Key("PK").eq(f"STATE#{state}"),
+        ).get("Items", [])
+        stories = []
+        for projection in projections:
+            run_id = projection.get("run_id")
+            story_id = projection.get("story_id")
+            if not run_id or not story_id:
+                continue
+            story = table.get_item(
+                Key={"PK": f"STORY#{run_id}#{story_id}", "SK": "META"}
+            ).get("Item")
+            if story:
+                story["state"] = state
+                stories.append(story)
+        return _response(200, {"state": state, "stories": stories})
 
     if path == "/process":
         function_name = os.environ.get("PROCESSOR_FUNCTION_NAME")

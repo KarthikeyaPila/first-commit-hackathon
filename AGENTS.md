@@ -185,7 +185,8 @@ Do not hide the source headline or present a synthesized title as fact.
 AWS is mandatory for the finished project.
 The initial foundation and real ingestion trigger are deployed in ap-south-1;
 story persistence, the first stories API, and AWS TF-IDF packaging are deployed;
-remaining work is state/comparison APIs, scheduling, and frontend wiring.
+state directory and state-story APIs are now deployed; remaining work is
+comparison details, scheduling, and frontend wiring.
 
 Credential safety is non-negotiable:
 

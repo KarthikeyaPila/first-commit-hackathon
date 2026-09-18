@@ -133,6 +133,18 @@ Resources:
             ApiId: !Ref HttpApi
             Path: /health
             Method: GET
+        States:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /states
+            Method: GET
+        StateStories:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /states/{state}/stories
+            Method: GET
         RunStatus:
           Type: HttpApi
           Properties:
