@@ -1013,6 +1013,21 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
 .pipeline-run:hover,.pipeline-run:focus-visible{background:#171310;border-color:#171310;box-shadow:0 10px 24px rgba(23,19,16,.18);transform:translateY(-2px)}
 .pipeline-run:hover b,.pipeline-run:focus-visible b{transform:translateX(5px)}
 .pipeline-run.is-running,.pipeline-run:disabled{background:rgba(217,34,67,.48);border-color:rgba(217,34,67,.48);box-shadow:none;cursor:wait;transform:none}
+.aws-architecture{margin:34px auto 0;padding:20px 0 4px;border-top:1px solid rgba(23,19,16,.18);max-width:1400px}
+.aws-architecture-head{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:16px}
+.aws-architecture-note{font-family:var(--mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:rgba(23,19,16,.45)}
+.aws-architecture-flow{display:flex;align-items:center;justify-content:center;gap:12px}
+.aws-node{display:grid;gap:5px;min-width:150px;padding:13px 14px;background:rgba(255,255,255,.48);border:1px solid rgba(23,19,16,.22)}
+.aws-node-main{border-color:#D92243;box-shadow:0 0 0 1px rgba(217,34,67,.13)}
+.aws-node small{font-family:var(--mono);font-size:7px;letter-spacing:.17em;color:#A56D16}
+.aws-node strong{font-family:var(--display);font-size:20px;font-weight:400;color:#171310}
+.aws-node span,.aws-architecture-support{font-family:var(--mono);font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:rgba(23,19,16,.48)}
+.aws-wire{font-style:normal;color:#D92243;font-family:var(--mono);font-size:18px}
+.aws-architecture-support{display:flex;justify-content:center;gap:28px;margin-top:14px}
+.aws-architecture-support b{color:#171310;font-weight:500}
+.pipeline-exit{position:absolute;right:var(--pad);bottom:clamp(18px,3vw,30px);z-index:4;display:flex;align-items:center;gap:12px;padding:10px 14px;background:transparent;border:1px solid rgba(23,19,16,.28);color:#171310;font-family:var(--mono);font-size:9px;letter-spacing:.17em;cursor:pointer;transition:background .3s var(--ease),color .3s var(--ease),transform .3s var(--ease)}
+.pipeline-exit b{font-size:16px;font-weight:400;color:#D92243}
+.pipeline-exit:hover,.pipeline-exit:focus-visible{background:#171310;color:#FFF5E5;transform:translateY(-2px)}
 .legend-dot{background:#8E8577!important}.legend-dot.run{background:#D92243!important}.legend-dot.done{background:#B48726!important}
 .pipeline-output{border-top-color:rgba(23,19,16,.18)!important}
 .output-title{color:#171310!important}
@@ -1033,6 +1048,14 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
   .press-layout{grid-template-columns:1fr;gap:24px;min-height:0}
   .press-layout .print-press-dock{justify-self:center;max-width:650px}
   .press-story{max-width:650px;width:100%;margin:0 auto;padding-top:4px}
+}
+@media (max-width:760px){
+  .aws-architecture-head{align-items:flex-start;flex-direction:column}
+  .aws-architecture-flow{align-items:stretch;flex-direction:column}
+  .aws-node{min-width:0}
+  .aws-wire{align-self:center;transform:rotate(90deg)}
+  .aws-architecture-support{align-items:flex-start;flex-direction:column;gap:8px}
+  .pipeline-exit{right:14px}
 }
 @media (max-width:760px){
   .press-section{min-height:620px;padding:112px 14px 45px}

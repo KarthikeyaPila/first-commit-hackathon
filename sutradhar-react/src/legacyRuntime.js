@@ -1856,6 +1856,7 @@ const outputRail = document.getElementById("outputRail");
 const outputFeeds = document.getElementById("outputFeeds");
 const pipelineClose = document.getElementById("pipelineClose");
 const pipelineRun = document.getElementById("pipelineRun");
+const pipelineExit = document.getElementById("pipelineExit");
 const PIPE_STAGES = [
   ["fetch_sources","FETCH RSS SOURCES"],
   ["parse_articles","PARSE ARTICLE ENTRIES"],
@@ -1973,7 +1974,6 @@ function applyBackendRun(run){
     backendRunFinished = true;
     hydrateAllStates(true);
     highlightOutput();
-    setTimeout(endPipelineToMap,1700);
   } else if((runStatus === "failed" || runStatus === "error") && !backendRunFinished){
     backendRunFinished = true;
     setPipelineError(run.error || "PROCESSING RUN FAILED");
@@ -2082,6 +2082,7 @@ async function closePipeline(){
 printPress.addEventListener("click",enterPipeline);
 pressStoryAction.addEventListener("click",enterPipeline);
 pipelineRun.addEventListener("click",startPipeline);
+pipelineExit.addEventListener("click",closePipeline);
 pipelineClose.addEventListener("click",closePipeline);
 window.addEventListener("resize",()=>{if(pipelineView.getAttribute("data-open")==="1") drawPipelineWires();});
 

@@ -265,8 +265,19 @@ export const HOME_MARKUP = String.raw`
         <div class="output-state-feed" id="outputFeeds"></div>
       </div>
     </div>
+    <section class="aws-architecture" aria-label="AWS architecture">
+      <div class="aws-architecture-head"><span class="pipeline-kicker">SUTRADHAR · AWS infrastructure</span><span class="aws-architecture-note">Deployed services behind the intelligence flow</span></div>
+      <div class="aws-architecture-flow">
+        <div class="aws-node"><small>ENTRY</small><strong>API Gateway</strong><span>HTTP API</span></div><i class="aws-wire">→</i>
+        <div class="aws-node"><small>COMPUTE</small><strong>API Lambda</strong><span>Read + trigger</span></div><i class="aws-wire">→</i>
+        <div class="aws-node aws-node-main"><small>PROCESSING</small><strong>Lambda</strong><span>RSS · NLP · stories</span></div><i class="aws-wire">→</i>
+        <div class="aws-node"><small>STORAGE</small><strong>DynamoDB</strong><span>Runs + articles</span></div>
+      </div>
+      <div class="aws-architecture-support"><span><b>EventBridge</b> hourly trigger · currently disabled</span><span><b>SQS</b> failure queue · retry capture</span></div>
+    </section>
   </div>
   <div class="pipeline-sim-note">LIVE TELEMETRY · STATUS AND COUNTERS FROM THE PROCESSING RUN</div>
+  <button class="pipeline-exit" id="pipelineExit" type="button"><span>EXIT PIPELINE</span><b>↘</b></button>
 </section>
 
 <div class="curtain" id="curtain" aria-hidden="true"></div>
