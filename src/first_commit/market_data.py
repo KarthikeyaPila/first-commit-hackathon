@@ -58,6 +58,28 @@ def _fetch_quote(instrument: dict[str, str]) -> dict[str, Any]:
     }
 
 
+def _convert_metals_to_inr(results: list[dict[str, Any]]) -> None:
+    usd_inr = next((item for item in results if item.get("key") == "usd_inr"), None)
+    rate = usd_inr.get("value") if usd_inr and usd_inr.get("status") == "OK" else None
+    for item in results:
+        if item.get("key") not in {"gold", "silver"} or item.get("status") != "OK":
+            continue
+        if rate is None:
+            item.update({
+                "value": None,
+                "change": None,
+                "change_percent": None,
+                "currency": None,
+                "status": "ERROR",
+                "error": "USD/INR quote unavailable for conversion",
+            })
+            continue
+        item["value"] = float(item["value"]) * float(rate) * 10 / 31.1034768
+        if item.get("change") is not None:
+            item["change"] = float(item["change"]) * float(rate) * 10 / 31.1034768
+        item["currency"] = "INR per 10 grams"
+
+
 def fetch_market_snapshot() -> dict[str, Any]:
     """Fetch configured market quotes in parallel without failing news ingestion."""
     fetched_at = datetime.now(timezone.utc).isoformat()
@@ -78,6 +100,7 @@ def fetch_market_snapshot() -> dict[str, Any]:
                     "status": "ERROR",
                     "error": f"{type(error).__name__}: {error}",
                 })
+    _convert_metals_to_inr(results)
     return {
         "status": "OK" if any(item["status"] == "OK" for item in results) else "ERROR",
         "fetched_at": fetched_at,

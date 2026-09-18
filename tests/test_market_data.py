@@ -19,6 +19,9 @@ def test_market_snapshot_fetches_all_configured_instruments(monkeypatch) -> None
     snapshot = market_data.fetch_market_snapshot()
 
     assert snapshot["status"] == "OK"
+    gold = next(item for item in snapshot["instruments"] if item["key"] == "gold")
+    assert gold["value"] == 3215.0746568627983
+    assert gold["currency"] == "INR per 10 grams"
     assert [item["key"] for item in snapshot["instruments"]] == [
         "nifty50", "sensex", "usd_inr", "gold", "silver"
     ]
