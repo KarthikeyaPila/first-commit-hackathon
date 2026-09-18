@@ -36,3 +36,5 @@ aws-credentials*
 *.tfstate.*
 frontend/node_modules/
 frontend/dist/
+sutradhar-react/node_modules/
+sutradhar-react/dist/

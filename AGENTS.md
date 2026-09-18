@@ -134,9 +134,11 @@ research and development packages are optional dependencies in pyproject.toml.
   POST routes: /api/candidates/label, /api/benchmark/label, /api/ingest.
   Story results are cached by snapshot modification time.
 - web/index.html: basic local helper UI. Keep backend status real; do not use fake loading animation.
-- frontend/: React/TypeScript/Vite Sutradhar frontend. `IndiaMap`, `PrintingPress`,
-  `StateStoryPanel`, `ProcessingPipeline`, and `AwsInfrastructure` use the real
-  API shapes; `final.html` and root mockups remain untouched references.
+- sutradhar-react/: the current React/Vite Sutradhar frontend. It preserves the
+  working reference implementation through `src/homeMarkup.js`,
+  `src/legacyRuntime.js`, and `src/styles.css`, with the backend bridge in
+  `src/backendApi.js`. `final.html` and root mockups remain untouched references.
+  The older `frontend/` rewrite is not the source of truth for the current UI.
 
 ## RSS coverage
 
@@ -253,7 +255,7 @@ or translation.
 
 ## Exact current resume point
 
-The current project name is **Sutradhar**. The deployed AWS backend is complete through processing, persistence, API comparison views, retries, failure capture, detailed stage telemetry, and market context. The frontend/control-system experience is now implemented locally with the \`final.html\` reference shell: Sutradhar overture -> India map with reference draw/hover/click transitions -> printing press -> real twelve-stage pipeline -> AWS infrastructure -> API-backed state dispatches and article comparisons. The remaining major task is frontend hosting against the deployed API. The hourly EventBridge schedule must remain disabled unless the operator deliberately enables it.
+The current project name is **Sutradhar**. The deployed AWS backend is complete through processing, persistence, API comparison views, retries, failure capture, detailed stage telemetry, and market context. The current frontend source of truth is `sutradhar-react/`: it preserves the working reference shell through the overture, India map, printing press, twelve-stage pipeline, AWS infrastructure view, and API-backed state dispatches/article comparisons. Its API base is configurable with `VITE_API_BASE_URL`, and the local reference experience remains available if an API request fails. The remaining major task is frontend hosting against the deployed API. The hourly EventBridge schedule must remain disabled unless the operator deliberately enables it.
 
 The market endpoint covers NIFTY 50, Sensex, USD/INR, gold, and silver. Gold and silver are converted from USD per troy ounce to INR per 10 grams. The current automated suite has 31 passing tests.
 
