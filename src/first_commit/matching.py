@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+import math
 import re
 
 from .models import Article
@@ -51,7 +52,11 @@ def _time_signal(first: Article, second: Article) -> tuple[float | None, str | N
     if not first.published_at or not second.published_at:
         return None, None
     hours = abs((first.published_at - second.published_at).total_seconds()) / 3600
-    return max(0.0, 1.0 - min(hours, 48.0) / 48.0), f"published {hours:.1f} hours apart"
+    # Time is deliberately a weak, gradual signal. It never rejects a pair
+    # and contributes at most 0.10 to the total score. A 72-hour half-life
+    # avoids making close publication times overpower the text signals.
+    signal = math.exp(-hours / (72.0 / math.log(2)))
+    return signal, f"published {hours:.1f} hours apart"
 
 def weighted_tfidf_similarities(
     articles: list[Article],

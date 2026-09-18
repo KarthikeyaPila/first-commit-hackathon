@@ -73,7 +73,7 @@ Preserve these invariants:
 - High-volume national feeds generally cap at 100; normal feeds at 50.
 - Clustering processes the full eligible snapshot; bounded sparse neighbor retrieval prevents a dense pair matrix.
 - Do not add an age cutoff without revisiting the original decision.
-- RSS discovery retention and the 48-hour clustering window are separate.
+- RSS discovery retention and the publication-time soft signal are separate.
 
 When article counts are unexpectedly low, inspect active source count, per-feed
 counts, parse errors, duplicate count, snapshot size, source caps, preview limits,

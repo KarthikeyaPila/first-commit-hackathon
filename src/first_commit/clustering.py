@@ -123,19 +123,13 @@ def build_global_stories(
         for source_id in source_by_id
     }
 
-    def time_compatible(first: int, second: int) -> bool:
-        first_time = articles[first].published_at
-        second_time = articles[second].published_at
-        if not first_time or not second_time:
-            return True
-        return abs((first_time - second_time).total_seconds()) / 3600 <= 48
-
     candidate_pairs: set[tuple[int, int]] = set()
     _report_stage(progress_callback, "neighbor_retrieval", "RUNNING", {"articles": len(articles)})
     if use_tfidf:
         # Walk a bounded global neighbor list instead of materializing the full
         # article-by-article cosine matrix. Retain up to the configured number
-        # of nearest, time-compatible articles from each other source.
+        # of nearest articles from each other source. Publication time is a
+        # weak scoring signal, not a hard eligibility window.
         for index in range(len(articles)):
             selected_by_source: dict[str, int] = defaultdict(int)
             for _distance, other in zip(
@@ -149,8 +143,6 @@ def build_global_stories(
                     continue
                 if selected_by_source[source_id] >= max_neighbors_per_source:
                     continue
-                if not time_compatible(index, other):
-                    continue
                 candidate_pairs.add(tuple(sorted((index, other))))
                 selected_by_source[source_id] += 1
     else:
@@ -158,7 +150,7 @@ def build_global_stories(
             for source_id, indexes in source_indexes.items():
                 if articles[index].source_id == source_id:
                     continue
-                compatible = [other for other in indexes if time_compatible(index, other)]
+                compatible = indexes
                 ranked = sorted(
                     compatible,
                     key=lambda other: lexical_similarity(articles[index], articles[other]),
