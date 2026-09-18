@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  Temporary HTTP-only S3 website hosting for the Sutradhar hackathon demo.
+  Replace with infra/frontend-hosting.yaml after CloudFront account verification.
+
+Metadata:
+  AWSToolsMetrics:
+    AWSAgentToolkit: aws-cloudformation@3
+  com.aws.cloudformation.Context:
+    arch: public S3 website endpoint -> compiled Sutradhar frontend assets
+    must:
+      - this stack is temporary and must not be used for production traffic
+      - no credentials or secrets may be stored in the bucket
+      - replace this public HTTP endpoint with private S3 plus CloudFront after account verification
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - demo
+    Description: Deployment environment label.
+
+Resources:
+  TemporaryFrontendBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: temporary static website origin while CloudFront account verification is pending
+        must:
+          - public read is limited to compiled frontend objects
+          - do not upload raw news, credentials, or private data
+          - delete the bucket deliberately after the CloudFront deployment is live
+        mutable: change-with-constraints
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: false
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: false
+      WebsiteConfiguration:
+        ErrorDocument: index.html
+        IndexDocument: index.html
+      Tags:
+        - Key: Project
+          Value: sutradhar
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Temporary
+          Value: cloudfront-pending
+
+  TemporaryFrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: permits anonymous reads required by the temporary S3 website endpoint
+        must:
+          - allow only object reads, never writes or listing
+          - remain temporary and be removed when private CloudFront hosting is available
+        mutable: change-with-constraints
+    Properties:
+      Bucket: !Ref TemporaryFrontendBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: TemporaryPublicWebsiteRead
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub ${TemporaryFrontendBucket.Arn}/*
+
+Outputs:
+  TemporaryFrontendBucketName:
+    Description: Temporary S3 bucket for compiled frontend assets.
+    Value: !Ref TemporaryFrontendBucket
+  TemporaryFrontendWebsiteUrl:
+    Description: HTTP-only temporary S3 website endpoint.
+    Value: !GetAtt TemporaryFrontendBucket.WebsiteURL
