@@ -21,6 +21,10 @@ Parameters:
       - dev
       - demo
     Description: Deployment environment label.
+  BucketName:
+    Type: String
+    Default: first-commit-sutradhar-2026
+    Description: Globally unique temporary S3 website bucket name.
 
 Resources:
   TemporaryFrontendBucket:
@@ -36,6 +40,7 @@ Resources:
           - delete the bucket deliberately after the CloudFront deployment is live
         mutable: change-with-constraints
     Properties:
+      BucketName: !Ref BucketName
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
