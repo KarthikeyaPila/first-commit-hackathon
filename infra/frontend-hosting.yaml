@@ -1,0 +1,204 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  Sutradhar static frontend hosting with a private encrypted S3 origin and a
+  CloudFront HTTPS distribution. The frontend is built and uploaded separately.
+
+Metadata:
+  AWSToolsMetrics:
+    AWSAgentToolkit: aws-cloudformation@3
+  com.aws.cloudformation.Context:
+    arch: CloudFront HTTPS distribution -> origin access control -> private S3 bucket
+    must:
+      - bucket objects must not be publicly readable
+      - all browser traffic must use HTTPS
+      - client-side routes must return the React application shell
+      - no credentials or secrets may be stored in the template or frontend bundle
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - demo
+    Description: Deployment environment label.
+
+Resources:
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: private durable origin for the compiled Sutradhar frontend assets
+        must:
+          - retain uploaded frontend assets when the stack is deleted or replaced
+          - block all public access and require encryption at rest
+        mutable: change-with-constraints
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: Project
+          Value: sutradhar
+        - Key: Environment
+          Value: !Ref Environment
+
+  FrontendOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: signs CloudFront requests to the private S3 origin with SigV4
+        must:
+          - use the CloudFront service principal rather than public bucket access
+        mutable: change-with-constraints
+    Properties:
+      OriginAccessControlConfig:
+        Description: Sutradhar private S3 origin access
+        Name: !Sub ${AWS::StackName}-s3-oac
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  FrontendResponseHeaders:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: applies browser security headers at the CDN edge
+        must:
+          - allow the deployed API origin used by the frontend
+          - keep framing and content sniffing disabled
+        mutable: change-with-constraints
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub ${AWS::StackName}-security-headers
+        Comment: Security headers for the Sutradhar static frontend.
+        SecurityHeadersConfig:
+          ContentSecurityPolicy:
+            ContentSecurityPolicy: >-
+              default-src 'self'; connect-src 'self'
+              https://nechnrnjk0.execute-api.ap-south-1.amazonaws.com; img-src
+              'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';
+              font-src 'self' data:; object-src 'none'; base-uri 'self';
+              frame-ancestors 'none'
+            Override: true
+          ContentTypeOptions:
+            Override: true
+          FrameOptions:
+            FrameOption: DENY
+            Override: true
+          ReferrerPolicy:
+            Override: true
+            ReferrerPolicy: strict-origin-when-cross-origin
+          StrictTransportSecurity:
+            AccessControlMaxAgeSec: 31536000
+            IncludeSubdomains: true
+            Override: true
+
+  FrontendDistribution:
+    Type: AWS::CloudFront::Distribution
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: public HTTPS delivery layer for the static Sutradhar application
+        must:
+          - redirect HTTP viewers to HTTPS
+          - use the private S3 bucket through origin access control
+          - serve index.html for client-side route misses
+        mutable: change-with-constraints
+    Properties:
+      DistributionConfig:
+        Comment: !Sub Sutradhar frontend - ${Environment}
+        DefaultRootObject: index.html
+        Enabled: true
+        HttpVersion: http2
+        IPV6Enabled: true
+        PriceClass: PriceClass_100
+        Origins:
+          - DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            Id: SutradharFrontendS3Origin
+            OriginAccessControlId: !Ref FrontendOriginAccessControl
+            S3OriginConfig: {}
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          Compress: true
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+          ResponseHeadersPolicyId: !Ref FrontendResponseHeaders
+          TargetOriginId: SutradharFrontendS3Origin
+          ViewerProtocolPolicy: redirect-to-https
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ErrorCachingMinTTL: 0
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 404
+            ErrorCachingMinTTL: 0
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: grants only this CloudFront distribution read access to the private origin
+        must:
+          - restrict reads by source account and distribution ARN
+          - deny non-TLS requests
+        mutable: change-with-constraints
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontRead
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub ${FrontendBucket.Arn}/*
+            Condition:
+              StringEquals:
+                AWS:SourceAccount: !Ref AWS::AccountId
+              StringLike:
+                AWS:SourceArn: !GetAtt FrontendDistribution.Arn
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource:
+              - !GetAtt FrontendBucket.Arn
+              - !Sub ${FrontendBucket.Arn}/*
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+
+Outputs:
+  FrontendBucketName:
+    Description: S3 bucket for the compiled Sutradhar frontend.
+    Value: !Ref FrontendBucket
+  FrontendDistributionId:
+    Description: CloudFront distribution ID for cache invalidations.
+    Value: !Ref FrontendDistribution
+  FrontendUrl:
+    Description: HTTPS URL for the deployed Sutradhar frontend.
+    Value: !Sub https://${FrontendDistribution.DomainName}
