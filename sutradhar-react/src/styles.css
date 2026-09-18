@@ -242,8 +242,8 @@ svg :focus-visible{outline:none}
 .hit{fill:transparent;stroke:transparent;stroke-width:7;pointer-events:all;cursor:pointer;transform-box:fill-box;transform-origin:center;transition:transform .6s var(--ease)}
 .hit.hot{transform:translateY(-3px) scale(1.006)}
 /* pattern reveal — the state's material appears exactly inside its own border */
-.patfill{opacity:0;pointer-events:none;transition:opacity .55s var(--ease);mix-blend-mode:normal}
-.patfill.hot{opacity:.82}
+.patfill{opacity:0;pointer-events:none;transition:opacity .55s var(--ease);mix-blend-mode:multiply}
+.patfill.hot{opacity:.96}
 #mapRoot[data-hover="1"] .st:not(.hot){opacity:.62}
 #mapRoot[data-focus="1"] .st:not(.hot){opacity:.06}
 #mapRoot[data-focus="1"] .patfill{opacity:0}
