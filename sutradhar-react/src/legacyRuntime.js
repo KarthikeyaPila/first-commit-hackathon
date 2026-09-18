@@ -835,7 +835,9 @@ const ORDER = KEYS.slice().sort((a,b)=>{
 const INDEX = {};
 KEYS.forEach((k,i)=>{ INDEX[k] = String(i+1).padStart(2,"0"); });
 const PAD2 = String(TOTAL).padStart(2,"0");
-const isLive = k => Array.isArray(STATES[k].stories);
+// Every mapped desk is selectable, but stories are considered live only after
+// the API has hydrated them. Reference copy is never presented as reporting.
+const isLive = () => true;
 const label = k => STATES[k].plain || STATES[k].name;
 
 /* ============================================================
@@ -1024,7 +1026,7 @@ const TOUCH = window.matchMedia("(hover:none)").matches;
 if(TOUCH){
   hint.textContent = "Tap a state to open its dispatches";
   document.querySelector(".flank-l .sub").textContent =
-    "Thirty-three desks across one country. Tap a shape and read what it sent.";
+    "Every state and territory keeps a desk. Tap a shape and read what it sent.";
 }
 const HINT_DEFAULT = hint.textContent;
 
@@ -1045,7 +1047,7 @@ function backendStory(summary){
     h: summary.story_title || "Untitled story",
     dek: sourceNames ? "Covered by " + sourceNames + "." : "Grouped coverage from the Sutradhar story graph.",
     body: ["This story is backed by the live Sutradhar story API.", sourceNames ? "Sources: " + sourceNames + "." : "Open the original publisher links to inspect the coverage."],
-    articleCount: Number(summary.article_count || 0),
+    articleCount: Math.max(Number(summary.article_count || 0), Array.isArray(summary.article_ids) ? summary.article_ids.length : 0),
     articleIds: Array.isArray(summary.article_ids) ? summary.article_ids : [],
     kind: "grouped",
     api: { runId: summary.run_id, storyId: summary.story_id }
@@ -1076,7 +1078,7 @@ async function hydrateState(key, force = false){
   const cachedStories = stateStoryCache.get(key);
   if(!force && Array.isArray(cachedStories) && cachedStories.length > 0){
     STATES[key].stories = cachedStories;
-    if(current === key) renderState(key);
+    if(current === key) refreshStateContent(key);
     return;
   }
   try {
@@ -1102,13 +1104,25 @@ async function hydrateState(key, force = false){
     if(stories.length > 0) stateStoryCache.set(key, stories);
     else stateStoryCache.delete(key);
     STATES[key].stories = stories;
-    const groupedCount = stories.filter(story=>story.kind === "grouped").length;
+    const groupedArticleCount = stories
+      .filter(story=>story.kind === "grouped")
+      .reduce((total, story)=>total + Math.max(0, Number(story.articleCount || 0)), 0);
     const latestCount = stories.filter(story=>story.kind === "latest").length;
-    STATES[key].facts = [["Total dispatches", String(stories.length)], ["Grouped stories", String(groupedCount)], ["Latest reports", String(latestCount)], ["Capital", STATES[key].cap]];
-    if(current === key) renderState(key);
+    STATES[key].facts = [["Total dispatches", String(stories.length)], ["Grouped articles", String(groupedArticleCount)], ["Latest reports", String(latestCount)], ["Capital", STATES[key].cap]];
+    if(current === key) refreshStateContent(key);
   } catch (error) {
-    console.warn("Sutradhar state API unavailable; keeping local reference content.", error);
+    console.warn("Sutradhar state API unavailable.", error);
+    stateStoryCache.delete(key);
+    STATES[key].stories = [];
+    STATES[key].facts = [["Total dispatches", "Unavailable"], ["Grouped articles", "Unavailable"], ["Latest reports", "Unavailable"], ["Capital", STATES[key].cap]];
+    if(current === key) refreshStateContent(key);
   }
+}
+
+function refreshStateContent(key){
+  if(current !== key) return;
+  spFacts.innerHTML = STATES[key].facts.map(f=>`<div class="fact"><dt>${f[0]}</dt><dd>${f[1]}</dd></div>`).join("");
+  renderStories(key);
 }
 
 async function hydrateAllStates(force = false){
@@ -1596,12 +1610,13 @@ async function renderNational(){
   spFacts.innerHTML=NATIONAL.facts.map(f=>`<div class="fact"><dt>${f[0]}</dt><dd>${f[1]}</dd></div>`).join("");
   buildNationalArt();
   buildMini("__national__");
+  NATIONAL.stories = [];
   try {
     const payload = await getNationalStories();
     const stories = Array.isArray(payload.stories) ? payload.stories.map(backendStory) : [];
     if(stories.length > 0) NATIONAL.stories = stories;
   } catch(error) {
-    console.warn("Sutradhar national API unavailable; keeping reference fallback.", error);
+    console.warn("Sutradhar national API unavailable.", error);
   }
   renderStoriesData(NATIONAL.stories,"national");
   spScroll.scrollTop=0;
@@ -1671,7 +1686,6 @@ async function selectNational(){
 async function select(key){
   if(busy) return;
   if(statePage.getAttribute("data-open") === "1"){ await switchTo(key); return; }
-  await hydrateState(key);
   busy = true;
   readout.classList.remove("on");
   document.documentElement.style.setProperty("--c",STATES[key].a);
@@ -1693,6 +1707,10 @@ async function select(key){
   await wait(660);
   stage.setAttribute("data-hidden","1");
   renderState(key);
+  // Start the live request after the page is visible so network latency never
+  // blocks the map-to-desk transition. The local shell remains readable while
+  // the API response replaces its reference dispatches in the background.
+  void hydrateState(key, true);
   document.body.classList.add("reading");
   await wait(60);
   curtainDown();
@@ -1730,7 +1748,6 @@ async function backToIndia(){
 async function switchTo(key){
   if(key === "__back__"){ await backToIndia(); return; }
   if(busy) return;
-  await hydrateState(key);
   if(!isLive(key)){
     document.documentElement.style.setProperty("--c",STATES[key].a);
     openSoon(key);
@@ -1746,6 +1763,7 @@ async function switchTo(key){
   setHot(key,true); hovered = key;
   zoomState(key,10);
   renderState(key);
+  void hydrateState(key, true);
   curtainDown();
   await wait(760);
   busy = false;
@@ -1947,15 +1965,22 @@ function addPacket(path){
   }
   requestAnimationFrame(f);
 }
-function highlightOutput(){
-  const feeds=[
-    ["maharashtra","Maharashtra","14 STORIES"],
-    ["karnataka","Karnataka","9 STORIES"],
-    ["west-bengal","West Bengal","7 STORIES"],
-    ["tamil-nadu","Tamil Nadu","11 STORIES"],
-    ["uttar-pradesh","Uttar Pradesh","18 STORIES"],
-    ["assam","Assam","5 STORIES"]
-  ];
+function highlightOutput(run={}){
+  const groups = run.grouping_summary?.state_groups || [];
+  const feeds = groups
+    .filter(group => Number(group.story_count) > 0)
+    .sort((a,b) => Number(b.story_count) - Number(a.story_count))
+    .slice(0, 8)
+    .map(group => {
+      const key = Object.keys(STATES).find(candidate => STATES[candidate].name.toLowerCase() === String(group.state).toLowerCase());
+      return key ? [key, STATES[key].name, `${Number(group.story_count)} STORIES`] : null;
+    })
+    .filter(Boolean);
+  const visibleFeeds = feeds.length ? feeds : Object.entries(STATES)
+    .filter(([key]) => isLive(key))
+    .sort((a,b) => b[1].stories.length - a[1].stories.length)
+    .slice(0, 6)
+    .map(([key,state]) => [key, state.name, `${state.stories.length} REFERENCE STORIES`]);
   pipelineOutput.classList.add("is-visible");
   outputIndia.classList.add("live");
   outputRail.classList.add("live");
@@ -1963,7 +1988,7 @@ function highlightOutput(){
   [...outputIndia.querySelectorAll(".hit,.marks,.patfill")].forEach(e=>e.remove());
   const nodes=[...outputIndia.querySelectorAll(".st")];
   nodes.forEach((n,i)=>{ if(i%4===0) n.classList.add("hot"); });
-  feeds.forEach(([key,name,count],i)=>setTimeout(()=>{
+  visibleFeeds.forEach(([key,name,count],i)=>setTimeout(()=>{
     const chip=document.createElement("span");
     chip.className="output-chip";
     chip.innerHTML=`<svg class="output-state-map" viewBox="0 0 ${VB.w} ${VB.h}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><path d="${pathOf(key)}"></path></svg><b>${name}</b><span>${count}</span>`;
@@ -2009,7 +2034,7 @@ function applyBackendRun(run){
   if(runStatus === "completed" && !backendRunFinished){
     backendRunFinished = true;
     hydrateAllStates(true);
-    highlightOutput();
+    highlightOutput(run);
   } else if((runStatus === "failed" || runStatus === "error") && !backendRunFinished){
     backendRunFinished = true;
     setPipelineError(run.error || "PROCESSING RUN FAILED");
@@ -2149,6 +2174,12 @@ setTimeout(()=>{ overture.style.display = "none"; }, startDelay + 1400);
 
 function hydrateBackend(){
   hydrateMarket();
+  // Clear authored reference copy before loading live projections. The map
+  // remains navigable, but no fictional dispatch is shown as current news.
+  KEYS.forEach(key=>{
+    STATES[key].stories = [];
+    STATES[key].facts = [["Total dispatches", "Loading"], ["Grouped articles", "Loading"], ["Latest reports", "Loading"], ["Capital", STATES[key].cap]];
+  });
   // Load the latest persisted state projections quietly. The printing press
   // remains the explicit action that starts a fresh processing run.
   hydrateAllStates();

@@ -27,14 +27,14 @@ export function MapHome({
         <aside className="flank flank-l">
           <div className="fl-kick"><span className="bar" /><span className="micro">Front page</span></div>
           <p>Every state<br />keeps its own<br /><em>record.</em></p>
-          <p className="sub">Thirty-three desks across one country. Pick a shape and read what it sent.</p>
+          <p className="sub">Every state and territory keeps a desk. Pick a shape and read what it sent.</p>
           <button className="national-btn" type="button" onClick={() => onSelectState?.("national")}><span className="national-btn-kick">National desk</span><span className="national-btn-title">National News</span><span className="national-btn-arrow">→</span></button>
         </aside>
         <IndiaMap selectedState={selectedState} onSelectState={onSelectState} />
         <aside className="flank flank-r">
           <span className="micro">In this edition</span>
           <div className="edition-list"><div className="idx-item"><span>01</span>Stories, connected</div><div className="idx-item"><span>02</span>by place.</div></div>
-          <p className="sub">Every state keeps a desk. All thirty-three filed this week.</p>
+          <p className="sub">Every state and territory keeps a desk. Live coverage appears as it is filed.</p>
         </aside>
       </section>
       <section className="press-section" aria-label="Printing press introduction">
@@ -51,7 +51,7 @@ export function MapHome({
         </div>
         </div>
       </section>
-      <footer className="footbar"><span className="micro">Hover a state to read its label · click to open dispatches</span><span className="foot-live"><span className="pip" /> <span className="micro">{selectedState ? "STATE SELECTED" : "LIVE EDITORIAL DESK"}</span></span><span className="micro">INDIA · 28 STATES · 8 TERRITORIES</span></footer>
+      <footer className="footbar"><span className="micro">Hover a state to read its label · click to open dispatches</span><span className="foot-live"><span className="pip" /> <span className="micro">{selectedState ? "STATE SELECTED" : "LIVE EDITORIAL DESK"}</span></span><span className="micro">INDIA · STATES AND UNION TERRITORIES</span></footer>
     </main>
   );
 }

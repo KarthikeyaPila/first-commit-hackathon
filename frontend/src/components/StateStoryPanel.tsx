@@ -18,6 +18,7 @@ export function StateStoryPanel({ state, onClose }: { state: string | null; onCl
     try { setSelectedStory(await getStory(runId, storyId)); } finally { setStoryLoading(false); }
   }
   const displayName = meta?.plain ?? meta?.name ?? state;
+  const groupedArticles = data?.stories.reduce((total, story) => total + Math.max(Number(story.article_count || 0), story.article_ids?.length ?? 0), 0) ?? 0;
   return <section className="state-page" data-open="1" role="dialog" aria-modal="true" aria-label={displayName + " stories"}>
     <div className="sp-chrome">
       <button className="back" type="button" onClick={onClose}><i>←</i> Home</button>
@@ -32,7 +33,7 @@ export function StateStoryPanel({ state, onClose }: { state: string | null; onCl
           <h1 className="sp-name rv">{displayName}</h1>
           <div className="sp-ep rv">{meta?.cap}</div>
           <p className="sp-stand rv">State-wise reporting, compared across publishers and grounded in the original source links.</p>
-          <dl className="sp-facts rv"><div className="fact"><dt>Stories</dt><dd>{loading ? "—" : data?.stories.length ?? 0}</dd></div><div className="fact"><dt>Lens</dt><dd>State desk</dd></div><div className="fact"><dt>Status</dt><dd>{error ? "Unavailable" : "Live"}</dd></div></dl>
+          <dl className="sp-facts rv"><div className="fact"><dt>Grouped articles</dt><dd>{loading ? "—" : groupedArticles}</dd></div><div className="fact"><dt>Stories</dt><dd>{loading ? "—" : data?.stories.length ?? 0}</dd></div><div className="fact"><dt>Status</dt><dd>{error ? "Unavailable" : "Live"}</dd></div></dl>
         </div>
         <div className="sp-art"><div className="state-art-mark">{meta?.ep}</div><div className="state-art-line" /><strong>{displayName}</strong></div>
       </header>

@@ -305,7 +305,7 @@ or translation.
 
 The current project name is **Sutradhar**. The deployed AWS backend is complete through processing, persistence, API comparison views, retries, failure capture, detailed stage telemetry, and market context. The current frontend source of truth is `sutradhar-react/`: it preserves the working reference shell through the overture, India map, printing press, twelve-stage pipeline, AWS infrastructure view, and API-backed state dispatches/article comparisons. Its API base is configurable with `VITE_API_BASE_URL`, and the local reference experience remains available if an API request fails. The remaining major task is frontend hosting against the deployed API. The hourly EventBridge schedule must remain disabled unless the operator deliberately enables it.
 
-The market endpoint covers NIFTY 50, Sensex, USD/INR, gold, and silver. Gold and silver are converted from USD per troy ounce to INR per 10 grams. The current automated suite has 31 passing tests.
+The market endpoint covers NIFTY 50, Sensex, USD/INR, gold, and silver. Gold and silver are converted from USD per troy ounce to INR per 10 grams. The current automated suite has 32 passing tests.
 
 ## Development contract
 
@@ -341,7 +341,7 @@ Generated snapshots, labels, model caches, and raw captures are ignored.
 
 - Read AGENTS.md, SKILLS.md, and the relevant docs.
 - Check git status and recent commits.
-- Run the 31-test suite before changing behavior.
+- Run the 32-test suite before changing behavior.
 - Read error.md when the user reports a browser/runtime issue.
 - Inspect API payloads and cache behavior before changing the UI.
 - Treat DEVELOPMENT_CHECKPOINTS.md as a local tracker, not something to blindly

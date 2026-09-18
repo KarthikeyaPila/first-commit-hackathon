@@ -86,7 +86,7 @@ python3 -m compileall -q src
 git diff --check
 ```
 
-The current suite has 31 tests.
+The current suite has 32 tests.
 
 ## Run the local helper UI
 

@@ -8,7 +8,7 @@ export const HOME_MARKUP = String.raw`
      ============================================================ -->
 <div class="overture" id="overture" aria-hidden="true">
   <div class="ov-mark">SUTRADHAR</div>
-  <div class="ov-sub micro">Drawing twenty-eight states and six territories</div>
+  <div class="ov-sub micro">Drawing India, state by state</div>
   <div class="ov-track"><i></i></div>
 </div>
 
@@ -56,7 +56,7 @@ export const HOME_MARKUP = String.raw`
     <div class="flank flank-l">
       <div class="fl-kick"><span class="bar"></span><span class="micro">Front page</span></div>
       <p class="lede">Every state<br>keeps its own<br><em>record.</em></p>
-      <p class="sub">Thirty-three desks across one country. Pick a shape and read what it sent.</p>
+      <p class="sub">Every state and territory keeps a desk. Pick a shape and read what it sent.</p>
 
       <div class="national-cta">
         <button class="national-btn" id="nationalBtn" type="button">
@@ -70,7 +70,7 @@ export const HOME_MARKUP = String.raw`
     <div class="flank flank-r">
       <span class="micro">In this edition</span>
       <div id="featured"></div>
-      <p class="sub">Every state keeps a desk. All thirty-three filed this week.</p>
+      <p class="sub">Every state and territory keeps a desk. Live coverage appears as it is filed.</p>
     </div>
 
   </div>

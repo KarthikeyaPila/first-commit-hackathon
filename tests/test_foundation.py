@@ -3,7 +3,7 @@ from first_commit.pipeline import pipeline_stages
 from first_commit.feeds import parse_feed_xml
 from first_commit.sources import SOURCES
 from first_commit.state_routing import route_article, state_source_directory
-from first_commit.lambda_handlers import _latest_completed_run_id
+from first_commit.lambda_handlers import _latest_completed_run_id, _query_all
 
 
 class _RunTable:
@@ -13,6 +13,27 @@ class _RunTable:
     def get_item(self, *, Key: dict[str, str]) -> dict[str, object]:
         run_id = Key["PK"].removeprefix("RUN#")
         return {"Item": self.runs.get(run_id)}
+
+
+class _PagedTable:
+    def __init__(self) -> None:
+        self.calls: list[dict[str, object]] = []
+
+    def query(self, **kwargs: object) -> dict[str, object]:
+        self.calls.append(kwargs)
+        if len(self.calls) == 1:
+            return {"Items": [{"id": "first"}], "LastEvaluatedKey": {"PK": "next"}}
+        return {"Items": [{"id": "second"}]}
+
+
+def test_dynamodb_queries_read_all_pages() -> None:
+    table = _PagedTable()
+
+    assert _query_all(table, KeyConditionExpression="state") == [
+        {"id": "first"},
+        {"id": "second"},
+    ]
+    assert table.calls[1]["ExclusiveStartKey"] == {"PK": "next"}
 
 
 def test_latest_completed_run_filters_historical_state_runs() -> None:

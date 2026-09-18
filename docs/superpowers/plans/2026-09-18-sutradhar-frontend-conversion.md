@@ -20,7 +20,7 @@
 - Preserve the Sutradhar editorial visual language: dark ink, ivory paper, brass/red accents, Fraunces, Inter, and IBM Plex Mono.
 - Support loading, empty, API failure, keyboard access, responsive layout, and `prefers-reduced-motion`.
 - Never add credentials, tokens, or private AWS configuration to frontend files.
-- Run frontend build checks plus the existing 31-test Python suite before each meaningful commit.
+- Run frontend build checks plus the existing 32-test Python suite before each meaningful commit.
 
 ---
 

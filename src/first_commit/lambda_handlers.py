@@ -24,6 +24,19 @@ def _response(status_code: int, body: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _query_all(table: Any, **kwargs: Any) -> list[dict[str, Any]]:
+    """Read every DynamoDB query page instead of silently stopping at 1 MB."""
+
+    items: list[dict[str, Any]] = []
+    while True:
+        page = table.query(**kwargs)
+        items.extend(page.get("Items", []))
+        last_key = page.get("LastEvaluatedKey")
+        if not last_key:
+            return items
+        kwargs["ExclusiveStartKey"] = last_key
+
+
 def _latest_completed_run_id(table: Any, projections: list[dict[str, Any]]) -> str | None:
     """Return the newest completed run represented by state projections."""
 
@@ -67,18 +80,18 @@ def api_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         if not os.environ.get("TABLE_NAME"):
             return _response(500, {"error": "TABLE_NAME is not configured"})
         table = boto3.resource("dynamodb").Table(os.environ["TABLE_NAME"])
-        seed = table.query(
+        seed = _query_all(table,
             KeyConditionExpression=Key("PK").eq("STATE#Jammu & Kashmir"),
-        ).get("Items", [])
+        )
         latest_run_id = _latest_completed_run_id(table, seed)
         if not latest_run_id:
             return _response(200, {"run_id": None, "stories": []})
         from .sources import SOURCES
         national_names = {source.name for source in SOURCES if source.scope == "NATIONAL"}
-        result = table.query(
+        result = _query_all(table,
             IndexName="RunStoriesIndex",
             KeyConditionExpression=Key("GSI1PK").eq(f"RUN#{latest_run_id}"),
-        ).get("Items", [])
+        )
         stories = []
         for story in result:
             sources = [name for name in story.get("sources", []) if name in national_names]
@@ -98,9 +111,9 @@ def api_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         from boto3.dynamodb.conditions import Key
 
         table = boto3.resource("dynamodb").Table(os.environ["TABLE_NAME"])
-        projections = table.query(
+        projections = _query_all(table,
             KeyConditionExpression=Key("PK").eq(f"STATE#{state}"),
-        ).get("Items", [])
+        )
         latest_run_id = _latest_completed_run_id(table, projections)
         article_projections = [
             projection for projection in projections
@@ -146,9 +159,9 @@ def api_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         from boto3.dynamodb.conditions import Key
 
         table = boto3.resource("dynamodb").Table(os.environ["TABLE_NAME"])
-        projections = table.query(
+        projections = _query_all(table,
             KeyConditionExpression=Key("PK").eq(f"STATE#{state}"),
-        ).get("Items", [])
+        )
         latest_run_id = _latest_completed_run_id(table, projections)
         if latest_run_id:
             projections = [
@@ -232,11 +245,11 @@ def api_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         from boto3.dynamodb.conditions import Key
 
         table = boto3.resource("dynamodb").Table(os.environ["TABLE_NAME"])
-        result = table.query(
+        result = _query_all(table,
             IndexName="RunStoriesIndex",
             KeyConditionExpression=Key("GSI1PK").eq(f"RUN#{run_id}"),
         )
-        return _response(200, {"run_id": run_id, "stories": result.get("Items", [])})
+        return _response(200, {"run_id": run_id, "stories": result})
 
     if path.startswith("/runs/"):
         run_id = path.rsplit("/", 1)[-1]
