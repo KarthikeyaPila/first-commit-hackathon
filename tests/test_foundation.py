@@ -149,3 +149,23 @@ def test_snapshot_metadata_is_available_for_versioned_outputs(tmp_path) -> None:
     path.write_text(json.dumps({"run_id": "run-123", "run_config": {"threshold": 0.4}, "articles": []}))
     metadata = load_snapshot_metadata(path)
     assert metadata == {"run_id": "run-123", "run_config": {"threshold": 0.4}}
+
+
+def test_aws_records_have_stable_single_table_keys() -> None:
+    from first_commit.aws_contract import (
+        article_record,
+        state_story_record,
+        story_membership_record,
+        story_record,
+    )
+
+    article = article_record({"article_id": "article-1", "headline": "Headline"}, "run-1")
+    story = story_record({"story_id": "story-1", "story_title": "Title"}, "run-1", "global-v1")
+    membership = story_membership_record("story-1", "run-1", "article-1")
+    projection = state_story_record("Kerala", "run-1", "story-1")
+
+    assert article["PK"] == "ARTICLE#article-1"
+    assert story["PK"] == "STORY#run-1#story-1"
+    assert membership["SK"] == "ARTICLE#article-1"
+    assert projection["PK"] == "STATE#Kerala"
+    assert {item["schema_version"] for item in (article, story, membership, projection)} == {"1"}
