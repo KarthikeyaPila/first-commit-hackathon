@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { MapHome } from "./components/MapHome";
 import { StateStoryPanel } from "./components/StateStoryPanel";
 import { PipelineView } from "./components/PipelineView";
 import { useMarket } from "./hooks/useMarket";
+import { STATES } from "./data/states";
 
 function App() {
   const [selectedState, setSelectedState] = useState<string | null>(null);
@@ -25,9 +26,10 @@ function App() {
     window.setTimeout(() => setStateCurtain(false), 620);
   };
   return <div className="app-root">
-    <div className={`overture${overture ? " is-visible" : ""}`} aria-hidden={!overture}><div className="overture-mark">SUTRADHAR</div><div className="overture-sub">India · state by state · story by story</div><div className="overture-track"><i /></div></div>
+    <div className="grain" aria-hidden="true" /><div className="vignette" aria-hidden="true" />
+    <div className={`overture${overture ? " is-visible" : ""}`} aria-hidden={!overture}><div className="ov-mark">SUTRADHAR</div><div className="ov-sub micro">Drawing twenty-eight states and six territories</div><div className="ov-track"><i /></div></div>
     <MapHome selectedState={selectedState} marketItems={marketItems} marketLoading={market.loading} onSelectState={selectState} onOpenPress={() => setPressOpen(true)} />
-    <div className={`state-curtain${stateCurtain ? " is-active" : ""}`} aria-hidden="true" />
+    <div className={`state-curtain${stateCurtain ? " is-active" : ""}`} style={{ "--c": selectedState ? STATES[selectedState]?.a : "#D92243" } as CSSProperties} aria-hidden="true" />
     <StateStoryPanel state={selectedState} onClose={() => setSelectedState(null)} />
     {pressOpen && <PipelineView onClose={() => setPressOpen(false)} />}
   </div>;

@@ -4,7 +4,7 @@ The historical technology record below is preserved. Current corrections: the pr
 
 The deployed stack persists runs, articles, stories, memberships, and state projections in DynamoDB, exposes API Gateway routes for processing, runs, states, stories, comparisons, and market context, retries asynchronous processing twice, and retains failures in SQS. Market context currently covers NIFTY 50, Sensex, USD/INR, gold, and silver. Gold and silver are converted from USD per troy ounce to INR per 10 grams using `USD/oz * USD/INR * 10 / 31.1034768`.
 
-The frontend/control-system experience is implemented locally in React/TypeScript/Vite. It includes the India map, state transitions, printing-press reveal, real twelve-stage telemetry view, AWS runtime diagram, story panels, and market ticker. Frontend hosting against the deployed API remains. Keep the deployed AWS resources and credentials out of source control.
+The frontend/control-system experience is implemented locally in React/TypeScript/Vite and now follows the \`final.html\` reference shell: its paper palette, editorial masthead, ticker, map draw/hover/click motion, printing-press bridge, state dispatch page, and pipeline reveal are reproduced while stories, comparisons, telemetry, and market values remain API-backed. Frontend hosting against the deployed API remains. Keep the deployed AWS resources and credentials out of source control.
 
 # First Commit — Technology and Resource Register
 

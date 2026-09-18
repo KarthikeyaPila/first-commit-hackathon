@@ -253,7 +253,7 @@ or translation.
 
 ## Exact current resume point
 
-The current project name is **Sutradhar**. The deployed AWS backend is complete through processing, persistence, API comparison views, retries, failure capture, detailed stage telemetry, and market context. The frontend/control-system experience is now implemented locally: Sutradhar overture -> India map with state transitions -> printing press -> real twelve-stage pipeline -> AWS infrastructure -> API-backed stories. The remaining major task is frontend hosting against the deployed API. The hourly EventBridge schedule must remain disabled unless the operator deliberately enables it.
+The current project name is **Sutradhar**. The deployed AWS backend is complete through processing, persistence, API comparison views, retries, failure capture, detailed stage telemetry, and market context. The frontend/control-system experience is now implemented locally with the \`final.html\` reference shell: Sutradhar overture -> India map with reference draw/hover/click transitions -> printing press -> real twelve-stage pipeline -> AWS infrastructure -> API-backed state dispatches and article comparisons. The remaining major task is frontend hosting against the deployed API. The hourly EventBridge schedule must remain disabled unless the operator deliberately enables it.
 
 The market endpoint covers NIFTY 50, Sensex, USD/INR, gold, and silver. Gold and silver are converted from USD per troy ounce to INR per 10 grams. The current automated suite has 31 passing tests.
 
