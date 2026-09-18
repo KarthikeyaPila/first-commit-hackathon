@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 import json
+import uuid
 from pathlib import Path
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -16,7 +17,7 @@ from .feeds import fetch_source
 from .sources import SOURCES
 from .state_routing import route_article, state_source_directory
 from .clustering import build_global_stories
-from .storage import save_snapshot
+from .storage import append_run, save_snapshot, upsert_articles
 
 
 WEB_DIR = Path(__file__).resolve().parents[2] / "web"
@@ -51,10 +52,11 @@ def run_ingestion() -> dict[str, object]:
     """Fetch every active source and return UI-friendly run information."""
 
     global _last_run
+    run_id = f"run-{uuid.uuid4().hex}"
     started_at = _now()
     reports: list[dict[str, object]] = []
     all_articles = []
-    _last_run = {"status": "running", "started_at": started_at, "completed_at": None, "feeds": reports}
+    _last_run = {"run_id": run_id, "status": "running", "started_at": started_at, "completed_at": None, "feeds": reports}
 
     config = PrototypeConfig()
     for source in SOURCES:
@@ -89,17 +91,26 @@ def run_ingestion() -> dict[str, object]:
         reports.append(report)
 
     unique_articles, duplicates_removed = deduplicate_articles(all_articles)
-    snapshot_path = save_snapshot(unique_articles)
+    persistence = upsert_articles(unique_articles)
+    run_config = {"cluster_time_window_hours": config.cluster_time_window_hours, "max_entries_per_source": config.max_entries_per_source}
+    snapshot_path = save_snapshot(unique_articles, run_id=run_id, run_config=run_config)
     _last_run = {
+        "run_id": run_id,
         "status": "completed",
         "articles_found": len(all_articles),
         "articles_unique": len(unique_articles),
         "duplicates_removed": duplicates_removed,
+        "articles_new": persistence["new"],
+        "articles_updated": persistence["updated"],
+        "articles_unchanged": persistence["unchanged"],
+        "articles_stored": persistence["stored"],
+        "run_config": run_config,
         "snapshot_path": str(snapshot_path),
         "started_at": started_at,
         "completed_at": _now(),
         "feeds": reports,
     }
+    append_run(_last_run)
     return _last_run
 
 

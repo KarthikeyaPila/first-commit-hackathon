@@ -118,3 +118,25 @@ def test_high_volume_national_sources_have_higher_caps() -> None:
     assert national["the-hindu-india"].max_entries == 100
     assert national["ndtv-india"].max_entries == 100
     assert next(source for source in SOURCES if source.scope == "STATE").max_entries == 50
+
+def test_article_store_upserts_repeated_fetches(tmp_path) -> None:
+    from first_commit.storage import upsert_articles
+
+    path = tmp_path / "articles.json"
+    first = Article(source_id="source-a", url="https://example.com/story", headline="Headline", rss_guid="guid-1")
+    assert upsert_articles([first], path)["new"] == 1
+    result = upsert_articles([first], path)
+    assert result["new"] == 0
+    assert result["unchanged"] == 1
+    assert result["stored"] == 1
+
+
+def test_snapshot_keeps_run_metadata(tmp_path) -> None:
+    from first_commit.storage import save_snapshot
+    import json
+
+    path = tmp_path / "snapshot.json"
+    save_snapshot([], path, run_id="run-1", run_config={"threshold": 0.4})
+    payload = json.loads(path.read_text())
+    assert payload["run_id"] == "run-1"
+    assert payload["run_config"]["threshold"] == 0.4

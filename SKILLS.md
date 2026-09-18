@@ -182,7 +182,7 @@ Minimum code verification:
     if [ -x .venv/bin/pytest ]; then .venv/bin/pytest -q; else python3 -m pytest -q; fi
     git diff --check
 
-The current suite contains 18 tests; update this count when tests are added or
+The current suite contains 20 tests; update this count when tests are added or
 removed.
 
 Source changes additionally require live parser validation and a report of

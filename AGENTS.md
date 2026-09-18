@@ -78,7 +78,8 @@ research and development packages are optional dependencies in pyproject.toml.
 - src/first_commit/dedupe.py: GUID → canonical URL → content hash deduplication;
   duplicate provenance is preserved.
 - src/first_commit/storage.py: latest normalized snapshot in ignored
-  data/processed/ingestion_latest.json, including stable article IDs.
+  data/processed/ingestion_latest.json, stable article IDs, an idempotent
+  article store, and append-only run history.
 - src/first_commit/state_routing.py: state signals and support for 28 states plus
   8 Union Territories.
 - src/first_commit/matching.py: explainable weighted TF-IDF similarity, entities,
@@ -217,7 +218,7 @@ Generated snapshots, labels, model caches, and raw captures are ignored.
 
 - Read AGENTS.md, SKILLS.md, and the relevant docs.
 - Check git status and recent commits.
-- Run the 18-test suite before changing behavior.
+- Run the 20-test suite before changing behavior.
 - Read error.md when the user reports a browser/runtime issue.
 - Inspect API payloads and cache behavior before changing the UI.
 - Treat DEVELOPMENT_CHECKPOINTS.md as a local tracker, not something to blindly
