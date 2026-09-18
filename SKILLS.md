@@ -85,9 +85,8 @@ Baseline:
 
 - Embed/compare headline + summary + lead.
 - Retrieve candidates with state/source awareness, time proximity, headline
-  neighbors, lexical fallback, and global graph construction. Cache snapshot headline artifacts. State-anchor retrieval may run in bounded
-  parallel batches, but final scoring and graph reconciliation remain global.
-  Measure candidate and scoring stages before adding further concurrency.
+  neighbors, lexical fallback, and global graph construction. Cache snapshot headline artifacts. Keep candidate retrieval and global scoring
+  deterministic; defer further performance parallelism until after AWS.
 - Use weighted TF-IDF, entities, keywords, state, genre where available, and time.
 - Outcomes are MATCH, CANDIDATE, and NEW STORY.
 - Explanations must show actual similarity/shared metadata; never invent reasons.
