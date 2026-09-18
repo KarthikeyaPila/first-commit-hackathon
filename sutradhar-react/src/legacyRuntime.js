@@ -1029,6 +1029,7 @@ if(TOUCH){
 const HINT_DEFAULT = hint.textContent;
 
 let hovered = null, busy = false, current = null;
+const stateStoryCache = new Map();
 
 function escapeHtml(value){
   return String(value ?? "").replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch]));
@@ -1048,10 +1049,16 @@ function backendStory(summary){
   };
 }
 
-async function hydrateState(key){
+async function hydrateState(key, force = false){
+  if(!force && stateStoryCache.has(key)){
+    STATES[key].stories = stateStoryCache.get(key);
+    if(current === key) renderState(key);
+    return;
+  }
   try {
     const payload = await getStateStories(key);
     const stories = Array.isArray(payload.stories) ? payload.stories.map(backendStory) : [];
+    stateStoryCache.set(key, stories);
     STATES[key].stories = stories;
     STATES[key].facts = [["Stories", String(stories.length)], ["Lens", "State desk"], ["Capital", STATES[key].cap], ["Filed", "Live API"]];
     if(current === key) renderState(key);
@@ -1060,10 +1067,10 @@ async function hydrateState(key){
   }
 }
 
-async function hydrateAllStates(){
+async function hydrateAllStates(force = false){
   const batchSize = 6;
   for(let i=0;i<KEYS.length;i+=batchSize){
-    await Promise.all(KEYS.slice(i,i+batchSize).map(hydrateState));
+    await Promise.all(KEYS.slice(i,i+batchSize).map(key=>hydrateState(key, force)));
   }
 }
 
@@ -1881,7 +1888,7 @@ function applyBackendRun(run){
   const runStatus = String(run.status || "").toLowerCase();
   if(runStatus === "completed" && !backendRunFinished){
     backendRunFinished = true;
-    hydrateAllStates();
+    hydrateAllStates(true);
     highlightOutput();
     setTimeout(endPipelineToMap,1700);
   } else if((runStatus === "failed" || runStatus === "error") && !backendRunFinished){
@@ -2003,6 +2010,9 @@ setTimeout(()=>{ overture.style.display = "none"; }, startDelay + 1400);
 
 function hydrateBackend(){
   hydrateMarket();
+  // Load the latest persisted state projections quietly. The printing press
+  // remains the explicit action that starts a fresh processing run.
+  hydrateAllStates();
 }
 hydrateBackend();
 
