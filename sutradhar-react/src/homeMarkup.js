@@ -258,12 +258,12 @@ export const HOME_MARKUP = String.raw`
     <div class="pipeline-board" id="pipelineBoard">
       <svg class="pipeline-wire-svg" id="pipelineWires" aria-hidden="true"></svg>
       <div class="pipeline-grid" id="pipelineGrid"></div>
-      <div class="pipeline-output" id="pipelineOutput">
-        <div><div class="output-title">State-wise feeds</div><div class="output-copy">Processed signals returning to India</div></div>
-        <div class="output-rail" id="outputRail" aria-hidden="true"><span></span><span></span><span></span><span></span><b>→ INDIA</b></div>
-        <div class="output-india" id="outputIndia" aria-hidden="true"></div>
-        <div class="output-state-feed" id="outputFeeds"></div>
-      </div>
+    </div>
+    <div class="pipeline-output" id="pipelineOutput">
+      <div><div class="output-title">State-wise feeds</div><div class="output-copy">Processed signals returning to India</div></div>
+      <div class="output-rail" id="outputRail" aria-hidden="true"><span></span><span></span><span></span><span></span><b>→ INDIA</b></div>
+      <div class="output-india" id="outputIndia" aria-hidden="true"></div>
+      <div class="output-state-feed" id="outputFeeds"></div>
     </div>
     <section class="aws-architecture" aria-label="AWS architecture">
       <div class="aws-architecture-head"><span class="pipeline-kicker">SUTRADHAR · AWS infrastructure</span><span class="aws-architecture-note">Deployed services behind the intelligence flow</span></div>
