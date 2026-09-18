@@ -276,9 +276,9 @@ export const HOME_MARKUP = String.raw`
       </div>
       <div class="aws-architecture-support"><span><b>EventBridge Schedule</b> → ProcessingFunction → <code>first_commit.lambda_handlers.processing_handler</code> · currently disabled</span><span><b>SQS ProcessingFailureQueue</b> · retry capture</span></div>
     </section>
+    <button class="pipeline-exit" id="pipelineExit" type="button"><span>EXIT PIPELINE</span><b>↘</b></button>
   </div>
   <div class="pipeline-sim-note">LIVE TELEMETRY · STATUS AND COUNTERS FROM THE PROCESSING RUN</div>
-  <button class="pipeline-exit" id="pipelineExit" type="button"><span>EXIT PIPELINE</span><b>↘</b></button>
 </section>
 
 <div class="curtain" id="curtain" aria-hidden="true"></div>
