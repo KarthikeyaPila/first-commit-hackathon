@@ -107,7 +107,7 @@ export const HOME_MARKUP = String.raw`
   <section class="aws-architecture aws-architecture-page" aria-label="AWS architecture">
     <div class="aws-architecture-head"><span class="pipeline-kicker">SUTRADHAR · AWS infrastructure</span><span class="aws-architecture-note">The deployed services behind the paper</span></div>
     <div class="aws-architecture-flow">
-      <div class="aws-column"><div class="aws-column-label">DELIVERY</div><div class="aws-node"><small>STATIC WEBSITE · TEMPORARY</small><strong>S3</strong><span>Frontend assets · HTTP demo</span></div><div class="aws-node aws-node-event"><small>CDN · PENDING VERIFICATION</small><strong>CloudFront</strong><span>Private HTTPS delivery</span></div></div>
+      <div class="aws-column"><div class="aws-column-label">DELIVERY</div><div class="aws-node aws-node-main"><small>STATIC WEBSITE HOSTING</small><strong>S3</strong><span>Frontend assets · live HTTP endpoint</span></div><div class="aws-node aws-node-event"><small>OBJECT STORAGE</small><strong>S3 bucket</strong><span>Compiled app files</span></div></div>
       <i class="aws-wire">→</i>
       <div class="aws-column"><div class="aws-column-label">ENTRY</div><div class="aws-node"><small>HTTP API</small><strong>API Gateway</strong><span>Browser requests</span></div><div class="aws-node aws-node-event"><small>SCHEDULE</small><strong>EventBridge</strong><span>Hourly trigger · disabled</span></div></div>
       <i class="aws-wire">→</i>
@@ -115,7 +115,7 @@ export const HOME_MARKUP = String.raw`
       <i class="aws-wire">→</i>
       <div class="aws-column"><div class="aws-column-label">PERSISTENCE</div><div class="aws-node"><small>STORAGE</small><strong>DynamoDB</strong><span>Runs + articles</span></div><div class="aws-node aws-node-event"><small>FAILURE CAPTURE</small><strong>SQS</strong><span>ProcessingFailureQueue</span></div></div>
     </div>
-    <div class="aws-architecture-support"><span><b>Frontend</b> → temporary public S3 website · CloudFront awaits account verification</span><span><b>EventBridge Schedule</b> → ProcessingFunction · currently disabled</span><span><b>SQS ProcessingFailureQueue</b> · retry capture</span></div>
+    <div class="aws-architecture-support"><span><b>Frontend</b> → S3 static website hosting</span><span><b>EventBridge Schedule</b> → ProcessingFunction · currently disabled</span><span><b>SQS ProcessingFailureQueue</b> · retry capture</span></div>
   </section>
 
   <!-- FOOTER CHROME -->
