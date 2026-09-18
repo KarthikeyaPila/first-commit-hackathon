@@ -1077,7 +1077,8 @@ function backendStateName(key){
 async function hydrateState(key, force = false){
   const cachedStories = stateStoryCache.get(key);
   if(!force && Array.isArray(cachedStories) && cachedStories.length > 0){
-    STATES[key].stories = cachedStories;
+    STATES[key].allStories = cachedStories;
+    STATES[key].stories = cachedStories.slice(0, 30);
     if(current === key) refreshStateContent(key);
     return;
   }
@@ -1098,12 +1099,13 @@ async function hydrateState(key, force = false){
             .map(backendArticle)
             .filter(article=>!groupedArticleIds.has(article.articleId))
           : [];
-        stories = stories.concat(fallback).slice(0,30);
+        stories = stories.concat(fallback);
       }
     }
     if(stories.length > 0) stateStoryCache.set(key, stories);
     else stateStoryCache.delete(key);
-    STATES[key].stories = stories;
+    STATES[key].allStories = stories;
+    STATES[key].stories = stories.slice(0, 30);
     const groupedArticleCount = stories
       .filter(story=>story.kind === "grouped")
       .reduce((total, story)=>total + Math.max(0, Number(story.articleCount || 0)), 0);
@@ -1113,6 +1115,7 @@ async function hydrateState(key, force = false){
   } catch (error) {
     console.warn("Sutradhar state API unavailable.", error);
     stateStoryCache.delete(key);
+    STATES[key].allStories = [];
     STATES[key].stories = [];
     STATES[key].facts = [["Total articles", "Unavailable"], ["Grouped articles", "Unavailable"], ["Latest reports", "Unavailable"], ["Capital", STATES[key].cap]];
     if(current === key) refreshStateContent(key);
@@ -1512,10 +1515,14 @@ function bindFeedSummary(card){
 
 function renderStories(key, limit = 12){
   const s = STATES[key];
+  const allStories = Array.isArray(s.allStories) ? s.allStories : s.stories;
+  s.stories = allStories.slice(0, Math.min(limit, allStories.length));
   spStories.innerHTML = "";
   const groupedCount = s.stories.filter(story=>story.kind !== "latest").length;
   const latestCount = s.stories.filter(story=>story.kind === "latest").length;
-  spCount.textContent = `${s.stories.length} dispatches · ${groupedCount} grouped stories · ${latestCount} latest reports · edition 01`;
+  const totalGroupedCount = allStories.filter(story=>story.kind !== "latest").length;
+  const totalLatestCount = allStories.filter(story=>story.kind === "latest").length;
+  spCount.textContent = `Showing ${s.stories.length} of ${allStories.length} dispatches · ${groupedCount}/${totalGroupedCount} grouped stories · ${latestCount}/${totalLatestCount} latest reports · edition 01`;
   s.stories.slice(0, Math.min(limit, 30)).forEach((st,i)=>{
     const b = document.createElement("button");
     b.type = "button";
@@ -1530,12 +1537,12 @@ function renderStories(key, limit = 12){
     bindFeedSummary(b);
     spStories.appendChild(b);
   });
-  if(s.stories.length > 12 && limit < 30){
+  if(allStories.length > limit){
     const more = document.createElement("button");
     more.type = "button";
     more.className = "story-more";
-    more.textContent = `Read more · show up to ${Math.min(s.stories.length, 30)} dispatches`;
-    more.addEventListener("click",()=>renderStories(key,30));
+    more.textContent = `Load next ${Math.min(30, allStories.length - limit)} dispatches`;
+    more.addEventListener("click",()=>renderStories(key, limit + 30));
     spStories.appendChild(more);
   }
 }
