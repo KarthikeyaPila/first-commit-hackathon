@@ -1049,6 +1049,10 @@ function backendStory(summary){
   };
 }
 
+function backendStateName(key){
+  return String(STATES[key].plain || STATES[key].name).replaceAll("&amp;","&");
+}
+
 async function hydrateState(key, force = false){
   if(!force && stateStoryCache.has(key)){
     STATES[key].stories = stateStoryCache.get(key);
@@ -1056,7 +1060,7 @@ async function hydrateState(key, force = false){
     return;
   }
   try {
-    const payload = await getStateStories(key);
+    const payload = await getStateStories(backendStateName(key));
     const stories = Array.isArray(payload.stories) ? payload.stories.map(backendStory) : [];
     stateStoryCache.set(key, stories);
     STATES[key].stories = stories;
