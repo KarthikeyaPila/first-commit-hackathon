@@ -1016,11 +1016,15 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
 .aws-architecture{margin:34px auto 0;padding:20px 0 4px;border-top:1px solid rgba(23,19,16,.18);max-width:1400px}
 .aws-architecture-head{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:16px}
 .aws-architecture-note{font-family:var(--mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:rgba(23,19,16,.45)}
-.aws-architecture-flow{display:flex;align-items:center;justify-content:center;gap:12px}
-.aws-node{display:grid;gap:5px;min-width:150px;padding:13px 14px;background:rgba(255,255,255,.48);border:1px solid rgba(23,19,16,.22)}
+.aws-architecture-flow{display:flex;align-items:center;justify-content:center;gap:18px}
+.aws-column{display:grid;gap:10px;min-width:215px}
+.aws-column-label{font-family:var(--mono);font-size:8px;letter-spacing:.19em;color:#A56D16;text-transform:uppercase;margin-bottom:2px}
+.aws-column-lambda{min-width:285px}
+.aws-node{display:grid;gap:7px;min-height:92px;padding:16px 17px;background:rgba(255,255,255,.48);border:1px solid rgba(23,19,16,.22)}
 .aws-node-main{border-color:#D92243;box-shadow:0 0 0 1px rgba(217,34,67,.13)}
+.aws-node-event{border-style:dashed}
 .aws-node small{font-family:var(--mono);font-size:7px;letter-spacing:.17em;color:#A56D16}
-.aws-node strong{font-family:var(--display);font-size:20px;font-weight:400;color:#171310}
+.aws-node strong{font-family:var(--display);font-size:23px;font-weight:400;color:#171310}
 .aws-node span,.aws-architecture-support{font-family:var(--mono);font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:rgba(23,19,16,.48)}
 .aws-architecture-support code{font-family:var(--mono);font-size:8px;letter-spacing:0;text-transform:none;color:#171310}
 .aws-handler{font-size:7px!important;letter-spacing:0!important;text-transform:none!important;overflow-wrap:anywhere}
@@ -1054,6 +1058,7 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
 @media (max-width:760px){
   .aws-architecture-head{align-items:flex-start;flex-direction:column}
   .aws-architecture-flow{align-items:stretch;flex-direction:column}
+  .aws-column,.aws-column-lambda{min-width:0}
   .aws-node{min-width:0}
   .aws-wire{align-self:center;transform:rotate(90deg)}
   .aws-architecture-support{align-items:flex-start;flex-direction:column;gap:8px}

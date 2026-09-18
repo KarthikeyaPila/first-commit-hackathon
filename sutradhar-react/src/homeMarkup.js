@@ -268,10 +268,11 @@ export const HOME_MARKUP = String.raw`
     <section class="aws-architecture" aria-label="AWS architecture">
       <div class="aws-architecture-head"><span class="pipeline-kicker">SUTRADHAR · AWS infrastructure</span><span class="aws-architecture-note">Deployed services behind the intelligence flow</span></div>
       <div class="aws-architecture-flow">
-        <div class="aws-node"><small>ENTRY · HTTP API</small><strong>API Gateway</strong><span>Browser requests</span></div><i class="aws-wire">→</i>
-        <div class="aws-node"><small>AWS::SERVERLESS::FUNCTION</small><strong>ApiFunction</strong><span class="aws-handler">first_commit.lambda_handlers.api_handler</span></div><i class="aws-wire">→</i>
-        <div class="aws-node aws-node-main"><small>AWS::SERVERLESS::FUNCTION</small><strong>ProcessingFunction</strong><span class="aws-handler">first_commit.lambda_handlers.processing_handler</span></div><i class="aws-wire">→</i>
-        <div class="aws-node"><small>STORAGE</small><strong>DynamoDB</strong><span>Runs + articles</span></div>
+        <div class="aws-column"><div class="aws-column-label">ENTRY</div><div class="aws-node"><small>HTTP API</small><strong>API Gateway</strong><span>Browser requests</span></div><div class="aws-node aws-node-event"><small>SCHEDULE</small><strong>EventBridge</strong><span>Hourly trigger</span></div></div>
+        <i class="aws-wire">→</i>
+        <div class="aws-column aws-column-lambda"><div class="aws-column-label">COMPUTE · LAMBDA</div><div class="aws-node"><small>AWS::SERVERLESS::FUNCTION</small><strong>ApiFunction</strong><span class="aws-handler">first_commit.lambda_handlers.api_handler</span></div><div class="aws-node aws-node-main"><small>AWS::SERVERLESS::FUNCTION</small><strong>ProcessingFunction</strong><span class="aws-handler">first_commit.lambda_handlers.processing_handler</span></div></div>
+        <i class="aws-wire">→</i>
+        <div class="aws-column"><div class="aws-column-label">PERSISTENCE</div><div class="aws-node"><small>STORAGE</small><strong>DynamoDB</strong><span>Runs + articles</span></div><div class="aws-node aws-node-event"><small>FAILURE CAPTURE</small><strong>SQS</strong><span>ProcessingFailureQueue</span></div></div>
       </div>
       <div class="aws-architecture-support"><span><b>EventBridge Schedule</b> → ProcessingFunction → <code>first_commit.lambda_handlers.processing_handler</code> · currently disabled</span><span><b>SQS ProcessingFailureQueue</b> · retry capture</span></div>
     </section>
