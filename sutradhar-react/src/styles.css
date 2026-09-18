@@ -457,6 +457,7 @@ svg :focus-visible{outline:none}
   max-width:44ch;margin:0;position:relative;
 }
 .story .by{margin-top:14px;font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--paper-dim);position:relative}
+.story-more{grid-column:1/-1;justify-self:center;margin:22px 0 8px;border:1px solid rgba(23,19,16,.25);padding:11px 18px;font-family:var(--mono);font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);background:transparent;cursor:pointer;transition:background .3s,color .3s,border-color .3s}.story-more:hover,.story-more:focus-visible{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .story.lead{grid-template-columns:clamp(46px,5.4vw,80px) minmax(0,1fr);padding-top:clamp(10px,1.6vw,18px)}
 .story.lead h4{font-size:clamp(28px,4.6vw,62px);max-width:15ch}
 .story.lead .dek{font-size:clamp(16px,1.5vw,19px);max-width:56ch;margin:20px 0 0}

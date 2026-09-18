@@ -134,3 +134,14 @@ def state_story_record(state: str, run_id: str, story_id: str) -> dict[str, Any]
         run_id=run_id,
         story_id=story_id,
     )
+
+
+def state_article_record(state: str, run_id: str, article_id: str) -> dict[str, Any]:
+    return _record(
+        f"STATE#{state}",
+        f"ARTICLE#{run_id}#{article_id}",
+        "state_article",
+        state=state,
+        run_id=run_id,
+        article_id=article_id,
+    )

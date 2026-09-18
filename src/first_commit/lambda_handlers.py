@@ -60,6 +60,54 @@ def api_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
         return _response(200, {"states": state_source_directory()})
 
+    if path.startswith("/states/") and path.endswith("/articles"):
+        state = unquote(path[len("/states/") : -len("/articles")].strip("/"))
+        if not state or not os.environ.get("TABLE_NAME"):
+            return _response(400, {"error": "state is required"})
+        import boto3
+        from boto3.dynamodb.conditions import Key
+
+        table = boto3.resource("dynamodb").Table(os.environ["TABLE_NAME"])
+        projections = table.query(
+            KeyConditionExpression=Key("PK").eq(f"STATE#{state}"),
+        ).get("Items", [])
+        latest_run_id = _latest_completed_run_id(table, projections)
+        article_projections = [
+            projection for projection in projections
+            if projection.get("entity_type") == "state_article"
+            and projection.get("run_id") == latest_run_id
+        ]
+        from .sources import SOURCES
+        sources = {source.source_id: source for source in SOURCES}
+        articles_by_source: dict[str, dict[str, Any]] = {}
+        for projection in article_projections:
+            article_id = projection.get("article_id")
+            if not article_id:
+                continue
+            article = table.get_item(
+                Key={"PK": f"ARTICLE#{article_id}", "SK": "META"}
+            ).get("Item")
+            if not article:
+                continue
+            source_id = str(article.get("source_id") or "unknown")
+            source = sources.get(source_id)
+            article["source"] = {
+                "source_id": source_id,
+                "name": source.name if source else source_id,
+                "scope": source.scope if source else None,
+                "states": list(source.states) if source else [],
+                "language": source.language if source else None,
+            }
+            existing = articles_by_source.get(source_id)
+            if existing is None or str(article.get("published_at") or "") > str(existing.get("published_at") or ""):
+                articles_by_source[source_id] = article
+        articles = sorted(
+            articles_by_source.values(),
+            key=lambda article: str(article.get("published_at") or ""),
+            reverse=True,
+        )[:30]
+        return _response(200, {"state": state, "run_id": latest_run_id, "articles": articles})
+
     if path.startswith("/states/") and path.endswith("/stories"):
         state = unquote(path[len("/states/") : -len("/stories")].strip("/"))
         if not state or not os.environ.get("TABLE_NAME"):

@@ -15,6 +15,10 @@ export function getStateStories(state, signal) {
   return apiGet(`/states/${encodeURIComponent(state)}/stories`, signal);
 }
 
+export function getStateArticles(state, signal) {
+  return apiGet(`/states/${encodeURIComponent(state)}/articles`, signal);
+}
+
 export function getStory(runId, storyId, signal) {
   return apiGet(`/stories/${encodeURIComponent(runId)}/${encodeURIComponent(storyId)}`, signal);
 }

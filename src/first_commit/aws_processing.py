@@ -16,6 +16,7 @@ from .aws_contract import (
     article_record,
     run_record,
     state_story_record,
+    state_article_record,
     story_membership_record,
     story_record,
     market_record,
@@ -300,6 +301,11 @@ def process_latest_news(table: Any, event: dict[str, Any]) -> dict[str, Any]:
                 ),
             },
         )
+        state_article_records = [
+            state_article_record(state, run_id, record["article_id"])
+            for record in article_records
+            for state in record.get("candidate_states", [])
+        ]
 
         story_records, grouping_summary = _build_story_records(
             run_id,
@@ -312,9 +318,9 @@ def process_latest_news(table: Any, event: dict[str, Any]) -> dict[str, Any]:
         mark_stage(
             "persist_outputs",
             "RUNNING",
-            {"records_to_write": len(article_records) + len(story_records) + len(market_records)},
+            {"records_to_write": len(article_records) + len(state_article_records) + len(story_records) + len(market_records)},
         )
-        _write_records(table, article_records + story_records + market_records)
+        _write_records(table, article_records + state_article_records + story_records + market_records)
         mark_stage(
             "persist_outputs",
             "COMPLETE",

@@ -1,4 +1,4 @@
-import { getMarket, getRunStatus, getStateStories, getStory, startProcessing } from "./backendApi";
+import { getMarket, getRunStatus, getStateArticles, getStateStories, getStory, startProcessing } from "./backendApi";
 
 export function initLegacy(){
 
@@ -1045,7 +1045,22 @@ function backendStory(summary){
     h: summary.story_title || "Untitled story",
     dek: sourceNames ? "Covered by " + sourceNames + "." : "Grouped coverage from the Sutradhar story graph.",
     body: ["This story is backed by the live Sutradhar story API.", sourceNames ? "Sources: " + sourceNames + "." : "Open the original publisher links to inspect the coverage."],
+    articleCount: Number(summary.article_count || 0),
     api: { runId: summary.run_id, storyId: summary.story_id }
+  };
+}
+
+function backendArticle(article){
+  const source = article.source?.name || article.source_id || "Sutradhar desk";
+  return {
+    cat: "Latest feed",
+    date: "LIVE",
+    read: "Read original",
+    by: source,
+    h: article.headline || "Untitled article",
+    dek: article.summary || "Latest article from the state feed.",
+    body: [article.summary || "Latest article from the state feed.", article.url || ""],
+    articleCount: 1
   };
 }
 
@@ -1060,8 +1075,15 @@ async function hydrateState(key, force = false){
     return;
   }
   try {
-    const payload = await getStateStories(backendStateName(key));
-    const stories = Array.isArray(payload.stories) ? payload.stories.map(backendStory) : [];
+    const stateName = backendStateName(key);
+    const payload = await getStateStories(stateName);
+    let stories = Array.isArray(payload.stories) ? payload.stories.map(backendStory) : [];
+    if(stories.length === 0){
+      const latest = await getStateArticles(stateName);
+      stories = Array.isArray(latest.articles) ? latest.articles.map(backendArticle) : [];
+    }else{
+      stories.sort((a,b)=>(b.articleCount || 0) - (a.articleCount || 0));
+    }
     stateStoryCache.set(key, stories);
     STATES[key].stories = stories;
     STATES[key].facts = [["Stories", String(stories.length)], ["Lens", "State desk"], ["Capital", STATES[key].cap], ["Filed", "Live API"]];
@@ -1424,11 +1446,11 @@ function buildMini(key){
   });
 }
 
-function renderStories(key){
+function renderStories(key, limit = 12){
   const s = STATES[key];
   spStories.innerHTML = "";
   spCount.textContent = `${s.stories.length} filed · edition 01`;
-  s.stories.forEach((st,i)=>{
+  s.stories.slice(0, Math.min(limit, 30)).forEach((st,i)=>{
     const b = document.createElement("button");
     b.type = "button";
     b.className = "story" + (i === 0 ? " lead" : "");
@@ -1441,6 +1463,14 @@ function renderStories(key){
     b.addEventListener("click",()=>openReader(key,i));
     spStories.appendChild(b);
   });
+  if(s.stories.length > 12 && limit < 30){
+    const more = document.createElement("button");
+    more.type = "button";
+    more.className = "story-more";
+    more.textContent = `Read more · show up to ${Math.min(s.stories.length, 30)} stories`;
+    more.addEventListener("click",()=>renderStories(key,30));
+    spStories.appendChild(more);
+  }
 }
 
 function renderState(key){
