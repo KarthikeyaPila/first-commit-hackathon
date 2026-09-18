@@ -5,12 +5,15 @@ from __future__ import annotations
 from collections import defaultdict
 from pathlib import Path
 
-from .benchmark import load_snapshot, lexical_similarity
+from .benchmark import load_snapshot, load_snapshot_metadata, lexical_similarity
 from .matching import score_pair, weighted_tfidf_similarities
 from .models import Article
 from .sources import SOURCES
 from .state_routing import route_article
 from .story_titles import choose_story_title
+
+
+STORY_ALGORITHM_VERSION = "global-story-graph-v1"
 
 
 def build_global_stories(
@@ -23,6 +26,8 @@ def build_global_stories(
 ) -> dict[str, object]:
     """Build global story clusters, then project their articles to states."""
 
+    snapshot_metadata = load_snapshot_metadata(snapshot_path)
+    run_id = snapshot_metadata.get("run_id") or "unversioned"
     articles = load_snapshot(snapshot_path)
     articles.sort(
         key=lambda article: article.published_at.timestamp() if article.published_at else 0,
@@ -38,6 +43,9 @@ def build_global_stories(
             "story_count": 0,
             "articles_ungrouped": 0,
             "matching_method": "global story graph",
+            "run_id": run_id,
+            "algorithm_version": STORY_ALGORITHM_VERSION,
+            "run_config": snapshot_metadata.get("run_config", {}),
         }
 
     try:
@@ -162,6 +170,8 @@ def build_global_stories(
             edges.append((first, second, decision))
         elif decision.outcome == "CANDIDATE":
             review_candidates.append({
+                "review_id": f"{run_id}-review-{len(review_candidates) + 1}",
+                "algorithm_version": STORY_ALGORITHM_VERSION,
                 "score": round(decision.score, 4),
                 "reasons": decision.reasons,
                 "signals": decision.signals,
@@ -188,7 +198,8 @@ def build_global_stories(
             if first in indexes and second in indexes
         ]
         stories.append({
-            "story_id": f"global-story-{len(stories) + 1}",
+            "story_id": f"{run_id}-story-{len(stories) + 1}",
+            "algorithm_version": STORY_ALGORITHM_VERSION,
             "story_title": choose_story_title([articles[index] for index in indexes], source_by_id),
             "article_count": len(indexes),
             "states": sorted({
@@ -223,6 +234,9 @@ def build_global_stories(
     visible_stories = stories[:max_stories]
     return {
         "stories": visible_stories,
+        "run_id": run_id,
+        "algorithm_version": STORY_ALGORITHM_VERSION,
+        "run_config": snapshot_metadata.get("run_config", {}),
         "state_groups": _project_state_groups(visible_stories),
         "articles_considered": len(articles),
         "candidate_pairs": len(pairs),

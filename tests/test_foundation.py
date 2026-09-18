@@ -140,3 +140,12 @@ def test_snapshot_keeps_run_metadata(tmp_path) -> None:
     payload = json.loads(path.read_text())
     assert payload["run_id"] == "run-1"
     assert payload["run_config"]["threshold"] == 0.4
+
+def test_snapshot_metadata_is_available_for_versioned_outputs(tmp_path) -> None:
+    from first_commit.benchmark import load_snapshot_metadata
+    import json
+
+    path = tmp_path / "snapshot.json"
+    path.write_text(json.dumps({"run_id": "run-123", "run_config": {"threshold": 0.4}, "articles": []}))
+    metadata = load_snapshot_metadata(path)
+    assert metadata == {"run_id": "run-123", "run_config": {"threshold": 0.4}}

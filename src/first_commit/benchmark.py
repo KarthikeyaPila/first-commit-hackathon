@@ -26,6 +26,16 @@ DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 TOKEN_RE = re.compile(r"[a-z0-9]{3,}")
 
 
+def load_snapshot_metadata(path: Path) -> dict[str, object]:
+    """Return persisted run/config metadata without loading article objects."""
+
+    payload = json.loads(path.read_text())
+    return {
+        "run_id": payload.get("run_id"),
+        "run_config": payload.get("run_config", {}),
+    }
+
+
 def load_snapshot(path: Path) -> list[Article]:
     """Load the latest ingestion JSON into Article objects."""
 

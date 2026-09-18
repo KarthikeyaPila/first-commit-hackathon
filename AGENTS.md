@@ -85,7 +85,8 @@ research and development packages are optional dependencies in pyproject.toml.
 - src/first_commit/matching.py: explainable weighted TF-IDF similarity, entities,
   keywords, state, and time.
 - src/first_commit/clustering.py: global story graph clustering and state
-  projections; current ceiling is 4,000 articles.
+  projections; current ceiling is 4,000 articles. Outputs carry run and
+  algorithm-version metadata.
 - src/first_commit/story_view.py: story formatting, explanations, source metadata,
   and article cards.
 - src/first_commit/benchmark.py: pair generation, labeling, TF-IDF evaluation,
@@ -218,7 +219,7 @@ Generated snapshots, labels, model caches, and raw captures are ignored.
 
 - Read AGENTS.md, SKILLS.md, and the relevant docs.
 - Check git status and recent commits.
-- Run the 20-test suite before changing behavior.
+- Run the 21-test suite before changing behavior.
 - Read error.md when the user reports a browser/runtime issue.
 - Inspect API payloads and cache behavior before changing the UI.
 - Treat DEVELOPMENT_CHECKPOINTS.md as a local tracker, not something to blindly

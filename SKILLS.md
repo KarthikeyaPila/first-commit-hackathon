@@ -91,7 +91,8 @@ Baseline:
 - State groups project globally clustered stories.
 - State sources anchor their state; national sources supplement coverage.
 - National-national and multiple-state-source pairs may chain when they match.
-- Current TF-IDF-only MATCH cutoff is 0.40.
+- Current TF-IDF-only MATCH cutoff is 0.40. Story outputs carry run_id,
+  algorithm_version, and run_config metadata.
 - Prefer false splits over false merges.
 
 Sparse grouping diagnosis:
