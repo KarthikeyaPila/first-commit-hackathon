@@ -1908,15 +1908,23 @@ async function beginBackendRun(){
   try {
     const accepted = await startProcessing();
     if(!accepted.run_id) throw new Error("No run ID returned by the processing API");
+    let pollFailures = 0;
     const poll = async () => {
       try {
         const run = await getRunStatus(accepted.run_id);
+        pollFailures = 0;
         applyBackendRun(run);
-        if(run.status !== "completed" && run.status !== "failed" && run.status !== "error"){
+        const runStatus = String(run.status || "").toLowerCase();
+        if(runStatus !== "completed" && runStatus !== "failed" && runStatus !== "error"){
           backendPollTimer = setTimeout(poll, 900);
         }
       } catch(error) {
-        setPipelineError(error.message || "RUN STATUS REQUEST FAILED");
+        pollFailures += 1;
+        if(pollFailures < 6){
+          backendPollTimer = setTimeout(poll, 1500);
+        }else{
+          setPipelineError(error.message || "RUN STATUS REQUEST FAILED");
+        }
       }
     };
     poll();
