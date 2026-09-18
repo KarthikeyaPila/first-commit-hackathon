@@ -1149,7 +1149,7 @@ async function hydrateMarket(){
 }
 
 function setHot(k,on){
-  if(!k) return;
+  if(!k || !vis[k]) return;
   vis[k].classList.toggle("hot",on);
   hit[k].classList.toggle("hot",on);
   if(patfill[k]) patfill[k].classList.toggle("hot",on);
@@ -1464,6 +1464,19 @@ function buildMini(key){
   });
 }
 
+function articleSummaryMarkup(summary){
+  const text = String(summary || "").trim();
+  if(!text) return "";
+  if(text.length < 420 && text.split(/\s+/).length < 70){
+    return `<p class="b">${escapeHtml(text)}</p>`;
+  }
+  return `<details class="article-summary"><summary><span>Summary</span><b>Read more</b></summary><p class="b">${escapeHtml(text)}</p></details>`;
+}
+
+function articleLinkMarkup(url){
+  return url ? `<p class="article-source-link"><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Read original article ↗</a></p>` : "";
+}
+
 function renderStories(key, limit = 12){
   const s = STATES[key];
   spStories.innerHTML = "";
@@ -1562,7 +1575,7 @@ async function renderNational(){
   bcState.textContent="National News";
   spFacts.innerHTML=NATIONAL.facts.map(f=>`<div class="fact"><dt>${f[0]}</dt><dd>${f[1]}</dd></div>`).join("");
   buildNationalArt();
-  mini.innerHTML="";
+  buildMini("__national__");
   try {
     const payload = await getNationalStories();
     const stories = Array.isArray(payload.stories) ? payload.stories.map(backendStory) : [];
@@ -1623,7 +1636,7 @@ async function selectNational(){
   curtainUp();
   await wait(660);
   stage.setAttribute("data-hidden","1");
-  renderNational();
+  await renderNational();
   document.body.classList.add("reading");
   await wait(60);
   curtainDown();
@@ -1733,9 +1746,9 @@ function openReader(key,i){
   const st = STATES[key].stories[i];
   rdKicker.textContent = `${label(key)} · ${st.cat} · ${st.date}`;
   rdBody.innerHTML =
-    `<h2>${st.h}</h2><div class="reader-rule"></div><p class="dek">${st.dek}</p>` +
-    st.body.map(p=>`<p class="b">${p}</p>`).join("") +
-    `<p class="reader-note">Demo copy · ${st.by} · ${st.read} read</p>` +
+    `<h2>${escapeHtml(st.h)}</h2><div class="reader-rule"></div>` +
+    (st.kind === "latest" ? articleSummaryMarkup(st.dek) + articleLinkMarkup(st.body[1]) : `<p class="dek">${escapeHtml(st.dek)}</p>` + st.body.map(p=>`<p class="b">${escapeHtml(p)}</p>`).join("")) +
+    `<p class="reader-note">${st.kind === "latest" ? "Live article" : "Live comparison"} · ${escapeHtml(st.by)} · ${escapeHtml(st.read)} read</p>` +
     `<p class="reader-fine">Written to show how a filed dispatch reads inside SUTRADHAR. None of it is real reporting.</p>`;
   reader.setAttribute("data-open","1");
   reader.setAttribute("aria-hidden","false");
@@ -1748,8 +1761,7 @@ function openReader(key,i){
         "<h2>" + escapeHtml(payload.story?.story_title || st.h) + "</h2><div class=\"reader-rule\"></div>" +
         "<p class=\"dek\">Grouped coverage across " + articles.length + " publisher reports.</p>" +
         articles.map(article => "<p class=\"b\"><strong>" + escapeHtml(article.source?.name || "Publisher") + "</strong><br>" + escapeHtml(article.headline) + "</p>" +
-          (article.summary ? "<p class=\"b\">" + escapeHtml(article.summary) + "</p>" : "") +
-          (article.url ? "<p><a href=\"" + escapeHtml(article.url) + "\" target=\"_blank\" rel=\"noreferrer\">Read original article ↗</a></p>" : "")).join("") +
+          articleSummaryMarkup(article.summary) + articleLinkMarkup(article.url)).join("") +
         "<p class=\"reader-note\">Live comparison · Sutradhar story API</p>";
     }).catch(error => console.warn("Sutradhar story detail unavailable.", error));
   }
