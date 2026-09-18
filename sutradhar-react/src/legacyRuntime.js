@@ -1046,6 +1046,7 @@ function backendStory(summary){
     dek: sourceNames ? "Covered by " + sourceNames + "." : "Grouped coverage from the Sutradhar story graph.",
     body: ["This story is backed by the live Sutradhar story API.", sourceNames ? "Sources: " + sourceNames + "." : "Open the original publisher links to inspect the coverage."],
     articleCount: Number(summary.article_count || 0),
+    articleIds: Array.isArray(summary.article_ids) ? summary.article_ids : [],
     api: { runId: summary.run_id, storyId: summary.story_id }
   };
 }
@@ -1060,7 +1061,8 @@ function backendArticle(article){
     h: article.headline || "Untitled article",
     dek: article.summary || "Latest article from the state feed.",
     body: [article.summary || "Latest article from the state feed.", article.url || ""],
-    articleCount: 1
+    articleCount: 1,
+    articleId: article.article_id
   };
 }
 
@@ -1084,6 +1086,16 @@ async function hydrateState(key, force = false){
       stories = Array.isArray(latest.articles) ? latest.articles.map(backendArticle) : [];
     }else{
       stories.sort((a,b)=>(b.articleCount || 0) - (a.articleCount || 0));
+      if(stories.length < 12){
+        const latest = await getStateArticles(stateName);
+        const groupedArticleIds = new Set(stories.flatMap(story=>story.articleIds || []));
+        const fallback = Array.isArray(latest.articles)
+          ? latest.articles
+            .map(backendArticle)
+            .filter(article=>!groupedArticleIds.has(article.articleId))
+          : [];
+        stories = stories.concat(fallback).slice(0,30);
+      }
     }
     if(stories.length > 0) stateStoryCache.set(key, stories);
     else stateStoryCache.delete(key);
