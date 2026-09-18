@@ -173,6 +173,17 @@ Do not hide the source headline or present a synthesized title as fact.
 
 AWS is mandatory for the finished project.
 
+Credential safety is non-negotiable:
+
+- Never commit AWS access keys, secret keys, session tokens, private keys, or
+  credential files.
+- Never place credentials in source code, JSON fixtures, Markdown, logs, or
+  frontend files.
+- Use the AWS CLI credential store, environment variables, or a secret manager
+  locally; use IAM roles for Lambda and other deployed services.
+- Review `git diff` and `git status` before every commit, and revoke any
+  credential immediately if it is accidentally exposed.
+
 1. Define DynamoDB records for sources, articles, stories, and runs.
 2. Keep one logical processing invocation:
    ingest → extract → normalize → state → genre → embed → cluster → aggregate.
