@@ -85,9 +85,8 @@ Baseline:
 
 - Embed/compare headline + summary + lead.
 - Retrieve candidates with state/source awareness, time proximity, headline
-  neighbors, lexical fallback, and global graph construction. Cache snapshot
-  headline artifacts and use sparse candidate-row similarities; do not build
-  an unnecessary full pairwise matrix.
+  neighbors, lexical fallback, and global graph construction. Cache snapshot headline artifacts and keep interactive candidate budgets bounded;
+  larger full-snapshot runs are reserved for offline processing.
 - Use weighted TF-IDF, entities, keywords, state, genre where available, and time.
 - Outcomes are MATCH, CANDIDATE, and NEW STORY.
 - Explanations must show actual similarity/shared metadata; never invent reasons.

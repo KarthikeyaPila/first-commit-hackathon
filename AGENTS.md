@@ -91,8 +91,8 @@ research and development packages are optional dependencies in pyproject.toml.
   keywords, state, and time.
 - src/first_commit/clustering.py: global story graph clustering and state
   projections; current ceiling is 4,000 articles. Outputs carry run and
-  algorithm-version metadata. Headline TF-IDF artifacts are cached per snapshot
-  and candidate retrieval uses sparse row-to-source similarities.
+  algorithm-version metadata. Headline TF-IDF artifacts are cached per snapshot. The interactive API uses a
+  bounded 1,200-article, 4-neighbor preview budget; larger runs remain offline.
 - src/first_commit/story_view.py: story formatting, explanations, source metadata,
   and article cards.
 - src/first_commit/benchmark.py: pair generation, labeling, TF-IDF evaluation,
