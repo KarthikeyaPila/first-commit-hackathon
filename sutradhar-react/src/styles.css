@@ -1034,6 +1034,16 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
 .pipeline-exit{position:absolute;right:var(--pad);bottom:clamp(18px,3vw,30px);z-index:4;display:flex;align-items:center;gap:12px;padding:10px 14px;background:transparent;border:1px solid rgba(23,19,16,.28);color:#171310;font-family:var(--mono);font-size:9px;letter-spacing:.17em;cursor:pointer;transition:background .3s var(--ease),color .3s var(--ease),transform .3s var(--ease)}
 .pipeline-exit b{font-size:16px;font-weight:400;color:#D92243}
 .pipeline-exit:hover,.pipeline-exit:focus-visible{background:#171310;color:#FFF5E5;transform:translateY(-2px)}
+
+/* Keep the editorial hierarchy, but make utility text easier to read. */
+.ticker-label,.ticker-change,.nat-cat,.grat text,.compass text,.isle text,.marks text,
+.ro-ep,.ro-idx,.story-more,.national-btn-kick,.national-story-cat,.national-note,
+.press-section-kicker,.press-story-kicker,.press-story-action,.pipeline-kicker,
+.pipe-num,.pipe-data,.pipe-status,.pipe-micro,.pipeline-legend,.pipeline-sim-note,
+.output-copy,.output-rail b,.output-chip,.aws-architecture-note,.aws-column-label,
+.aws-node small,.aws-node span,.aws-architecture-support,.press-story-meta{font-size:9px}
+.ticker-item,.idx-item span,.story .by,.reader-note,.close-x,.sw-item .micro,.article-summary summary,
+.article-source-link a,.pipeline-meta{font-size:10px}
 .legend-dot{background:#8E8577!important}.legend-dot.run{background:#D92243!important}.legend-dot.done{background:#B48726!important}
 .pipeline-output{border-top-color:rgba(23,19,16,.18)!important}
 .output-title{color:#171310!important}
