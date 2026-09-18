@@ -249,8 +249,8 @@ export const HOME_MARKUP = String.raw`
       <span class="pipeline-signal" aria-hidden="true"></span>
       <div><div class="pipeline-kicker">SUTRADHAR · Internal Processing</div><h2 class="pipeline-title">Processing Pipeline</h2></div>
     </div>
-    <div class="pipeline-meta">Live system view · AWS run telemetry<br>Backend stages and metrics</div>
     <button class="pipeline-run" id="pipelineRun" type="button"><span>RUN PIPELINE</span><b>→</b></button>
+    <div class="pipeline-meta">Live system view · AWS run telemetry<br>Backend stages and metrics</div>
     <button class="pipeline-close" id="pipelineClose" type="button" aria-label="Return to press">←</button>
   </header>
   <div class="pipeline-shell">

@@ -1008,7 +1008,7 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
 .pipe-node[data-status="complete"] .pipe-status{color:#A56D16!important}
 .pipe-micro{color:rgba(23,19,16,.40)!important}
 .pipeline-legend{color:rgba(23,19,16,.46)!important}
-.pipeline-run{display:flex;align-items:center;justify-content:space-between;gap:24px;width:min(260px,24vw);min-width:210px;margin:0 0 0 auto;padding:13px 16px;background:#8F2638;color:#FFF5E5;border:1px solid #8F2638;box-shadow:0 8px 18px rgba(92,27,39,.22);font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-align:left;cursor:pointer;transition:transform .3s var(--ease),background .3s,color .3s,box-shadow .3s}
+.pipeline-run{display:flex;align-items:center;justify-content:space-between;gap:24px;width:min(260px,24vw);min-width:210px;margin:0;padding:13px 16px;background:#8F2638;color:#FFF5E5;border:1px solid #8F2638;box-shadow:0 8px 18px rgba(92,27,39,.22);font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-align:left;cursor:pointer;transition:transform .3s var(--ease),background .3s,color .3s,box-shadow .3s}
 .pipeline-run b{font-size:17px;font-weight:400;transition:transform .3s var(--ease)}
 .pipeline-run:hover,.pipeline-run:focus-visible{background:#171310;border-color:#171310;box-shadow:0 10px 24px rgba(23,19,16,.18);transform:translateY(-2px)}
 .pipeline-run:hover b,.pipeline-run:focus-visible b{transform:translateX(5px)}
