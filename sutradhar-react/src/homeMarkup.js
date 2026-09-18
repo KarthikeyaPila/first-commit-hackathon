@@ -82,7 +82,7 @@ export const HOME_MARKUP = String.raw`
     <div class="press-intro">
       <span class="press-section-kicker">THE MACHINE BEHIND THE PAPER</span>
       <span class="press-section-rule"></span>
-      <span class="press-section-copy">From the map · into the machinery</span>
+      <span class="press-section-copy">PRINTING PRESS · from the map · into the machinery</span>
     </div>
     <div class="press-layout">
       <button class="print-press-dock" id="printPress" type="button" aria-label="Look inside the printing press">
