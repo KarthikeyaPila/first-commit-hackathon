@@ -81,9 +81,8 @@ def weighted_tfidf_similarities(
             ).fit_transform(values)
         except ValueError:
             continue
-        similarities = cosine_similarity(matrix)
         field_scores[field] = [
-            float(similarities[first, second])
+            float(matrix[first].multiply(matrix[second]).sum())
             for first, second in pairs
         ]
 

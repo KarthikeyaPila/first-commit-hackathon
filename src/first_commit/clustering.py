@@ -14,6 +14,7 @@ from .story_titles import choose_story_title
 
 
 STORY_ALGORITHM_VERSION = "global-story-graph-v1"
+_HEADLINE_MATRIX_CACHE: dict[tuple[str, int, int], object] = {}
 
 
 def build_global_stories(
@@ -52,15 +53,19 @@ def build_global_stories(
         from sklearn.feature_extraction.text import TfidfVectorizer
         from sklearn.metrics.pairwise import cosine_similarity
 
+        cache_key = (str(snapshot_path.resolve()), snapshot_path.stat().st_mtime_ns, len(articles))
+        headline_matrix = _HEADLINE_MATRIX_CACHE.get(cache_key)
+        if headline_matrix is None:
+            headline_matrix = TfidfVectorizer(
+                stop_words="english",
+                ngram_range=(1, 2),
+            ).fit_transform([article.headline for article in articles])
+            _HEADLINE_MATRIX_CACHE.clear()
+            _HEADLINE_MATRIX_CACHE[cache_key] = headline_matrix
         use_tfidf = True
-        headline_matrix = TfidfVectorizer(
-            stop_words="english",
-            ngram_range=(1, 2),
-        ).fit_transform([article.headline for article in articles])
-        headline_similarities = cosine_similarity(headline_matrix)
     except ImportError:
         use_tfidf = False
-        headline_similarities = None
+        headline_matrix = None
 
     source_indexes = {
         source_id: [
@@ -78,12 +83,14 @@ def build_global_stories(
         return abs((first_time - second_time).total_seconds()) / 3600 <= 48
 
     def nearest_candidates(index: int, indexes: list[int]) -> list[int]:
-        if use_tfidf:
-            return sorted(
-                indexes,
-                key=lambda other: float(headline_similarities[index, other]),
+        if use_tfidf and indexes:
+            scores = cosine_similarity(headline_matrix[index], headline_matrix[indexes])[0]
+            ranked = sorted(
+                zip(indexes, scores),
+                key=lambda item: float(item[1]),
                 reverse=True,
-            )[:max_neighbors_per_source]
+            )
+            return [candidate for candidate, _ in ranked[:max_neighbors_per_source]]
         return sorted(
             indexes,
             key=lambda other: lexical_similarity(articles[index], articles[other]),
