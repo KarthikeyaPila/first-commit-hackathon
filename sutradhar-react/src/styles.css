@@ -192,8 +192,9 @@ svg :focus-visible{outline:none}
 .map-wrap::before{
   content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(42% 46% at 28% 34%, rgba(182,66,50,.09), transparent 72%),
-    radial-gradient(46% 40% at 76% 68%, rgba(47,110,107,.09), transparent 72%);
+    radial-gradient(42% 46% at 28% 34%, rgba(182,66,50,.14), transparent 72%),
+    radial-gradient(46% 40% at 76% 68%, rgba(47,110,107,.14), transparent 72%),
+    radial-gradient(36% 38% at 52% 42%, rgba(201,162,39,.08), transparent 74%);
 }
 .ghost{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-52%);
@@ -221,15 +222,16 @@ svg :focus-visible{outline:none}
 .compass text{font-family:var(--mono);font-size:8px;letter-spacing:.1em;fill:rgba(237,228,211,.32)}
 
 .st{
-  fill:color-mix(in srgb, var(--a) 11%, transparent);
-  stroke:rgba(237,228,211,.3);
-  stroke-width:.85;
+  fill:color-mix(in srgb, var(--a) 20%, transparent);
+  stroke:rgba(23,19,16,.46);
+  stroke-width:1.1;
   stroke-linejoin:round;
+  paint-order:stroke fill;
   vector-effect:non-scaling-stroke;
   transform-box:fill-box;transform-origin:center;
   transition:fill .5s var(--ease),fill-opacity .5s var(--ease),stroke .45s var(--ease),opacity .5s var(--ease),transform .6s var(--ease);
 }
-.st.live{fill:color-mix(in srgb, var(--a) 30%, transparent);stroke:color-mix(in srgb, var(--a) 60%, rgba(237,228,211,.75))}
+.st.live{fill:color-mix(in srgb, var(--a) 43%, transparent);stroke:color-mix(in srgb, var(--a) 52%, #171310 48%);stroke-width:1.35}
 .st.hot{
   fill:var(--a);
   fill-opacity:.4;
