@@ -15,6 +15,7 @@
       .toolbar { display: flex; align-items: center; gap: 16px; margin: 30px 0 20px; flex-wrap: wrap; }
       button { border: 0; border-radius: 999px; background: var(--ink); color: white; cursor: pointer; font: inherit; font-weight: 700; padding: 12px 18px; }
       button:disabled { cursor: wait; opacity: .6; }
+      .section-action { background: #edf0f4; color: var(--ink); font-size: 13px; padding: 9px 13px; }
       #run-status { color: var(--muted); }
       .summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 18px 0 28px; }
       .metric, .feed { background: white; border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
@@ -91,6 +92,7 @@
       <section class="story-panel" aria-label="Matched story cards">
         <div class="section-kicker">Matching preview</div>
         <h2>Stories grouped across sources</h2>
+        <button id="refresh-stories" class="section-action" type="button">Refresh matching preview</button>
         <p id="stories-summary" class="meta">Loading story groups…</p>
         <div id="story-list" class="story-grid"><div class="feed">Loading story cards…</div></div>
       </section>
@@ -126,6 +128,7 @@
       const benchmarkPair = document.querySelector('#benchmark-pair');
       const benchmarkProgress = document.querySelector('#benchmark-progress');
       const storyList = document.querySelector('#story-list');
+      const refreshStoriesButton = document.querySelector('#refresh-stories');
       const storiesSummary = document.querySelector('#stories-summary');
       const candidateList = document.querySelector('#candidate-list');
       const candidateSummary = document.querySelector('#candidate-summary');
@@ -208,8 +211,19 @@
         }
       });
       const loadStories = async () => {
-        try { const payload = await (await fetch('/api/stories')).json(); renderStories(payload); renderCandidates(payload); }
-        catch (error) { storiesSummary.textContent = 'Could not load story groups.'; storyList.innerHTML = '<div class="error">' + escapeHtml(error.message) + '</div>'; }
+        if (refreshStoriesButton) refreshStoriesButton.disabled = true;
+        try {
+          const response = await fetch('/api/stories');
+          const payload = await response.json();
+          if (!response.ok || payload.error) throw new Error(payload.error || 'Request failed');
+          renderStories(payload);
+          renderCandidates(payload);
+        } catch (error) {
+          storiesSummary.textContent = 'Could not load story groups.';
+          storyList.innerHTML = '<div class="error">' + escapeHtml(error.message) + '</div>';
+        } finally {
+          if (refreshStoriesButton) refreshStoriesButton.disabled = false;
+        }
       };
       const loadBenchmark = async () => {
         try { renderBenchmark(await (await fetch('/api/benchmark')).json()); }
@@ -233,6 +247,7 @@
         }
       });
       loadBenchmark();
+      if (refreshStoriesButton) refreshStoriesButton.addEventListener('click', loadStories);
       loadStories();
       const render = (run) => {
         const reports = run.feeds || [];
