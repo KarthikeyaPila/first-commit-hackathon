@@ -208,7 +208,7 @@ Minimum code verification:
     if [ -x .venv/bin/pytest ]; then .venv/bin/pytest -q; else python3 -m pytest -q; fi
     git diff --check
 
-The current suite contains 20 tests; update this count when tests are added or
+The current suite contains 31 tests; update this count when tests are added or
 removed.
 
 Source changes additionally require live parser validation and a report of
@@ -243,3 +243,9 @@ discovery, change, validation, and remaining uncertainty.
 Final handoff should name changed files, behavior, tests, commit/push status,
 limitations, and the next safe step. Never call a feed, model, story count, or
 AWS deployment production-ready without verification.
+
+## Exact current resume point
+
+Sutradhar has a deployed AWS processing backend in `ap-south-1`. The completed path includes RSS ingestion, normalization, deduplication, state routing, sparse TF-IDF grouping, story naming, DynamoDB persistence, state/story/comparison APIs, retries, failure capture, and real stage telemetry. Market context is cached at `/market`; gold and silver are INR per 10 grams.
+
+The next work is frontend-only product integration: build the India map, printing-press “look inside” transition, animated control-system view driven by the real run-stage API, state story output, market strip, and frontend hosting. Keep credentials out of source control and leave the hourly schedule disabled by default.

@@ -1,3 +1,6 @@
+> **Current runtime note - 18 September 2026:** The registry remains at 157 records: 136 active and 21 inactive with validation reasons. No feed registry changes were made during this documentation refresh. Use `AGENTS.md` and `README.md` for the current pipeline and deployment state.
+
+
 # India News RSS Feed Registry — First Commit
 
 _Last checked: 17 September 2026 (IST)_

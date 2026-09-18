@@ -1,3 +1,11 @@
+## CURRENT IMPLEMENTATION SNAPSHOT - 18 September 2026
+
+The historical technology record below is preserved. Current corrections: the project is now named **Sutradhar**; AWS is deployed in `ap-south-1`; the runtime has 31 passing tests; RSS ingestion is parallelized with a bounded worker pool; grouping uses sparse nearest-neighbor retrieval plus vectorized weighted TF-IDF scoring; and the AWS Lambda path persists detailed stage telemetry.
+
+The deployed stack persists runs, articles, stories, memberships, and state projections in DynamoDB, exposes API Gateway routes for processing, runs, states, stories, comparisons, and market context, retries asynchronous processing twice, and retains failures in SQS. Market context currently covers NIFTY 50, Sensex, USD/INR, gold, and silver. Gold and silver are converted from USD per troy ounce to INR per 10 grams using `USD/oz * USD/INR * 10 / 31.1034768`.
+
+The next implementation phase is the frontend/control-system experience and hosting. Keep the deployed AWS resources and credentials out of source control.
+
 # First Commit — Technology and Resource Register
 
 **Snapshot date:** 17 September 2026  

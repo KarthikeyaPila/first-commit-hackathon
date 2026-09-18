@@ -1,3 +1,11 @@
+## CURRENT STATE OVERRIDE - 18 September 2026
+
+This historical handoff remains useful for the original product decisions, but the project has progressed substantially. The current product name is **Sutradhar**. AWS is mandatory and the deployed backend is in `ap-south-1` under stack `first-commit-news-dev`. The live path is RSS fetch/parse -> normalize -> deduplicate -> state routing -> weighted TF-IDF -> sparse neighbor retrieval -> candidate scoring -> keyword/entity/time signals -> graph clustering -> deterministic story naming/ranking -> DynamoDB persistence.
+
+The deployed API includes health, processing, run status with detailed stage telemetry, state stories, story details, comparisons, and cached market context. Gold and silver are presented as INR per 10 grams. The hourly schedule exists but is disabled. The next major work is the Sutradhar frontend: India map -> printing press -> animated real pipeline -> state-wise story output, followed by frontend hosting/polish. Do not restart the old prototype or embeddings plan unless explicitly requested.
+
+For exact resource names, current commits, tests, commands, and credential rules, use `AGENTS.md`, `SKILLS.md`, `README.md`, and `src/CHATGPT_PROJECT_CONTEXT.md`.
+
 # First Commit — Codex Handoff / Project Decision Record
 
 ## Purpose

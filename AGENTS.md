@@ -47,6 +47,13 @@ Branch: main
 
 Latest pushed commits:
 
+- 8162910 — convert gold and silver to Indian units
+- 40bbeb5 — add cached market context
+- b2df03c — expose live processing stages
+- 715fd6b — speed up large snapshot grouping
+- f7d0b8a — add scheduled processing retries
+- 13cbc48 — connect AWS story comparisons to UI
+- a9427f8 — add AWS state story APIs
 - e8afceb — representative story headlines
 - a424f5f — project handoff and development playbook
 - 4ba7186 — final RSS publisher sweep
@@ -225,6 +232,12 @@ The original v1 scope was English-only. The registry now contains validated Hind
 feeds for volume experiments. Decide explicitly before adding multilingual NLP
 or translation.
 
+## Exact current resume point
+
+The current project name is **Sutradhar**. The deployed AWS backend is complete through processing, persistence, API comparison views, retries, failure capture, detailed stage telemetry, and market context. The next implementation is the frontend/control-system experience: India map -> printing press -> real twelve-stage pipeline -> state-wise story output, followed by frontend hosting/polish. The hourly EventBridge schedule must remain disabled unless the operator deliberately enables it.
+
+The market endpoint covers NIFTY 50, Sensex, USD/INR, gold, and silver. Gold and silver are converted from USD per troy ounce to INR per 10 grams. The current automated suite has 31 passing tests.
+
 ## Development contract
 
 For every meaningful change:
@@ -259,7 +272,7 @@ Generated snapshots, labels, model caches, and raw captures are ignored.
 
 - Read AGENTS.md, SKILLS.md, and the relevant docs.
 - Check git status and recent commits.
-- Run the 25-test suite before changing behavior.
+- Run the 31-test suite before changing behavior.
 - Read error.md when the user reports a browser/runtime issue.
 - Inspect API payloads and cache behavior before changing the UI.
 - Treat DEVELOPMENT_CHECKPOINTS.md as a local tracker, not something to blindly
