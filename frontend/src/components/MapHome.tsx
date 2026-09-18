@@ -1,5 +1,6 @@
 import { MarketTicker, type MarketTickerItem } from "./MarketTicker";
 import { IndiaMap } from "./IndiaMap";
+import { PrintingPress } from "./PrintingPress";
 
 export function MapHome({
   selectedState,
@@ -38,8 +39,9 @@ export function MapHome({
       </section>
       <section className="press-bridge" aria-label="Printing press introduction">
         <div className="press-wire" aria-hidden="true" />
+        <PrintingPress onLookInside={onOpenPress} />
         <div className="press-copy">
-          <span className="micro">The machine behind the paper</span>
+          <span className="micro">Sutradhar · inside the machine</span>
           <h2>Look what happens<br /><em>inside.</em></h2>
           <p>Raw reports enter the press as a stream. Sutradhar sorts, understands, clusters, and returns stories for every corner of India.</p>
           <button className="text-button" type="button" onClick={onOpenPress}>Look inside <span>→</span></button>
