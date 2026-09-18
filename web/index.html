@@ -72,6 +72,15 @@
       .article a { color: var(--ink); font-weight: 650; text-decoration: none; }
       .article a:hover { color: var(--accent); }
       .error { color: var(--bad); }
+      .collapsible { overflow: hidden; }
+      .collapsible > summary { cursor: pointer; list-style: none; font: 700 26px/1.1 Georgia, serif; }
+      .collapsible > summary::-webkit-details-marker { display: none; }
+      .collapsible > summary::before { content: "▸"; display: inline-block; color: var(--accent); font: 700 20px system-ui, sans-serif; margin-right: 10px; transition: transform .15s ease; }
+      .collapsible[open] > summary::before { transform: rotate(90deg); }
+      .summary[open] { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+      .summary > summary { grid-column: 1 / -1; }
+      .collapsible > summary + .section-kicker { margin-top: 14px; }
+
       @media (max-width: 650px) { .summary { grid-template-columns: 1fr; } .story-grid { grid-template-columns: 1fr; } .feed-head { display: block; } .badge { display: inline-block; margin-top: 10px; } }
     </style>
   </head>
@@ -80,42 +89,46 @@
       <div class="eyebrow">First Commit · Research prototype</div>
       <h1>Is the news pipeline alive?</h1>
       <p class="intro">A deliberately small verification view for the first ingestion slice. Fetch the configured English RSS feeds and inspect what came back before we add story matching.</p>
-      <section class="state-panel" aria-label="State source directory">
+      <details class="collapsible state-panel" aria-label="State source directory">
+        <summary>States and their sources</summary>
         <div class="section-kicker">State routing</div>
-        <h2>States and their sources</h2>
         <p class="meta">National sources are potential contributors to every state. State and regional sources are mapped directly.</p>
         <div id="state-list" class="states"><div class="feed">Loading state directory…</div></div>
-      </section>
-      <section class="story-panel" aria-label="Matched story cards">
+      </details>
+      <details class="collapsible story-panel" aria-label="Matched story cards">
+        <summary>Stories grouped across sources</summary>
         <div class="section-kicker">Matching preview</div>
-        <h2>Stories grouped across sources</h2>
         <p id="stories-summary" class="meta">Loading story groups…</p>
         <div id="story-list" class="story-grid"><div class="feed">Loading story cards…</div></div>
-      </section>
-      <section class="candidate-panel" aria-label="Candidate story matches">
+      </details>
+      <details class="collapsible candidate-panel" aria-label="Candidate story matches">
+        <summary>Possible matches not yet grouped</summary>
         <div class="section-kicker">Review queue</div>
-        <h2>Possible matches not yet grouped</h2>
         <p id="candidate-summary" class="meta">Loading candidate reviews…</p>
         <div id="candidate-list" class="candidate-grid"><div class="feed">Loading candidate pairs…</div></div>
-      </section>
-      <section class="benchmark-panel" aria-label="Story matching labeler">
+      </details>
+      <details class="collapsible benchmark-panel" aria-label="Story matching labeler">
+        <summary>Are these the same story?</summary>
         <div class="section-kicker">Story matching benchmark</div>
-        <h2>Are these the same story?</h2>
         <p id="benchmark-progress" class="meta">Loading labeling queue…</p>
         <div id="benchmark-pair"><div class="feed">Loading next pair…</div></div>
-      </section>
+      </details>
       <div class="toolbar">
         <button id="ingest">Process latest news</button>
         <span id="run-status">No ingestion run yet.</span>
       </div>
-      <section class="summary" aria-label="Ingestion summary">
+      <details class="collapsible summary" aria-label="Ingestion summary">
+        <summary>Ingestion summary</summary>
         <div class="metric"><strong id="source-count">—</strong><span>active sources</span></div>
         <div class="metric"><strong id="healthy-count">—</strong><span>healthy feeds</span></div>
         <div class="metric"><strong id="article-count">—</strong><span>articles found</span></div>
         <div class="metric"><strong id="unique-count">—</strong><span>unique snapshot</span></div>
         <div class="metric"><strong id="duplicate-count">—</strong><span>duplicates removed</span></div>
-      </section>
-      <section id="feeds" class="feeds"><div class="feed">Click “Process latest news” to test the feeds.</div></section>
+      </details>
+      <details class="collapsible story-panel" aria-label="Feed results">
+        <summary>Feed results</summary>
+        <section id="feeds" class="feeds"><div class="feed">Click “Process latest news” to test the feeds.</div></section>
+      </details>
     </main>
     <script>
       const button = document.querySelector('#ingest');
