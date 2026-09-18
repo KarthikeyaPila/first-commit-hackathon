@@ -25,3 +25,5 @@ data/processed/*
 
 # Local development tracker
 DEVELOPMENT_CHECKPOINTS.md
+src/CHATGPT_PROJECT_CONTEXT.md
+error.md
