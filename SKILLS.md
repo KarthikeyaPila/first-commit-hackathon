@@ -177,6 +177,8 @@ Implement in this order:
 8. Thin vertical deployment with a small source set.
    The deployed POST /process trigger accepts optional source_ids for controlled runs.
 9. Expand source volume after observability works.
+   scikit-learn is currently packaged directly in both Lambda artifacts; optimize
+   into a shared layer only if deployment or cold-start measurements require it.
 
 Avoid unnecessary microservices, permanent raw archives, credentials in Git,
 and a public deployment that ignores publisher RSS terms.

@@ -85,8 +85,10 @@ research and development packages are optional dependencies in pyproject.toml.
   contract for runs, articles, stories, memberships, and state projections.
 - src/first_commit/aws_adapter.py: local adapter that exports completed runs
   and normalized articles in the AWS record shape.
-- src/first_commit/aws_processing.py: deployed ingestion, fallback story grouping,
-  story memberships, state projections, and idempotent DynamoDB writes.
+- src/first_commit/aws_processing.py: deployed ingestion, story grouping, story
+  memberships, state projections, and idempotent DynamoDB writes.
+- src/requirements.txt: pinned scikit-learn runtime dependency packaged into
+  both Lambda functions; AWS grouping reports weighted TF-IDF when deployed.
 - src/first_commit/lambda_handlers.py: AWS API and asynchronous processing Lambda
   entry points for health, run status, and manual latest-news triggers.
 - infra/template.yaml: deployed SAM/CloudFormation stack for DynamoDB, HTTP API,
@@ -182,8 +184,8 @@ Do not hide the source headline or present a synthesized title as fact.
 
 AWS is mandatory for the finished project.
 The initial foundation and real ingestion trigger are deployed in ap-south-1;
-story persistence and the first stories API are deployed; remaining work is
-state/comparison APIs, scheduling, frontend wiring, and TF-IDF packaging.
+story persistence, the first stories API, and AWS TF-IDF packaging are deployed;
+remaining work is state/comparison APIs, scheduling, and frontend wiring.
 
 Credential safety is non-negotiable:
 
