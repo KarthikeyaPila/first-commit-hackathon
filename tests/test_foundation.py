@@ -239,3 +239,36 @@ def test_aws_processor_persists_articles_and_is_idempotent(monkeypatch) -> None:
     assert result["articles_unique"] == 1
     assert table.items[("ARTICLE#" + article.article_id, "META")]["candidate_states"] == ["Kerala"]
     assert aws_processing.process_latest_news(table, {"run_id": "run-test"})["status"] == "completed"
+
+
+def test_story_clustering_groups_a_clear_cross_source_event(tmp_path) -> None:
+    from first_commit.clustering import build_global_stories
+    from first_commit.models import Article
+    from first_commit.storage import save_snapshot
+    from datetime import datetime, timezone
+
+    timestamp = datetime(2026, 9, 18, 10, 0, tzinfo=timezone.utc)
+    articles = [
+        Article(
+            source_id="the-hindu-india",
+            url="https://example.test/national-event",
+            headline="Government approves new rail project in Andhra Pradesh",
+            summary="The cabinet approved a new rail project in Andhra Pradesh.",
+            published_at=timestamp,
+        ),
+        Article(
+            source_id="the-hindu-andhra-pradesh",
+            url="https://example.test/state-event",
+            headline="New rail project approved for Andhra Pradesh by cabinet",
+            summary="A cabinet decision approved the new rail project in Andhra Pradesh.",
+            published_at=timestamp,
+        ),
+    ]
+    snapshot = tmp_path / "snapshot.json"
+    save_snapshot(articles, snapshot, run_id="run-test-story")
+
+    result = build_global_stories(snapshot)
+
+    assert result["story_count"] == 1
+    assert result["matched_edges"] == 1
+    assert result["stories"][0]["article_count"] == 2
