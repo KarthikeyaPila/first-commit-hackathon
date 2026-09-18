@@ -1016,7 +1016,7 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
 .aws-architecture{margin:34px auto 0;padding:20px 0 4px;border-top:1px solid rgba(23,19,16,.18);max-width:1400px}
 .aws-architecture-head{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:16px}
 .aws-architecture-note{font-family:var(--mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:rgba(23,19,16,.45)}
-.aws-architecture-flow{display:flex;align-items:center;justify-content:center;gap:18px}
+.aws-architecture-flow{display:flex;align-items:center;justify-content:center;column-gap:32px;row-gap:10px}
 .aws-column{display:grid;gap:10px;min-width:215px}
 .aws-column-label{font-family:var(--mono);font-size:8px;letter-spacing:.19em;color:#A56D16;text-transform:uppercase;margin-bottom:2px}
 .aws-column-lambda{min-width:285px}
