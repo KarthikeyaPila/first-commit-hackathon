@@ -1022,6 +1022,8 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
 .aws-node small{font-family:var(--mono);font-size:7px;letter-spacing:.17em;color:#A56D16}
 .aws-node strong{font-family:var(--display);font-size:20px;font-weight:400;color:#171310}
 .aws-node span,.aws-architecture-support{font-family:var(--mono);font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:rgba(23,19,16,.48)}
+.aws-architecture-support code{font-family:var(--mono);font-size:8px;letter-spacing:0;text-transform:none;color:#171310}
+.aws-handler{font-size:7px!important;letter-spacing:0!important;text-transform:none!important;overflow-wrap:anywhere}
 .aws-wire{font-style:normal;color:#D92243;font-family:var(--mono);font-size:18px}
 .aws-architecture-support{display:flex;justify-content:center;gap:28px;margin-top:14px}
 .aws-architecture-support b{color:#171310;font-weight:500}
