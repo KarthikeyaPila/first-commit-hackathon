@@ -13,5 +13,5 @@ export type Article = {
   published_at?: string | null; source?: { name?: string; source_id?: string; scope?: string };
 };
 export type StoryResponse = { run_id: string; story: StorySummary; articles: Article[] };
-export type RunStage = { stage_id: string; label?: string; status: string; metrics?: Record<string, unknown>; started_at?: string; completed_at?: string };
+export type RunStage = { stage_id: string; label?: string; status: string; metrics?: Record<string, unknown>; started_at?: string | null; completed_at?: string | null };
 export type RunStatusResponse = { run_id: string; status: string; current_stage?: string; stage_progress?: RunStage[]; story_count?: number; articles_unique?: number; grouping_summary?: Record<string, unknown>; error?: string };

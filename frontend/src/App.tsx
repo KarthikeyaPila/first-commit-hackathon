@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { MapHome } from "./components/MapHome";
 import { StateStoryPanel } from "./components/StateStoryPanel";
 import { useMarket } from "./hooks/useMarket";
+import { PipelineView } from "./components/PipelineView";
 
 function App() {
   const [selectedState, setSelectedState] = useState<string | null>(null);
@@ -18,9 +19,7 @@ function App() {
   return <div className="app-root">
     <MapHome selectedState={selectedState} marketItems={marketItems} marketLoading={market.loading} onSelectState={setSelectedState} onOpenPress={() => setPressOpen(true)} />
     <StateStoryPanel state={selectedState} onClose={() => setSelectedState(null)} />
-    {pressOpen && <div className="foundation-notice" role="dialog" aria-modal="true" aria-label="Pipeline preview">
-      <div className="foundation-notice-card"><span className="micro">Pipeline foundation</span><h2>The machine is next.</h2><p>The live AWS pipeline will replace this foundation preview in the next frontend milestone.</p><button type="button" className="text-button" onClick={() => setPressOpen(false)}>Return to map <span>→</span></button></div>
-    </div>}
+    {pressOpen && <PipelineView onClose={() => setPressOpen(false)} />}
   </div>;
 }
 
