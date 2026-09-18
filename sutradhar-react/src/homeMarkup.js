@@ -103,6 +103,21 @@ export const HOME_MARKUP = String.raw`
     </div>
   </section>
 
+  <!-- AWS INFRASTRUCTURE — BELOW THE PRESS, OUTSIDE THE LOOK-INSIDE RUN -->
+  <section class="aws-architecture aws-architecture-page" aria-label="AWS architecture">
+    <div class="aws-architecture-head"><span class="pipeline-kicker">SUTRADHAR · AWS infrastructure</span><span class="aws-architecture-note">The deployed services behind the paper</span></div>
+    <div class="aws-architecture-flow">
+      <div class="aws-column"><div class="aws-column-label">DELIVERY</div><div class="aws-node"><small>STATIC WEBSITE · TEMPORARY</small><strong>S3</strong><span>Frontend assets · HTTP demo</span></div><div class="aws-node aws-node-event"><small>CDN · PENDING VERIFICATION</small><strong>CloudFront</strong><span>Private HTTPS delivery</span></div></div>
+      <i class="aws-wire">→</i>
+      <div class="aws-column"><div class="aws-column-label">ENTRY</div><div class="aws-node"><small>HTTP API</small><strong>API Gateway</strong><span>Browser requests</span></div><div class="aws-node aws-node-event"><small>SCHEDULE</small><strong>EventBridge</strong><span>Hourly trigger · disabled</span></div></div>
+      <i class="aws-wire">→</i>
+      <div class="aws-column aws-column-lambda"><div class="aws-column-label">COMPUTE · LAMBDA</div><div class="aws-node"><small>AWS::SERVERLESS::FUNCTION</small><strong>ApiFunction</strong><span class="aws-handler">first_commit.lambda_handlers.api_handler</span></div><div class="aws-node aws-node-main"><small>AWS::SERVERLESS::FUNCTION</small><strong>ProcessingFunction</strong><span class="aws-handler">first_commit.lambda_handlers.processing_handler</span></div></div>
+      <i class="aws-wire">→</i>
+      <div class="aws-column"><div class="aws-column-label">PERSISTENCE</div><div class="aws-node"><small>STORAGE</small><strong>DynamoDB</strong><span>Runs + articles</span></div><div class="aws-node aws-node-event"><small>FAILURE CAPTURE</small><strong>SQS</strong><span>ProcessingFailureQueue</span></div></div>
+    </div>
+    <div class="aws-architecture-support"><span><b>Frontend</b> → temporary public S3 website · CloudFront awaits account verification</span><span><b>EventBridge Schedule</b> → ProcessingFunction · currently disabled</span><span><b>SQS ProcessingFailureQueue</b> · retry capture</span></div>
+  </section>
+
   <!-- FOOTER CHROME -->
   <div class="footbar">
     <div class="micro" id="hint">Hover a state to read its label · click to open its dispatches</div>
@@ -265,17 +280,6 @@ export const HOME_MARKUP = String.raw`
       <div class="output-india" id="outputIndia" aria-hidden="true"></div>
       <div class="output-state-feed" id="outputFeeds"></div>
     </div>
-    <section class="aws-architecture" aria-label="AWS architecture">
-      <div class="aws-architecture-head"><span class="pipeline-kicker">SUTRADHAR · AWS infrastructure</span><span class="aws-architecture-note">Deployed services behind the intelligence flow</span></div>
-      <div class="aws-architecture-flow">
-        <div class="aws-column"><div class="aws-column-label">ENTRY</div><div class="aws-node"><small>HTTP API</small><strong>API Gateway</strong><span>Browser requests</span></div><div class="aws-node aws-node-event"><small>SCHEDULE</small><strong>EventBridge</strong><span>Hourly trigger</span></div></div>
-        <i class="aws-wire">→</i>
-        <div class="aws-column aws-column-lambda"><div class="aws-column-label">COMPUTE · LAMBDA</div><div class="aws-node"><small>AWS::SERVERLESS::FUNCTION</small><strong>ApiFunction</strong><span class="aws-handler">first_commit.lambda_handlers.api_handler</span></div><div class="aws-node aws-node-main"><small>AWS::SERVERLESS::FUNCTION</small><strong>ProcessingFunction</strong><span class="aws-handler">first_commit.lambda_handlers.processing_handler</span></div></div>
-        <i class="aws-wire">→</i>
-        <div class="aws-column"><div class="aws-column-label">PERSISTENCE</div><div class="aws-node"><small>STORAGE</small><strong>DynamoDB</strong><span>Runs + articles</span></div><div class="aws-node aws-node-event"><small>FAILURE CAPTURE</small><strong>SQS</strong><span>ProcessingFailureQueue</span></div></div>
-      </div>
-      <div class="aws-architecture-support"><span><b>EventBridge Schedule</b> → ProcessingFunction → <code>first_commit.lambda_handlers.processing_handler</code> · currently disabled</span><span><b>SQS ProcessingFailureQueue</b> · retry capture</span></div>
-    </section>
     <button class="pipeline-exit" id="pipelineExit" type="button"><span>EXIT PIPELINE</span><b>↘</b></button>
   </div>
   <div class="pipeline-sim-note">LIVE TELEMETRY · STATUS AND COUNTERS FROM THE PROCESSING RUN</div>
