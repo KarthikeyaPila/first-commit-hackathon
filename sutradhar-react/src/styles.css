@@ -589,14 +589,13 @@ svg :focus-visible{outline:none}
 .national-btn-kick{font-family:var(--mono);font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:#D92243;margin-bottom:5px}
 .national-btn-title{font-family:var(--display);font-size:clamp(24px,2.6vw,34px);font-weight:300;line-height:1}
 .national-btn-arrow{font-family:var(--mono);font-size:16px;margin-top:8px}
-.national-cta{margin-top:28px;padding:13px 0 0;border-top:1px solid #D92243}
-.national-btn{background:rgba(217,34,67,.055);color:#171310;padding:12px 12px 11px;text-align:left;border:1px solid rgba(217,34,67,.42);box-shadow:none;transition:background .35s var(--ease),color .35s var(--ease),transform .35s var(--ease),box-shadow .35s var(--ease)}
-.national-btn:hover,.national-btn:focus-visible{background:#D92243;color:#FFF5E5;padding-right:18px;transform:translateY(-2px);box-shadow:0 9px 20px rgba(217,34,67,.14)}
+.national-cta{margin-top:24px;padding:11px 0 0;border-top:1px solid rgba(217,34,67,.65)}
+.national-btn{background:transparent;color:#171310;padding:8px 0 9px;text-align:left;border:0;border-bottom:1px solid rgba(23,19,16,.18);box-shadow:none;transition:background .35s var(--ease),color .35s var(--ease),transform .35s var(--ease),padding .35s var(--ease)}
+.national-btn:hover,.national-btn:focus-visible{background:rgba(217,34,67,.055);color:#D92243;padding:8px 8px 9px;transform:translateY(-1px);box-shadow:none}
 .national-btn-kick{color:#D92243}
-.national-btn:hover .national-btn-kick,.national-btn:focus-visible .national-btn-kick{color:#FFF5E5}
-.national-btn-title{font-size:clamp(21px,2.2vw,29px)}
-.national-btn-hint{display:block;margin-top:8px;font-family:var(--mono);font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:rgba(23,19,16,.58)}
-.national-btn:hover .national-btn-hint,.national-btn:focus-visible .national-btn-hint{color:rgba(255,245,229,.78)}
+.national-btn-title{font-size:clamp(18px,2vw,25px)}
+.national-btn-hint{display:block;margin-top:6px;font-family:var(--mono);font-size:7px;letter-spacing:.14em;text-transform:uppercase;color:rgba(23,19,16,.52)}
+.national-btn:hover .national-btn-hint,.national-btn:focus-visible .national-btn-hint{color:#D92243}
 .national-art .nmap-state.live{fill:rgba(217,34,67,.12);stroke:rgba(23,19,16,.48);stroke-width:1}
 .national-art .nmap-frame{stroke:#D92243;stroke-width:1.5;stroke-dasharray:5 5}
 .national-art .nmap-label{fill:rgba(23,19,16,.72)}
