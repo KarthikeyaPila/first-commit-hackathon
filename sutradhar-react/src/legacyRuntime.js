@@ -1069,8 +1069,9 @@ function backendStateName(key){
 }
 
 async function hydrateState(key, force = false){
-  if(!force && stateStoryCache.has(key)){
-    STATES[key].stories = stateStoryCache.get(key);
+  const cachedStories = stateStoryCache.get(key);
+  if(!force && Array.isArray(cachedStories) && cachedStories.length > 0){
+    STATES[key].stories = cachedStories;
     if(current === key) renderState(key);
     return;
   }
@@ -1084,7 +1085,8 @@ async function hydrateState(key, force = false){
     }else{
       stories.sort((a,b)=>(b.articleCount || 0) - (a.articleCount || 0));
     }
-    stateStoryCache.set(key, stories);
+    if(stories.length > 0) stateStoryCache.set(key, stories);
+    else stateStoryCache.delete(key);
     STATES[key].stories = stories;
     STATES[key].facts = [["Stories", String(stories.length)], ["Lens", "State desk"], ["Capital", STATES[key].cap], ["Filed", "Live API"]];
     if(current === key) renderState(key);
