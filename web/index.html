@@ -77,8 +77,6 @@
       .collapsible > summary::-webkit-details-marker { display: none; }
       .collapsible > summary::before { content: "▸"; display: inline-block; color: var(--accent); font: 700 20px system-ui, sans-serif; margin-right: 10px; transition: transform .15s ease; }
       .collapsible[open] > summary::before { transform: rotate(90deg); }
-      .summary[open] { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
-      .summary > summary { grid-column: 1 / -1; }
       .collapsible > summary + .section-kicker { margin-top: 14px; }
 
       @media (max-width: 650px) { .summary { grid-template-columns: 1fr; } .story-grid { grid-template-columns: 1fr; } .feed-head { display: block; } .badge { display: inline-block; margin-top: 10px; } }
@@ -117,14 +115,13 @@
         <button id="ingest">Process latest news</button>
         <span id="run-status">No ingestion run yet.</span>
       </div>
-      <details class="collapsible summary" aria-label="Ingestion summary">
-        <summary>Ingestion summary</summary>
+      <section class="summary" aria-label="Ingestion summary">
         <div class="metric"><strong id="source-count">—</strong><span>active sources</span></div>
         <div class="metric"><strong id="healthy-count">—</strong><span>healthy feeds</span></div>
         <div class="metric"><strong id="article-count">—</strong><span>articles found</span></div>
         <div class="metric"><strong id="unique-count">—</strong><span>unique snapshot</span></div>
         <div class="metric"><strong id="duplicate-count">—</strong><span>duplicates removed</span></div>
-      </details>
+      </section>
       <details class="collapsible story-panel" aria-label="Feed results">
         <summary>Feed results</summary>
         <section id="feeds" class="feeds"><div class="feed">Click “Process latest news” to test the feeds.</div></section>
