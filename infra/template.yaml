@@ -163,6 +163,12 @@ Resources:
             ApiId: !Ref HttpApi
             Path: /stories/{run_id}
             Method: GET
+        StoryDetail:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /stories/{run_id}/{story_id}
+            Method: GET
 
   ProcessingFunction:
     Type: AWS::Serverless::Function

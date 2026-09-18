@@ -82,7 +82,13 @@
     <main>
       <div class="eyebrow">First Commit · Research prototype</div>
       <h1>Is the news pipeline alive?</h1>
-      <p class="intro">A deliberately small verification view for the first ingestion slice. Fetch the configured English RSS feeds and inspect what came back before we add story matching.</p>
+      <p class="intro">A deliberately small verification view for the ingestion and story pipeline. Use local mode for research, or connect the deployed AWS API for a live run.</p>
+      <section class="state-panel" aria-label="API connection">
+        <div class="section-kicker">API connection</div>
+        <h2>Choose where to inspect the pipeline</h2>
+        <div class="toolbar"><input id="aws-api-url" type="url" placeholder="https://your-api.execute-api.region.amazonaws.com" style="flex:1; min-width:260px; border:1px solid var(--line); border-radius:999px; padding:12px 16px; font:inherit" /><button id="connect-aws" type="button">Connect AWS API</button><button id="disconnect-aws" class="section-action" type="button">Use local mode</button></div>
+        <p id="api-mode" class="meta">Local API mode</p>
+      </section>
       <section class="state-panel" aria-label="State source directory">
         <div class="section-kicker">State routing</div>
         <h2>States and their sources</h2>
@@ -132,6 +138,24 @@
       const storiesSummary = document.querySelector('#stories-summary');
       const candidateList = document.querySelector('#candidate-list');
       const candidateSummary = document.querySelector('#candidate-summary');
+      const awsApiInput = document.querySelector('#aws-api-url');
+      const apiMode = document.querySelector('#api-mode');
+      const connectAwsButton = document.querySelector('#connect-aws');
+      const disconnectAwsButton = document.querySelector('#disconnect-aws');
+      let awsApiBase = localStorage.getItem('first-commit-aws-api') || '';
+      let awsRunId = localStorage.getItem('first-commit-aws-run') || '';
+      if (awsApiInput) awsApiInput.value = awsApiBase;
+      const awsPath = (path) => {
+        if (path === '/api/state-sources') return '/states';
+        if (path === '/api/ingest') return '/process';
+        if (path === '/api/stories') return awsRunId ? '/stories/' + encodeURIComponent(awsRunId) : '/stories/missing-run';
+        if (path === '/api/feeds') return awsRunId ? '/runs/' + encodeURIComponent(awsRunId) : '/runs/missing-run';
+        if (path.startsWith('/api/story-detail/')) return '/stories/' + path.slice('/api/story-detail/'.length);
+        return path;
+      };
+      const apiFetch = (path, options) => fetch(awsApiBase ? awsApiBase + awsPath(path) : path, options);
+      const setApiMode = () => { if (apiMode) apiMode.textContent = awsApiBase ? 'AWS API mode - ' + awsApiBase : 'Local API mode'; };
+      setApiMode();
       const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
       const renderBenchmark = (payload) => {
         benchmarkProgress.textContent = payload.total_pairs ? payload.labeled_pairs + ' of ' + payload.total_pairs + ' pairs labeled' : 'No benchmark pairs available yet.';
@@ -194,7 +218,7 @@
         if (!candidate) return;
         button.disabled = true;
         try {
-          const payload = await (await fetch('/api/candidates/label', {
+          const payload = await (await apiFetch('/api/candidates/label', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
@@ -210,10 +234,49 @@
           candidateSummary.textContent = 'Could not save candidate label: ' + error.message;
         }
       });
+      const loadAwsStories = async () => {
+        if (!awsRunId) {
+          storiesSummary.textContent = 'Run AWS processing first to load stories.';
+          storyList.innerHTML = '<div class="feed">No AWS run selected.</div>';
+          return;
+        }
+        const listResponse = await apiFetch('/api/stories');
+        const listPayload = await listResponse.json();
+        if (!listResponse.ok || listPayload.error) throw new Error(listPayload.error || 'Could not load AWS stories');
+        const detailed = await Promise.all((listPayload.stories || []).map(async (story) => {
+          const response = await apiFetch('/api/story-detail/' + encodeURIComponent(awsRunId) + '/' + encodeURIComponent(story.story_id));
+          const payload = await response.json();
+          if (!response.ok) throw new Error(payload.error || 'Could not load story comparison');
+          return { ...payload.story, articles: (payload.articles || []).map((article) => ({ ...article, source: article.source?.name || article.source_id })) };
+        }));
+        renderStories({ matched_groups: detailed.length, articles_considered: 0, candidate_pairs: 0, decision_counts: {}, articles_ungrouped: 0, matching_method: 'AWS weighted TF-IDF', state_groups: [{ state: 'AWS run', story_count: detailed.length, stories: detailed }] });
+        renderCandidates({ candidate_reviews: [] });
+      };
+      const pollAwsRun = async (runId) => {
+        awsRunId = runId;
+        localStorage.setItem('first-commit-aws-run', runId);
+        for (let attempt = 0; attempt < 90; attempt += 1) {
+          const response = await apiFetch('/api/feeds');
+          const run = await response.json();
+          if (run.status === 'completed' || run.status === 'failed') {
+            render(run);
+            await loadAwsStories();
+            return;
+          }
+          status.textContent = 'AWS processing... ' + run.status;
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
+        status.textContent = 'AWS run is still processing; refresh the story preview later.';
+      };
+
       const loadStories = async () => {
+        if (awsApiBase) {
+          try { await loadAwsStories(); } catch (error) { storiesSummary.textContent = 'Could not load AWS stories.'; storyList.innerHTML = '<div class="error">' + escapeHtml(error.message) + '</div>'; }
+          return;
+        }
         if (refreshStoriesButton) refreshStoriesButton.disabled = true;
         try {
-          const response = await fetch('/api/stories');
+          const response = await apiFetch('/api/stories');
           const payload = await response.json();
           if (!response.ok || payload.error) throw new Error(payload.error || 'Request failed');
           renderStories(payload);
@@ -226,7 +289,8 @@
         }
       };
       const loadBenchmark = async () => {
-        try { renderBenchmark(await (await fetch('/api/benchmark')).json()); }
+        if (awsApiBase) { benchmarkProgress.textContent = 'Benchmark labeling is available in local mode only.'; benchmarkPair.innerHTML = '<div class="feed">Switch to local mode to label benchmark pairs.</div>'; return; }
+        try { renderBenchmark(await (await apiFetch('/api/benchmark')).json()); }
         catch (error) { benchmarkPair.innerHTML = '<div class="error">Could not load benchmark: ' + escapeHtml(error.message) + '</div>'; }
       };
       benchmarkPair.addEventListener('click', async (event) => {
@@ -234,10 +298,10 @@
         if (!button) return;
         button.disabled = true;
         try {
-          const payload = await (await fetch('/api/benchmark/label', {
+          const payload = await (await apiFetch('/api/benchmark/label', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({index: (await (await fetch('/api/benchmark')).json()).next_index, same_story: button.dataset.label === 'true', notes: document.querySelector('#reasoning').value})
+            body: JSON.stringify({index: (await (await apiFetch('/api/benchmark')).json()).next_index, same_story: button.dataset.label === 'true', notes: document.querySelector('#reasoning').value})
           })).json();
           if (!payload.ok) throw new Error(payload.error);
           renderBenchmark(payload.benchmark);
@@ -277,15 +341,27 @@
         }).join('');
       };
       const loadStateDirectory = async () => {
-        try { renderStateDirectory(await (await fetch('/api/state-sources')).json()); }
+        try { renderStateDirectory(await (await apiFetch('/api/state-sources')).json()); }
         catch (error) { document.querySelector('#state-list').innerHTML = '<div class="error">Could not load state directory: ' + escapeHtml(error.message) + '</div>'; }
       };
       loadStateDirectory();
       button.addEventListener('click', async () => {
-        button.disabled = true; status.textContent = 'Fetching RSS feeds…';
-        try { render(await (await fetch('/api/ingest', { method: 'POST' })).json()); }
-        catch (error) { status.textContent = `Request failed: ${error.message}`; }
+        button.disabled = true; status.textContent = awsApiBase ? 'Queueing AWS processing...' : 'Fetching RSS feeds...';
+        try {
+          const response = await apiFetch('/api/ingest', { method: 'POST' });
+          const payload = await response.json();
+          if (!response.ok || payload.error) throw new Error(payload.error || 'Request failed');
+          if (awsApiBase) await pollAwsRun(payload.run_id); else render(payload);
+        } catch (error) { status.textContent = 'Request failed: ' + error.message; }
         finally { button.disabled = false; }
+      });
+      connectAwsButton?.addEventListener('click', () => {
+        awsApiBase = (awsApiInput.value || '').trim().replace(/\/$/, '');
+        if (awsApiBase) localStorage.setItem('first-commit-aws-api', awsApiBase);
+        setApiMode(); loadStateDirectory(); loadBenchmark(); loadStories();
+      });
+      disconnectAwsButton?.addEventListener('click', () => {
+        awsApiBase = ''; localStorage.removeItem('first-commit-aws-api'); setApiMode(); loadStateDirectory(); loadBenchmark(); loadStories();
       });
     </script>
   </body>

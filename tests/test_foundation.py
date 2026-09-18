@@ -283,3 +283,10 @@ def test_lambda_state_directory_and_state_story_validation() -> None:
 
     stories = api_handler({"rawPath": "/states/Kerala/stories"}, None)
     assert stories["statusCode"] == 400
+
+
+def test_lambda_story_comparison_requires_both_identifiers() -> None:
+    from first_commit.lambda_handlers import api_handler
+
+    response = api_handler({"rawPath": "/stories/run-1/story-1"}, None)
+    assert response["statusCode"] == 400

@@ -85,7 +85,38 @@ def api_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         return _response(202, {"run_id": run_id, "status": "queued"})
 
     if path.startswith("/stories/"):
-        run_id = path.rsplit("/", 1)[-1]
+        parts = [unquote(part) for part in path.strip("/").split("/")]
+        if len(parts) == 3:
+            _, run_id, story_id = parts
+            if not run_id or not story_id or not os.environ.get("TABLE_NAME"):
+                return _response(400, {"error": "run_id and story_id are required"})
+            import boto3
+            table = boto3.resource("dynamodb").Table(os.environ["TABLE_NAME"])
+            story = table.get_item(
+                Key={"PK": f"STORY#{run_id}#{story_id}", "SK": "META"}
+            ).get("Item")
+            if story is None:
+                return _response(404, {"error": "story not found"})
+            from .sources import SOURCES
+            sources = {source.source_id: source for source in SOURCES}
+            articles = []
+            for article_id in story.get("article_ids", []):
+                article = table.get_item(
+                    Key={"PK": f"ARTICLE#{article_id}", "SK": "META"}
+                ).get("Item")
+                if article:
+                    source = sources.get(article.get("source_id"))
+                    article["source"] = {
+                        "source_id": article.get("source_id"),
+                        "name": source.name if source else article.get("source_id"),
+                        "scope": source.scope if source else None,
+                        "states": list(source.states) if source else [],
+                        "language": source.language if source else None,
+                    }
+                    articles.append(article)
+            return _response(200, {"run_id": run_id, "story": story, "articles": articles})
+
+        run_id = parts[-1] if len(parts) == 2 else ""
         if not run_id or not os.environ.get("TABLE_NAME"):
             return _response(400, {"error": "run_id is required"})
         import boto3
