@@ -73,9 +73,9 @@
       .article a:hover { color: var(--accent); }
       .error { color: var(--bad); }
       .collapsible { overflow: hidden; }
-      .collapsible > summary { cursor: pointer; list-style: none; font: 700 26px/1.1 Georgia, serif; }
+      .collapsible > summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; font: 700 26px/1.1 Georgia, serif; }
       .collapsible > summary::-webkit-details-marker { display: none; }
-      .collapsible > summary::before { content: "▸"; display: inline-block; color: var(--accent); font: 700 20px system-ui, sans-serif; margin-right: 10px; transition: transform .15s ease; }
+      .collapsible > summary::before { content: "▸"; order: 2; display: inline-block; color: var(--accent); font: 700 20px system-ui, sans-serif; margin-left: 10px; transition: transform .15s ease; }
       .collapsible[open] > summary::before { transform: rotate(90deg); }
       .collapsible > summary + .section-kicker { margin-top: 14px; }
 
