@@ -1477,6 +1477,25 @@ function articleLinkMarkup(url){
   return url ? `<p class="article-source-link"><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Read original article ↗</a></p>` : "";
 }
 
+function feedSummaryMarkup(text){
+  const value = String(text || "");
+  if(value.split(/\s+/).length < 42 && value.length < 260) return `<span class="dek">${escapeHtml(value)}</span>`;
+  return `<span class="feed-summary"><span class="feed-summary-text">${escapeHtml(value)}</span><span class="feed-summary-toggle" role="button" tabindex="0">Read more</span></span>`;
+}
+
+function bindFeedSummary(card){
+  const summary = card.querySelector(".feed-summary");
+  if(!summary) return;
+  const toggle = summary.querySelector(".feed-summary-toggle");
+  const expand = (event)=>{
+    event.stopPropagation();
+    summary.classList.toggle("expanded");
+    toggle.textContent = summary.classList.contains("expanded") ? "Read less" : "Read more";
+  };
+  toggle.addEventListener("click",expand);
+  toggle.addEventListener("keydown",event=>{ if(event.key === "Enter" || event.key === " "){ event.preventDefault(); expand(event); } });
+}
+
 function renderStories(key, limit = 12){
   const s = STATES[key];
   spStories.innerHTML = "";
@@ -1487,13 +1506,14 @@ function renderStories(key, limit = 12){
     const b = document.createElement("button");
     b.type = "button";
     b.className = "story" + (i === 0 ? " lead" : "");
-    const meta = `<p class="dek">${st.dek}</p><span class="by">${st.by} · ${st.read} read</span>`;
+    const meta = `${feedSummaryMarkup(st.dek)}<span class="by">${st.by} · ${st.read} read</span>`;
     b.innerHTML =
       `<span class="idx">${String(i+1).padStart(2,"0")}</span>` +
       `<span class="col-a"><span class="cat">${st.cat}<s>${st.date}</s></span>` +
       `<h4>${st.h}</h4>${i === 0 ? meta : ""}</span>` +
       (i === 0 ? "" : `<span class="col-b">${meta}</span>`);
     b.addEventListener("click",()=>openReader(key,i));
+    bindFeedSummary(b);
     spStories.appendChild(b);
   });
   if(s.stories.length > 12 && limit < 30){
@@ -1598,11 +1618,12 @@ function renderStoriesData(stories,key,limit=12){
   spCount.textContent=`${stories.length} dispatches · edition 01`;
   stories.slice(0,Math.min(limit,30)).forEach((st,i)=>{
     const b=document.createElement("button"); b.type="button"; b.className="story"+(i===0?" lead":"");
-    const meta=`<p class="dek">${st.dek}</p><span class="by">${st.by} · ${st.read} read</span>`;
+    const meta=`${feedSummaryMarkup(st.dek)}<span class="by">${st.by} · ${st.read} read</span>`;
     b.innerHTML=`<span class="idx">${String(i+1).padStart(2,"0")}</span>`+
       `<span class="col-a"><span class="cat">${st.cat}<s>${st.date}</s></span><h4>${st.h}</h4>${i===0?meta:""}</span>`+
       (i===0?"":`<span class="col-b">${meta}</span>`);
     b.addEventListener("click",()=>openNationalReader(st));
+    bindFeedSummary(b);
     spStories.appendChild(b);
   });
   if(stories.length > 12 && limit < 30){

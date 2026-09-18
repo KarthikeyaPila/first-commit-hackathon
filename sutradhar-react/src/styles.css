@@ -457,6 +457,8 @@ svg :focus-visible{outline:none}
   max-width:44ch;margin:0;position:relative;
 }
 .story .by{margin-top:14px;font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--paper-dim);position:relative}
+.feed-summary{display:block;margin:0 0 8px;font-family:var(--display);font-size:15px;line-height:1.62;color:rgba(23,19,16,.68)}.feed-summary-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:7;overflow:hidden}.feed-summary.expanded .feed-summary-text{display:block}.feed-summary-toggle{display:inline-block;margin-top:8px;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#D92243;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+.story:not(.lead) h4{font-size:clamp(19px,1.55vw,25px)}
 .story-more{grid-column:1/-1;justify-self:center;margin:22px 0 8px;border:1px solid rgba(23,19,16,.25);padding:11px 18px;font-family:var(--mono);font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);background:transparent;cursor:pointer;transition:background .3s,color .3s,border-color .3s}.story-more:hover,.story-more:focus-visible{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .story.lead{grid-template-columns:clamp(46px,5.4vw,80px) minmax(0,1fr);padding-top:clamp(10px,1.6vw,18px)}
 .story.lead h4{font-size:clamp(28px,4.6vw,62px);max-width:15ch}
