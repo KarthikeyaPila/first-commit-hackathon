@@ -1881,6 +1881,7 @@ function buildPipeline(){
     pipelineGrid.appendChild(n);
   });
   outputFeeds.innerHTML="";
+  pipelineOutput.classList.remove("is-visible");
   outputIndia.innerHTML="";
   outputIndia.classList.remove("live");
   outputRail.classList.remove("live");
@@ -1927,6 +1928,7 @@ function addPacket(path){
 }
 function highlightOutput(){
   const feeds=["MAHARASHTRA — 14 STORIES","KARNATAKA — 9 STORIES","WEST BENGAL — 7 STORIES","TAMIL NADU — 11 STORIES","UTTAR PRADESH — 18 STORIES","ASSAM — 5 STORIES"];
+  pipelineOutput.classList.add("is-visible");
   outputIndia.classList.add("live");
   outputRail.classList.add("live");
   outputIndia.innerHTML=`<svg viewBox="0 0 ${VB.w} ${VB.h}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><g transform="translate(18 8) scale(.31)">${gStates.innerHTML}</g></svg>`;
