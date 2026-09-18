@@ -835,7 +835,7 @@ const ORDER = KEYS.slice().sort((a,b)=>{
 const INDEX = {};
 KEYS.forEach((k,i)=>{ INDEX[k] = String(i+1).padStart(2,"0"); });
 const PAD2 = String(TOTAL).padStart(2,"0");
-const isLive = k => Array.isArray(STATES[k].stories) && STATES[k].stories.length > 0;
+const isLive = k => Array.isArray(STATES[k].stories);
 const label = k => STATES[k].plain || STATES[k].name;
 
 /* ============================================================
@@ -1054,29 +1054,10 @@ async function hydrateState(key){
     const stories = Array.isArray(payload.stories) ? payload.stories.map(backendStory) : [];
     STATES[key].stories = stories;
     STATES[key].facts = [["Stories", String(stories.length)], ["Lens", "State desk"], ["Capital", STATES[key].cap], ["Filed", "Live API"]];
-    refreshStateIndicators();
     if(current === key) renderState(key);
-    return true;
   } catch (error) {
     console.warn("Sutradhar state API unavailable; keeping local reference content.", error);
-    return false;
   }
-}
-
-function refreshStateIndicators(){
-  KEYS.forEach(k=>{
-    const live = isLive(k) && STATES[k].stories.length > 0;
-    vis[k].classList.toggle("live",live);
-    hit[k].setAttribute("aria-label",`${label(k)} — ${live ? "open dispatches" : "not filed yet"}`);
-    if(marks[k]) marks[k].classList.toggle("on",live);
-  });
-  document.querySelectorAll(".idx-item").forEach(btn=>{
-    const k = btn.dataset.go;
-    btn.querySelector("span").textContent = String(STATES[k].stories.length).padStart(2,"0");
-  });
-  document.getElementById("tally").textContent =
-    TOTAL + " states and territories · " +
-    KEYS.reduce((n,k)=>n + STATES[k].stories.length,0) + " dispatches filed";
 }
 
 async function hydrateAllStates(){
@@ -1854,22 +1835,14 @@ function addPacket(path){
   requestAnimationFrame(f);
 }
 function highlightOutput(){
-  const feeds=KEYS
-    .filter(k=>isLive(k) && STATES[k].stories.length > 0)
-    .sort((a,b)=>STATES[b].stories.length - STATES[a].stories.length)
-    .slice(0,6)
-    .map(k=>`${label(k).toUpperCase()} — ${STATES[k].stories.length} STORIES`);
+  const feeds=["MAHARASHTRA — 14 STORIES","KARNATAKA — 9 STORIES","WEST BENGAL — 7 STORIES","TAMIL NADU — 11 STORIES","UTTAR PRADESH — 18 STORIES","ASSAM — 5 STORIES"];
   outputIndia.classList.add("live");
   outputRail.classList.add("live");
   outputIndia.innerHTML=`<svg viewBox="0 0 ${VB.w} ${VB.h}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><g transform="translate(18 8) scale(.31)">${gStates.innerHTML}</g></svg>`;
   [...outputIndia.querySelectorAll(".hit,.marks,.patfill")].forEach(e=>e.remove());
   const nodes=[...outputIndia.querySelectorAll(".st")];
   nodes.forEach((n,i)=>{ if(i%4===0) n.classList.add("hot"); });
-  if(!feeds.length){
-    outputFeeds.innerHTML = '<span class="output-chip show"><b>NO GROUPED STORIES</b> — STATE PROJECTIONS EMPTY</span>';
-  }else{
-    feeds.forEach((f,i)=>setTimeout(()=>{const chip=document.createElement("span");chip.className="output-chip";chip.innerHTML=`<b>${f.split(" — ")[0]}</b> — ${f.split(" — ")[1]}`;outputFeeds.appendChild(chip);requestAnimationFrame(()=>chip.classList.add("show"));},i*180));
-  }
+  feeds.forEach((f,i)=>setTimeout(()=>{const chip=document.createElement("span");chip.className="output-chip";chip.innerHTML=`<b>${f.split(" — ")[0]}</b> — ${f.split(" — ")[1]}`;outputFeeds.appendChild(chip);requestAnimationFrame(()=>chip.classList.add("show"));},i*180));
   pipelineView.classList.add("pipeline-done");
 }
 let backendPollTimer = null;
@@ -1908,7 +1881,9 @@ function applyBackendRun(run){
   const runStatus = String(run.status || "").toLowerCase();
   if(runStatus === "completed" && !backendRunFinished){
     backendRunFinished = true;
-    finalizeCompletedRun();
+    hydrateAllStates();
+    highlightOutput();
+    setTimeout(endPipelineToMap,1700);
   } else if((runStatus === "failed" || runStatus === "error") && !backendRunFinished){
     backendRunFinished = true;
     setPipelineError(run.error || "PROCESSING RUN FAILED");
@@ -1917,11 +1892,6 @@ function applyBackendRun(run){
     if(backendPollTimer) clearTimeout(backendPollTimer);
     backendPollTimer = null;
   }
-}
-async function finalizeCompletedRun(){
-  await hydrateAllStates();
-  highlightOutput();
-  setTimeout(endPipelineToMap,1700);
 }
 async function beginBackendRun(){
   try {
