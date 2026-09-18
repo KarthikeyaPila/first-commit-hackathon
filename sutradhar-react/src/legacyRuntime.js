@@ -1047,6 +1047,7 @@ function backendStory(summary){
     body: ["This story is backed by the live Sutradhar story API.", sourceNames ? "Sources: " + sourceNames + "." : "Open the original publisher links to inspect the coverage."],
     articleCount: Number(summary.article_count || 0),
     articleIds: Array.isArray(summary.article_ids) ? summary.article_ids : [],
+    kind: "grouped",
     api: { runId: summary.run_id, storyId: summary.story_id }
   };
 }
@@ -1062,7 +1063,8 @@ function backendArticle(article){
     dek: article.summary || "Latest article from the state feed.",
     body: [article.summary || "Latest article from the state feed.", article.url || ""],
     articleCount: 1,
-    articleId: article.article_id
+    articleId: article.article_id,
+    kind: "latest"
   };
 }
 
@@ -1100,7 +1102,9 @@ async function hydrateState(key, force = false){
     if(stories.length > 0) stateStoryCache.set(key, stories);
     else stateStoryCache.delete(key);
     STATES[key].stories = stories;
-    STATES[key].facts = [["Stories", String(stories.length)], ["Lens", "State desk"], ["Capital", STATES[key].cap], ["Filed", "Live API"]];
+    const groupedCount = stories.filter(story=>story.kind === "grouped").length;
+    const latestCount = stories.filter(story=>story.kind === "latest").length;
+    STATES[key].facts = [["Total dispatches", String(stories.length)], ["Grouped stories", String(groupedCount)], ["Latest reports", String(latestCount)], ["Capital", STATES[key].cap]];
     if(current === key) renderState(key);
   } catch (error) {
     console.warn("Sutradhar state API unavailable; keeping local reference content.", error);
@@ -1463,7 +1467,9 @@ function buildMini(key){
 function renderStories(key, limit = 12){
   const s = STATES[key];
   spStories.innerHTML = "";
-  spCount.textContent = `${s.stories.length} filed · edition 01`;
+  const groupedCount = s.stories.filter(story=>story.kind !== "latest").length;
+  const latestCount = s.stories.filter(story=>story.kind === "latest").length;
+  spCount.textContent = `${s.stories.length} dispatches · ${groupedCount} grouped stories · ${latestCount} latest reports · edition 01`;
   s.stories.slice(0, Math.min(limit, 30)).forEach((st,i)=>{
     const b = document.createElement("button");
     b.type = "button";
@@ -1481,7 +1487,7 @@ function renderStories(key, limit = 12){
     const more = document.createElement("button");
     more.type = "button";
     more.className = "story-more";
-    more.textContent = `Read more · show up to ${Math.min(s.stories.length, 30)} stories`;
+    more.textContent = `Read more · show up to ${Math.min(s.stories.length, 30)} dispatches`;
     more.addEventListener("click",()=>renderStories(key,30));
     spStories.appendChild(more);
   }
