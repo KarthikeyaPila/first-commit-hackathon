@@ -591,6 +591,8 @@ svg :focus-visible{outline:none}
 .national-btn-kick{color:#D92243}
 .national-btn:hover .national-btn-kick,.national-btn:focus-visible .national-btn-kick{color:#FFF5E5}
 .national-btn-title{font-size:clamp(21px,2.2vw,29px)}
+.national-btn-hint{display:block;margin-top:8px;font-family:var(--mono);font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:rgba(23,19,16,.58)}
+.national-btn:hover .national-btn-hint,.national-btn:focus-visible .national-btn-hint{color:rgba(255,245,229,.78)}
 .national-art .nmap-state.live{fill:rgba(217,34,67,.12);stroke:rgba(23,19,16,.48);stroke-width:1}
 .national-art .nmap-frame{stroke:#D92243;stroke-width:1.5;stroke-dasharray:5 5}
 .national-art .nmap-label{fill:rgba(23,19,16,.72)}

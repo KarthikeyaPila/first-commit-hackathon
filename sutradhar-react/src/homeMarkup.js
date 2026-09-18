@@ -62,6 +62,7 @@ export const HOME_MARKUP = String.raw`
         <button class="national-btn" id="nationalBtn" type="button">
           <span class="national-btn-kick">National desk</span>
           <span class="national-btn-title">National News</span>
+          <span class="national-btn-hint">Click to read national dispatches</span>
           <span class="national-btn-arrow">→</span>
         </button>
       </div>
