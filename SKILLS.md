@@ -63,7 +63,8 @@ deduplicate → snapshot → API/UI
 
 Preserve these invariants:
 
-- GUID → canonical URL → content hash dedupe order.
+- GUID → canonical URL → content hash dedupe order. Persist the resulting deterministic
+  article_id so repeated fetches can upsert the same publisher article.
 - Duplicate provenance remains available.
 - A failed feed does not abort the run.
 - Feed reports include status, feed_health, error, articles_found, and cap.

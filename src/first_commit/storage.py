@@ -15,6 +15,7 @@ SNAPSHOT_PATH = PROCESSED_DATA_DIR / "ingestion_latest.json"
 
 def _serialize_article(article: Article) -> dict[str, object]:
     return {
+        "article_id": article.article_id,
         "source_id": article.source_id,
         "provenance_source_ids": list(
             article.provenance_source_ids or (article.source_id,)

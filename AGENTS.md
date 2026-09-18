@@ -68,8 +68,9 @@ Do not delete, overwrite, or stage those files unless explicitly requested.
 Python 3.11+ project. Required runtime code uses the standard library;
 research and development packages are optional dependencies in pyproject.toml.
 
-- src/first_commit/models.py: Article and PairLabel dataclasses. Clustering text
-  combines headline, summary, and lead.
+- src/first_commit/models.py: Article and PairLabel dataclasses. Articles expose deterministic
+  article_id values based on source/GUID, canonical URL, or content fallback.
+  Clustering text combines headline, summary, and lead.
 - src/first_commit/sources.py: Source registry with source_id, name, scope,
   states, language, rss_url, max_entries, active, feed_health, and last_error.
 - src/first_commit/feeds.py: RSS/Atom fetch, XML parsing, text cleanup, dates,
@@ -77,7 +78,7 @@ research and development packages are optional dependencies in pyproject.toml.
 - src/first_commit/dedupe.py: GUID → canonical URL → content hash deduplication;
   duplicate provenance is preserved.
 - src/first_commit/storage.py: latest normalized snapshot in ignored
-  data/processed/ingestion_latest.json.
+  data/processed/ingestion_latest.json, including stable article IDs.
 - src/first_commit/state_routing.py: state signals and support for 28 states plus
   8 Union Territories.
 - src/first_commit/matching.py: explainable weighted TF-IDF similarity, entities,

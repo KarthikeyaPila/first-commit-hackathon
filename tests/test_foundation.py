@@ -96,6 +96,21 @@ def test_deduplication_canonicalizes_urls_and_merges_provenance() -> None:
     assert len(unique) == 1
     assert removed == 1
     assert unique[0].provenance_source_ids == ("source-a", "source-b")
+    assert unique[0].article_id == first.article_id
+
+
+def test_article_id_is_stable_and_uses_fallback_identity() -> None:
+    from first_commit.models import Article
+
+    with_guid = Article(source_id="source-a", url="https://example.com/one", headline="Headline", rss_guid="guid-1")
+    repeated_fetch = Article(source_id="source-a", url="https://example.com/one", headline="Updated headline", rss_guid="guid-1")
+    assert with_guid.article_id == repeated_fetch.article_id
+
+    with_url = Article(source_id="source-a", url="https://example.com/one", headline="Headline")
+    assert with_url.article_id != with_guid.article_id
+
+    with_content = Article(source_id="source-a", url="", headline="", content_hash="content-1")
+    assert with_content.article_id.startswith("article-")
 
 
 def test_high_volume_national_sources_have_higher_caps() -> None:

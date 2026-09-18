@@ -1,6 +1,7 @@
 """Core data structures for articles and benchmark labels."""
 
 from dataclasses import dataclass
+import hashlib
 from datetime import datetime
 
 
@@ -17,6 +18,20 @@ class Article:
     content_hash: str | None = None
     rss_guid: str | None = None
     provenance_source_ids: tuple[str, ...] = ()
+    @property
+    def article_id(self) -> str:
+        """Return a stable identifier for this publisher article."""
+
+        if self.rss_guid:
+            identity = f"guid:{self.source_id}:{self.rss_guid.strip()}"
+        elif self.url:
+            identity = f"url:{self.url.strip()}"
+        elif self.content_hash:
+            identity = f"content:{self.content_hash}"
+        else:
+            identity = f"text:{self.clustering_text.casefold()}"
+        digest = hashlib.sha256(identity.encode("utf-8")).hexdigest()
+        return f"article-{digest}"
 
     @property
     def clustering_text(self) -> str:
