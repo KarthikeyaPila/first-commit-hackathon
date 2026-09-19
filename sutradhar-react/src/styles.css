@@ -1118,3 +1118,10 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
   .press-story p{font-size:15px}
   .press-intro{top:82px}
 }
+
+.aws-architecture[data-run-status="queued"] .aws-node,
+.aws-architecture[data-run-status="running"] .aws-node { border-color: rgba(200, 48, 42, .72); box-shadow: 0 0 0 1px rgba(200, 48, 42, .18), 0 0 22px rgba(200, 48, 42, .16); }
+.aws-architecture[data-run-status="queued"]::after,
+.aws-architecture[data-run-status="running"]::after { content: "● LIVE AWS PROCESSING · TELEMETRY CONNECTED"; display: block; margin-top: 14px; color: #b52b27; font: 700 11px/1.2 var(--mono); letter-spacing: .12em; animation: aws-pulse 1.4s ease-in-out infinite; }
+.aws-architecture[data-run-status="completed"]::after { content: "● AWS RUN COMPLETE · OUTPUTS PERSISTED"; display: block; margin-top: 14px; color: #3f704b; font: 700 11px/1.2 var(--mono); letter-spacing: .12em; }
+@keyframes aws-pulse { 50% { opacity: .38; } }

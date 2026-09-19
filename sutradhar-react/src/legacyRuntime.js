@@ -1993,6 +1993,11 @@ const outputFeeds = document.getElementById("outputFeeds");
 const pipelineClose = document.getElementById("pipelineClose");
 const pipelineRun = document.getElementById("pipelineRun");
 const pipelineExit = document.getElementById("pipelineExit");
+const awsArchitecture = document.getElementById("awsArchitecture");
+function setAwsRunState(status){
+  if(!awsArchitecture) return;
+  awsArchitecture.dataset.runStatus = status;
+}
 const PIPE_STAGES = [
   ["fetch_sources","FETCH RSS SOURCES"],
   ["parse_articles","PARSE ARTICLE ENTRIES"],
@@ -2097,6 +2102,7 @@ function highlightOutput(run={}){
 let backendPollTimer = null;
 let backendRunFinished = false;
 function setPipelineError(message){
+  setAwsRunState("failed");
   pipelineView.dataset.backendError="1";
   const first = pipelineGrid.children[0];
   if(first) {
@@ -2128,6 +2134,7 @@ function applyBackendRun(run){
     if(metrics[1] && micro) micro.textContent = metrics[1].toUpperCase();
   });
   const runStatus = String(run.status || "").toLowerCase();
+  setAwsRunState(runStatus || "running");
   if(runStatus === "completed" && !backendRunFinished){
     backendRunFinished = true;
     hydrateAllStates(true);
@@ -2183,6 +2190,7 @@ function startPipeline(){
   delete pipelineView.dataset.backendError;
   pipelineRun.disabled = true;
   pipelineRun.classList.add("is-running");
+  setAwsRunState("queued");
   pipelineRun.querySelector("span").textContent = "PIPELINE RUNNING";
   buildPipeline();
   beginBackendRun();
