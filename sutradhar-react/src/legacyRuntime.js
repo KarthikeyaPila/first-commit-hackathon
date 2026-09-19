@@ -1089,7 +1089,7 @@ function backendStory(summary){
     read: "Compare",
     by: sourceNames || "Sutradhar desk",
     h: summary.story_title || "Untitled story",
-    dek: `Cross-source coverage · ${sourceCount} ${sourceCount === 1 ? "publisher" : "publishers"} cover this story.`,
+    dek: "",
     body: ["This story is backed by the live Sutradhar story API.", sourceNames ? "Sources: " + sourceNames + "." : "Open the original publisher links to inspect the coverage."],
     articleCount: Math.max(Number(summary.article_count || 0), Array.isArray(summary.article_ids) ? summary.article_ids.length : 0),
     articleIds: Array.isArray(summary.article_ids) ? summary.article_ids : [],
@@ -1131,6 +1131,12 @@ function storyOrder(a,b){
     if(countDifference) return countDifference;
   }
   return new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime();
+}
+
+function groupedCoverageMarkup(story){
+  if(story.kind !== "grouped") return "";
+  const sourceNames = story.sourceNames || story.by || "Publisher coverage";
+  return `<span class="source-coverage"><b>Sources</b><span>${escapeHtml(sourceNames)}</span></span>`;
 }
 
 async function hydrateState(key, force = false){
@@ -1633,12 +1639,7 @@ function renderStories(key, limit = 12){
     const b = document.createElement("button");
     b.type = "button";
     b.className = "story" + (i === 0 ? " lead" : "");
-    const sourceNames = st.sourceNames || st.by || "Publisher coverage";
-    const sourceList = sourceNames.split(" · ").map(name=>name.trim()).filter(Boolean);
-    const sourceCount = Number(st.sourceCount) || sourceList.length;
-    const coverage = st.kind === "grouped"
-      ? `<span class="source-coverage"><b>Covered by ${sourceCount} ${sourceCount === 1 ? "source" : "sources"}</b><span>${escapeHtml(sourceNames)}</span></span>`
-      : "";
+    const coverage = groupedCoverageMarkup(st);
     const byline = st.kind === "grouped" ? "" : `<span class="by">${escapeHtml(st.by)} · ${escapeHtml(st.read)} read</span>`;
     const meta = `${feedSummaryMarkup(st.dek)}${coverage}${byline}`;
     b.innerHTML =
@@ -1759,7 +1760,9 @@ function renderStoriesData(stories,key,limit=12){
   spCount.textContent=`${stories.length} stories · ${articleTotal} articles · edition 01`;
   stories.slice(0,limit).forEach((st,i)=>{
     const b=document.createElement("button"); b.type="button"; b.className="story"+(i===0?" lead":"");
-    const meta=`${feedSummaryMarkup(st.dek)}<span class="by">${st.by} · ${st.read} read</span>`;
+    const coverage=groupedCoverageMarkup(st);
+    const byline=st.kind === "grouped" ? "" : `<span class="by">${escapeHtml(st.by)} · ${escapeHtml(st.read)} read</span>`;
+    const meta=`${feedSummaryMarkup(st.dek)}${coverage}${byline}`;
     b.innerHTML=`<span class="idx">${String(i+1).padStart(2,"0")}</span>`+
       `<span class="col-a"><span class="cat">${st.cat}<s>${st.date}</s></span><h4>${st.h}</h4>${i===0?meta:""}</span>`+
       (i===0?"":`<span class="col-b">${meta}</span>`);
