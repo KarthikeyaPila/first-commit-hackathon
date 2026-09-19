@@ -69,7 +69,7 @@ export const HOME_MARKUP = String.raw`
     </div>
 
     <div class="flank flank-r">
-      <span class="micro">In this edition</span>
+      <span class="micro">State coverage</span>
       <div id="featured"></div>
       <p class="sub">Every state and territory keeps a desk. Live coverage appears as it is filed.</p>
     </div>

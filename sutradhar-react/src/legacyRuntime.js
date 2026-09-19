@@ -1245,7 +1245,15 @@ function updateFeaturedCount(key){
   const count = featuredButtons.get(key)?.querySelector(".featured-count");
   if(!count) return;
   const stories = Array.isArray(STATES[key].allStories) ? STATES[key].allStories : STATES[key].stories;
-  count.textContent = Array.isArray(stories) && stories.length > 0 ? String(stories.length).padStart(2,"0") : "—";
+  if(!Array.isArray(stories) || stories.length === 0){
+    count.textContent = "—";
+    return;
+  }
+  const total = stories
+    .filter(story=>story.kind === "grouped")
+    .reduce((sum, story)=>sum + Math.max(0, Number(story.articleCount || 0)), 0)
+    + stories.filter(story=>story.kind === "latest").length;
+  count.textContent = `${total} ${total === 1 ? "article" : "articles"}`;
 }
 FEATURED.forEach(k=>{
   const b = document.createElement("button");
