@@ -1032,7 +1032,7 @@ const HINT_DEFAULT = hint.textContent;
 
 let hovered = null, busy = false, current = null;
 const stateStoryCache = new Map();
-const STATE_CACHE_PREFIX = "sutradhar-state-snapshot:v2:";
+const STATE_CACHE_PREFIX = "sutradhar-state-snapshot:v3:";
 
 function readStateSnapshot(key){
   try {
@@ -1076,6 +1076,7 @@ function backendStory(summary){
     body: ["This story is backed by the live Sutradhar story API.", sourceNames ? "Sources: " + sourceNames + "." : "Open the original publisher links to inspect the coverage."],
     articleCount: Math.max(Number(summary.article_count || 0), Array.isArray(summary.article_ids) ? summary.article_ids.length : 0),
     articleIds: Array.isArray(summary.article_ids) ? summary.article_ids : [],
+    publishedAt: summary.latest_published_at || "",
     kind: "grouped",
     api: { runId: summary.run_id, storyId: summary.story_id }
   };
@@ -1093,6 +1094,7 @@ function backendArticle(article){
     body: [article.summary || "Latest article from the state feed.", article.url || ""],
     articleCount: 1,
     articleId: article.article_id,
+    publishedAt: article.published_at || "",
     kind: "latest"
   };
 }
@@ -1101,11 +1103,22 @@ function backendStateName(key){
   return String(STATES[key].plain || STATES[key].name).replaceAll("&amp;","&");
 }
 
+function storyOrder(a,b){
+  const aGrouped = a.kind === "grouped";
+  const bGrouped = b.kind === "grouped";
+  if(aGrouped !== bGrouped) return aGrouped ? -1 : 1;
+  if(aGrouped){
+    const countDifference = (b.articleCount || 0) - (a.articleCount || 0);
+    if(countDifference) return countDifference;
+  }
+  return new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime();
+}
+
 async function hydrateState(key, force = false){
   const cachedStories = stateStoryCache.get(key);
   if(!force && Array.isArray(cachedStories) && cachedStories.length > 0){
     STATES[key].allStories = cachedStories;
-    STATES[key].stories = cachedStories.slice(0, 30);
+    STATES[key].stories = cachedStories;
     updateFeaturedCount(key);
     if(current === key) refreshStateContent(key);
     return;
@@ -1115,7 +1128,7 @@ async function hydrateState(key, force = false){
     if(snapshot){
       stateStoryCache.set(key, snapshot.stories);
       STATES[key].allStories = snapshot.stories;
-      STATES[key].stories = snapshot.stories.slice(0, 30);
+      STATES[key].stories = snapshot.stories;
       STATES[key].facts = snapshot.facts || STATES[key].facts;
       updateFeaturedCount(key);
       if(current === key) refreshStateContent(key);
@@ -1130,22 +1143,20 @@ async function hydrateState(key, force = false){
       const latest = await getStateArticles(stateName);
       stories = Array.isArray(latest.articles) ? latest.articles.map(backendArticle) : [];
     }else{
-      stories.sort((a,b)=>(b.articleCount || 0) - (a.articleCount || 0));
-      if(stories.length < 12){
-        const latest = await getStateArticles(stateName);
-        const groupedArticleIds = new Set(stories.flatMap(story=>story.articleIds || []));
-        const fallback = Array.isArray(latest.articles)
-          ? latest.articles
-            .map(backendArticle)
-            .filter(article=>!groupedArticleIds.has(article.articleId))
-          : [];
-        stories = stories.concat(fallback);
-      }
+      const latest = await getStateArticles(stateName);
+      const groupedArticleIds = new Set(stories.flatMap(story=>story.articleIds || []));
+      const fallback = Array.isArray(latest.articles)
+        ? latest.articles
+          .map(backendArticle)
+          .filter(article=>!groupedArticleIds.has(article.articleId))
+        : [];
+      stories = stories.concat(fallback);
     }
+    stories.sort(storyOrder);
     if(stories.length > 0) stateStoryCache.set(key, stories);
     else stateStoryCache.delete(key);
     STATES[key].allStories = stories;
-    STATES[key].stories = stories.slice(0, 30);
+    STATES[key].stories = stories;
     const groupedArticleCount = stories
       .filter(story=>story.kind === "grouped")
       .reduce((total, story)=>total + Math.max(0, Number(story.articleCount || 0)), 0);
@@ -1599,7 +1610,7 @@ function renderStories(key, limit = 12){
   const totalGroupedCount = allStories.filter(story=>story.kind !== "latest").length;
   const totalLatestCount = allStories.filter(story=>story.kind === "latest").length;
   spCount.textContent = `Showing ${s.stories.length} of ${allStories.length} dispatches · ${groupedCount}/${totalGroupedCount} grouped stories · ${latestCount}/${totalLatestCount} latest reports · edition 01`;
-  s.stories.slice(0, Math.min(limit, 30)).forEach((st,i)=>{
+  s.stories.slice(0, limit).forEach((st,i)=>{
     const b = document.createElement("button");
     b.type = "button";
     b.className = "story" + (i === 0 ? " lead" : "");
@@ -1617,8 +1628,8 @@ function renderStories(key, limit = 12){
     const more = document.createElement("button");
     more.type = "button";
     more.className = "story-more";
-    more.textContent = `Read more articles · show next ${Math.min(30, allStories.length - limit)}`;
-    more.addEventListener("click",()=>renderStories(key, limit + 30));
+    more.textContent = `Read more articles · show next ${allStories.length - limit}`;
+    more.addEventListener("click",()=>renderStories(key, allStories.length));
     spStories.appendChild(more);
   }
 }
@@ -1715,7 +1726,7 @@ async function renderNational(){
 function renderStoriesData(stories,key,limit=12){
   spStories.innerHTML="";
   spCount.textContent=`${stories.length} dispatches · edition 01`;
-  stories.slice(0,Math.min(limit,30)).forEach((st,i)=>{
+  stories.slice(0,limit).forEach((st,i)=>{
     const b=document.createElement("button"); b.type="button"; b.className="story"+(i===0?" lead":"");
     const meta=`${feedSummaryMarkup(st.dek)}<span class="by">${st.by} · ${st.read} read</span>`;
     b.innerHTML=`<span class="idx">${String(i+1).padStart(2,"0")}</span>`+
@@ -1725,12 +1736,12 @@ function renderStoriesData(stories,key,limit=12){
     bindFeedSummary(b);
     spStories.appendChild(b);
   });
-  if(stories.length > 12 && limit < 30){
+  if(stories.length > limit){
     const more=document.createElement("button");
     more.type="button";
     more.className="story-more";
-    more.textContent=`Read more · show up to ${Math.min(stories.length,30)} dispatches`;
-    more.addEventListener("click",()=>renderStoriesData(stories,key,30));
+    more.textContent=`Read more articles · show next ${stories.length - limit}`;
+    more.addEventListener("click",()=>renderStoriesData(stories,key,stories.length));
     spStories.appendChild(more);
   }
 }
