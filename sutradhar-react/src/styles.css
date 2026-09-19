@@ -295,6 +295,7 @@ svg :focus-visible{outline:none}
 }
 .curtain.up{animation:curtainUp .62s var(--ease-cine) forwards}
 .curtain.down{animation:curtainDown .7s var(--ease-cine) forwards}
+.curtain.national-curtain{background:linear-gradient(180deg,#FF9933 0 33%,#FFF5E5 33% 66%,#138808 66% 100%)!important}
 @keyframes curtainUp{from{transform:scaleY(0);transform-origin:50% 100%}to{transform:scaleY(1);transform-origin:50% 100%}}
 @keyframes curtainDown{from{transform:scaleY(1);transform-origin:50% 0}to{transform:scaleY(0);transform-origin:50% 0}}
 

@@ -1756,20 +1756,23 @@ async function selectNational(){
   busy=true;
   readout.classList.remove("on");
   document.documentElement.style.setProperty("--c","#D92243");
-  curtain.style.background="#D92243";
+  curtain.classList.add("national-curtain");
+  curtain.style.background="linear-gradient(180deg,#FF9933 0 33%,#FFF5E5 33% 66%,#138808 66% 100%)";
   mapRoot.setAttribute("data-focus","1");
   if(hovered) setHot(hovered,false);
   hovered=null;
   zoomState("uttar-pradesh",650);
-  await wait(420);
+  await wait(220);
   curtainUp();
-  await wait(660);
+  await wait(380);
   stage.setAttribute("data-hidden","1");
   await renderNational();
   document.body.classList.add("reading");
-  await wait(60);
+  await wait(40);
   curtainDown();
-  await wait(760);
+  await wait(420);
+  curtain.classList.remove("national-curtain");
+  curtain.style.background="";
   busy=false;
 }
 
