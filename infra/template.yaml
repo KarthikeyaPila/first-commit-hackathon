@@ -239,8 +239,7 @@ Resources:
           Type: Schedule
           Properties:
             Schedule: rate(1 hour)
-            # Intentionally disabled until the operator explicitly enables the rule.
-            Enabled: false
+            Enabled: true
             Input: '{"source":"eventbridge","detail-type":"hourly-process"}'
 
 Outputs:
