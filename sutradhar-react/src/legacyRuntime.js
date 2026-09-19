@@ -1998,6 +1998,19 @@ function setAwsRunState(status){
   if(!awsArchitecture) return;
   awsArchitecture.dataset.runStatus = status;
 }
+function updateAwsServices(stages = [], runStatus = ""){
+  if(!awsArchitecture) return;
+  const active = new Set();
+  const running = stages.filter(stage=>String(stage.status || "").toLowerCase() === "running");
+  if(runStatus === "queued") { active.add("api"); active.add("processing"); }
+  running.forEach(stage=>{
+    const id = String(stage.stage_id || "");
+    if(id === "fetch_sources") active.add("s3");
+    if(id !== "persist_outputs") { active.add("api"); active.add("processing"); }
+    if(id === "persist_outputs") active.add("dynamo");
+  });
+  awsArchitecture.querySelectorAll("[data-service]").forEach(node=>node.classList.toggle("is-active", active.has(node.dataset.service)));
+}
 const PIPE_STAGES = [
   ["fetch_sources","FETCH RSS SOURCES"],
   ["parse_articles","PARSE ARTICLE ENTRIES"],
@@ -2135,6 +2148,7 @@ function applyBackendRun(run){
   });
   const runStatus = String(run.status || "").toLowerCase();
   setAwsRunState(runStatus || "running");
+  updateAwsServices(stages, runStatus);
   if(runStatus === "completed" && !backendRunFinished){
     backendRunFinished = true;
     hydrateAllStates(true);

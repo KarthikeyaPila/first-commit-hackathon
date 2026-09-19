@@ -1132,6 +1132,14 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
   overflow: hidden;
   animation: aws-node-breathe 1.8s ease-in-out infinite;
 }
+.aws-architecture[data-run-status="queued"] .aws-node:not(.is-active),
+.aws-architecture[data-run-status="running"] .aws-node:not(.is-active) {
+  animation: none;
+  border-color: inherit;
+  box-shadow: none;
+}
+.aws-architecture[data-run-status="queued"] .aws-node:not(.is-active)::after,
+.aws-architecture[data-run-status="running"] .aws-node:not(.is-active)::after { display: none; }
 .aws-architecture[data-run-status="queued"] .aws-node::after,
 .aws-architecture[data-run-status="running"] .aws-node::after {
   content: "";
