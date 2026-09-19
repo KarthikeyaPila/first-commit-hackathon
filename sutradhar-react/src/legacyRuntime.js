@@ -2002,6 +2002,7 @@ function updateAwsServices(stages = [], runStatus = ""){
   if(!awsArchitecture) return;
   const active = new Set();
   if(runStatus === "ready") active.add("s3");
+  if(runStatus === "queued" || runStatus === "running") active.add("s3");
   const running = stages.filter(stage=>String(stage.status || "").toLowerCase() === "running");
   if(runStatus === "queued") { active.add("api"); active.add("processing"); }
   running.forEach(stage=>{

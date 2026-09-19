@@ -1197,15 +1197,31 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
   color: #D92243;
   animation: aws-pulse 1.1s ease-in-out infinite;
 }
+.pipe-node[data-status="running"]::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -42%;
+  width: 32%;
+  height: auto;
+  margin: 0;
+  border-radius: 0;
+  background: linear-gradient(90deg, transparent, rgba(217,34,67,.24), transparent) !important;
+  box-shadow: none !important;
+  transform: skewX(-18deg);
+  animation: pipeline-box-scan 1.35s linear infinite;
+  pointer-events: none;
+}
 @keyframes pipeline-scan {
   from { background-position: 140% 0; }
   to { background-position: -140% 0; }
 }
+@keyframes pipeline-box-scan { to { left: 125%; } }
 @media (prefers-reduced-motion: reduce) {
   .aws-architecture[data-run-status="queued"] .aws-node,
   .aws-architecture[data-run-status="running"] .aws-node,
   .aws-architecture[data-run-status="queued"] .aws-node::after,
   .aws-architecture[data-run-status="running"] .aws-node::after,
   .pipe-node[data-status="running"],
-  .pipe-node[data-status="running"] .pipe-data::after { animation: none; }
+  .pipe-node[data-status="running"] .pipe-data::after,
+  .pipe-node[data-status="running"]::after { animation: none; }
 }
