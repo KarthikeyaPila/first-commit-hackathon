@@ -1032,7 +1032,7 @@ const HINT_DEFAULT = hint.textContent;
 
 let hovered = null, busy = false, current = null;
 const stateStoryCache = new Map();
-const STATE_CACHE_PREFIX = "sutradhar-state-snapshot:";
+const STATE_CACHE_PREFIX = "sutradhar-state-snapshot:v2:";
 
 function readStateSnapshot(key){
   try {
@@ -1617,7 +1617,7 @@ function renderStories(key, limit = 12){
     const more = document.createElement("button");
     more.type = "button";
     more.className = "story-more";
-    more.textContent = `Load next ${Math.min(30, allStories.length - limit)} dispatches`;
+    more.textContent = `Read more articles · show next ${Math.min(30, allStories.length - limit)}`;
     more.addEventListener("click",()=>renderStories(key, limit + 30));
     spStories.appendChild(more);
   }
