@@ -1623,7 +1623,8 @@ function renderStories(key, limit = 12){
     const coverage = st.kind === "grouped"
       ? `<span class="source-coverage"><b>Covered by ${sourceCount} ${sourceCount === 1 ? "source" : "sources"}</b><span>${escapeHtml(sourceNames)}</span></span>`
       : "";
-    const meta = `${feedSummaryMarkup(st.dek)}${coverage}<span class="by">${st.by} · ${st.read} read</span>`;
+    const byline = st.kind === "grouped" ? "" : `<span class="by">${escapeHtml(st.by)} · ${escapeHtml(st.read)} read</span>`;
+    const meta = `${feedSummaryMarkup(st.dek)}${coverage}${byline}`;
     b.innerHTML =
       `<span class="idx">${String(i+1).padStart(2,"0")}</span>` +
       `<span class="col-a"><span class="cat">${st.cat}<s>${st.date}</s></span>` +
