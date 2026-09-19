@@ -1033,7 +1033,7 @@ const HINT_DEFAULT = hint.textContent;
 let hovered = null, busy = false, current = null;
 const stateStoryCache = new Map();
 const STATE_CACHE_PREFIX = "sutradhar-state-snapshot:v4:";
-const NATIONAL_CACHE_KEY = "sutradhar-national-snapshot:v1";
+const NATIONAL_CACHE_KEY = "sutradhar-national-snapshot:v2";
 
 function readStateSnapshot(key){
   try {
