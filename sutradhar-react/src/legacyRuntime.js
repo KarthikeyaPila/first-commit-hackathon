@@ -1086,6 +1086,7 @@ async function hydrateState(key, force = false){
   if(!force && Array.isArray(cachedStories) && cachedStories.length > 0){
     STATES[key].allStories = cachedStories;
     STATES[key].stories = cachedStories.slice(0, 30);
+    updateFeaturedCount(key);
     if(current === key) refreshStateContent(key);
     return;
   }
@@ -1118,6 +1119,7 @@ async function hydrateState(key, force = false){
       .reduce((total, story)=>total + Math.max(0, Number(story.articleCount || 0)), 0);
     const latestCount = stories.filter(story=>story.kind === "latest").length;
     STATES[key].facts = [["Total articles", String(groupedArticleCount + latestCount)], ["Grouped articles", String(groupedArticleCount)], ["Latest reports", String(latestCount)], ["Capital", STATES[key].cap]];
+    updateFeaturedCount(key);
     if(current === key) refreshStateContent(key);
   } catch (error) {
     console.warn("Sutradhar state API unavailable.", error);
@@ -1125,6 +1127,7 @@ async function hydrateState(key, force = false){
     STATES[key].allStories = [];
     STATES[key].stories = [];
     STATES[key].facts = [["Total articles", "Unavailable"], ["Grouped articles", "Unavailable"], ["Latest reports", "Unavailable"], ["Capital", STATES[key].cap]];
+    updateFeaturedCount(key);
     if(current === key) refreshStateContent(key);
   }
 }
@@ -1237,10 +1240,18 @@ KEYS.forEach(k=>{
 });
 const FEATURED = ["uttar-pradesh","maharashtra","west-bengal","tamil-nadu"];
 const featured = document.getElementById("featured");
+const featuredButtons = new Map();
+function updateFeaturedCount(key){
+  const count = featuredButtons.get(key)?.querySelector(".featured-count");
+  if(!count) return;
+  const stories = Array.isArray(STATES[key].allStories) ? STATES[key].allStories : STATES[key].stories;
+  count.textContent = Array.isArray(stories) && stories.length > 0 ? String(stories.length).padStart(2,"0") : "—";
+}
 FEATURED.forEach(k=>{
   const b = document.createElement("button");
   b.type = "button"; b.className = "idx-item"; b.dataset.go = k;
-  b.innerHTML = `${STATES[k].name} <span>${String(STATES[k].stories.length).padStart(2,"0")}</span>`;
+  b.innerHTML = `${STATES[k].name} <span class="featured-count">—</span>`;
+  featuredButtons.set(k,b);
   featured.appendChild(b);
 });
 document.getElementById("tally").textContent =
