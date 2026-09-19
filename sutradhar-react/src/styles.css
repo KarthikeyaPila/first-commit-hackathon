@@ -1126,6 +1126,8 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
 .aws-architecture[data-run-status="completed"]::after { content: "● AWS RUN COMPLETE · OUTPUTS PERSISTED"; display: block; margin-top: 14px; color: #3f704b; font: 700 11px/1.2 var(--mono); letter-spacing: .12em; }
 .aws-architecture[data-run-status="ready"]::after { content: "● S3 HOSTING LIVE · STATIC ASSETS SERVED"; display: block; margin-top: 14px; color: #3f704b; font: 700 11px/1.2 var(--mono); letter-spacing: .12em; }
 .aws-architecture[data-run-status="ready"] [data-service="s3"] {
+  position: relative;
+  overflow: hidden;
   border-color: rgba(63,112,75,.62);
   box-shadow: 0 0 0 1px rgba(63,112,75,.16), 0 0 18px rgba(63,112,75,.12);
   animation: aws-hosting-breathe 2.4s ease-in-out infinite;
@@ -1186,16 +1188,24 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
 .pipe-node[data-status="running"] {
   position: relative;
   overflow: hidden;
-  animation: aws-node-breathe 1.8s ease-in-out infinite;
+  animation: aws-node-breathe 1.8s ease-in-out infinite, pipeline-scan 1.7s linear infinite;
+  background-image: linear-gradient(105deg, transparent 0%, transparent 42%, rgba(217,34,67,.16) 50%, transparent 58%, transparent 100%);
+  background-size: 240% 100%;
 }
 .pipe-node[data-status="running"] .pipe-data::after {
   content: " · LIVE";
   color: #D92243;
   animation: aws-pulse 1.1s ease-in-out infinite;
 }
+@keyframes pipeline-scan {
+  from { background-position: 140% 0; }
+  to { background-position: -140% 0; }
+}
 @media (prefers-reduced-motion: reduce) {
   .aws-architecture[data-run-status="queued"] .aws-node,
   .aws-architecture[data-run-status="running"] .aws-node,
   .aws-architecture[data-run-status="queued"] .aws-node::after,
-  .aws-architecture[data-run-status="running"] .aws-node::after { animation: none; }
+  .aws-architecture[data-run-status="running"] .aws-node::after,
+  .pipe-node[data-status="running"],
+  .pipe-node[data-status="running"] .pipe-data::after { animation: none; }
 }
