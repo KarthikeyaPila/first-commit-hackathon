@@ -1724,8 +1724,10 @@ async function renderNational(){
 }
 
 function renderStoriesData(stories,key,limit=12){
+  stories.sort(storyOrder);
   spStories.innerHTML="";
-  spCount.textContent=`${stories.length} dispatches · edition 01`;
+  const articleTotal = stories.reduce((total, story)=>total + Math.max(1, Number(story.articleCount || 0)), 0);
+  spCount.textContent=`${stories.length} stories · ${articleTotal} articles · edition 01`;
   stories.slice(0,limit).forEach((st,i)=>{
     const b=document.createElement("button"); b.type="button"; b.className="story"+(i===0?" lead":"");
     const meta=`${feedSummaryMarkup(st.dek)}<span class="by">${st.by} · ${st.read} read</span>`;
