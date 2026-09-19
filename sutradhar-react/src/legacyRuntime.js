@@ -1762,15 +1762,17 @@ async function selectNational(){
   if(hovered) setHot(hovered,false);
   hovered=null;
   zoomState("uttar-pradesh",650);
-  await wait(220);
+  await wait(700);
   curtainUp();
-  await wait(380);
+  await wait(660);
   stage.setAttribute("data-hidden","1");
-  await renderNational();
+  // Reveal the national desk on the same cadence as a state desk. Its live
+  // stories continue hydrating in the background after the shell is visible.
+  void renderNational();
   document.body.classList.add("reading");
-  await wait(40);
+  await wait(60);
   curtainDown();
-  await wait(420);
+  await wait(760);
   curtain.classList.remove("national-curtain");
   curtain.style.background="";
   busy=false;
