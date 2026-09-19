@@ -1136,7 +1136,8 @@ function storyOrder(a,b){
 function groupedCoverageMarkup(story){
   if(story.kind !== "grouped") return "";
   const sourceNames = story.sourceNames || story.by || "Publisher coverage";
-  return `<span class="source-coverage"><b>Sources</b><span>${escapeHtml(sourceNames)}</span></span>`;
+  const sourceCount = Number(story.sourceCount) || sourceNames.split(" · ").map(name=>name.trim()).filter(Boolean).length;
+  return `<span class="source-coverage"><b>Covered by ${sourceCount} ${sourceCount === 1 ? "source" : "sources"}</b><span>${escapeHtml(sourceNames)}</span></span>`;
 }
 
 async function hydrateState(key, force = false){
