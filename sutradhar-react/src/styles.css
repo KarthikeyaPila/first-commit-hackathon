@@ -1233,7 +1233,7 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
   letter-spacing: .04em;
   line-height: 1.35;
 }
-.source-coverage b { color: #8f6410; white-space: nowrap; text-transform: uppercase; }
+.source-coverage b { color: #8f6410; white-space: nowrap; }
 .source-coverage span { color: rgba(23,19,16,.68); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) {
   .aws-architecture[data-run-status="queued"] .aws-node,

@@ -1032,7 +1032,7 @@ const HINT_DEFAULT = hint.textContent;
 
 let hovered = null, busy = false, current = null;
 const stateStoryCache = new Map();
-const STATE_CACHE_PREFIX = "sutradhar-state-snapshot:v3:";
+const STATE_CACHE_PREFIX = "sutradhar-state-snapshot:v4:";
 
 function readStateSnapshot(key){
   try {
@@ -1617,8 +1617,11 @@ function renderStories(key, limit = 12){
     const b = document.createElement("button");
     b.type = "button";
     b.className = "story" + (i === 0 ? " lead" : "");
+    const sourceNames = st.sourceNames || st.by || "Publisher coverage";
+    const sourceList = sourceNames.split(" · ").map(name=>name.trim()).filter(Boolean);
+    const sourceCount = Number(st.sourceCount) || sourceList.length;
     const coverage = st.kind === "grouped"
-      ? `<span class="source-coverage"><b>${st.sourceCount || 0} ${st.sourceCount === 1 ? "source" : "sources"}</b><span>${escapeHtml(st.sourceNames || st.by || "Publisher coverage")}</span></span>`
+      ? `<span class="source-coverage"><b>Covered by ${sourceCount} ${sourceCount === 1 ? "source" : "sources"}</b><span>${escapeHtml(sourceNames)}</span></span>`
       : "";
     const meta = `${feedSummaryMarkup(st.dek)}${coverage}<span class="by">${st.by} · ${st.read} read</span>`;
     b.innerHTML =
