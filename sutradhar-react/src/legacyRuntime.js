@@ -2001,6 +2001,7 @@ function setAwsRunState(status){
 function updateAwsServices(stages = [], runStatus = ""){
   if(!awsArchitecture) return;
   const active = new Set();
+  if(runStatus === "ready") active.add("s3");
   const running = stages.filter(stage=>String(stage.status || "").toLowerCase() === "running");
   if(runStatus === "queued") { active.add("api"); active.add("processing"); }
   running.forEach(stage=>{
@@ -2306,6 +2307,8 @@ setTimeout(()=>{ overture.style.display = "none"; }, startDelay + 1400);
 
 function hydrateBackend(){
   hydrateMarket();
+  setAwsRunState("ready");
+  updateAwsServices([], "ready");
   // Clear authored reference copy before loading live projections. The map
   // remains navigable, but no fictional dispatch is shown as current news.
   KEYS.forEach(key=>{

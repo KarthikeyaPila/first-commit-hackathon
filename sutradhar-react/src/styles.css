@@ -1124,6 +1124,27 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
 .aws-architecture[data-run-status="queued"]::after,
 .aws-architecture[data-run-status="running"]::after { content: "● LIVE AWS PROCESSING · TELEMETRY CONNECTED"; display: block; margin-top: 14px; color: #b52b27; font: 700 11px/1.2 var(--mono); letter-spacing: .12em; animation: aws-pulse 1.4s ease-in-out infinite; }
 .aws-architecture[data-run-status="completed"]::after { content: "● AWS RUN COMPLETE · OUTPUTS PERSISTED"; display: block; margin-top: 14px; color: #3f704b; font: 700 11px/1.2 var(--mono); letter-spacing: .12em; }
+.aws-architecture[data-run-status="ready"]::after { content: "● S3 HOSTING LIVE · STATIC ASSETS SERVED"; display: block; margin-top: 14px; color: #3f704b; font: 700 11px/1.2 var(--mono); letter-spacing: .12em; }
+.aws-architecture[data-run-status="ready"] [data-service="s3"] {
+  border-color: rgba(63,112,75,.62);
+  box-shadow: 0 0 0 1px rgba(63,112,75,.16), 0 0 18px rgba(63,112,75,.12);
+  animation: aws-hosting-breathe 2.4s ease-in-out infinite;
+}
+.aws-architecture[data-run-status="ready"] [data-service="processing"] {
+  border-color: inherit;
+  box-shadow: none;
+  animation: none;
+}
+.aws-architecture[data-run-status="ready"] [data-service="s3"]::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -45%;
+  width: 34%;
+  background: linear-gradient(90deg, transparent, rgba(63,112,75,.18), transparent);
+  transform: skewX(-18deg);
+  animation: aws-scan 2.6s linear infinite;
+  pointer-events: none;
+}
 @keyframes aws-pulse { 50% { opacity: .38; } }
 
 .aws-architecture[data-run-status="queued"] .aws-node,
@@ -1158,6 +1179,19 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
 @keyframes aws-scan { to { left: 125%; } }
 @keyframes aws-node-breathe {
   50% { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(200,48,42,.24), 0 0 28px rgba(200,48,42,.24); }
+}
+@keyframes aws-hosting-breathe {
+  50% { transform: translateY(-1px); box-shadow: 0 0 0 1px rgba(63,112,75,.22), 0 0 24px rgba(63,112,75,.18); }
+}
+.pipe-node[data-status="running"] {
+  position: relative;
+  overflow: hidden;
+  animation: aws-node-breathe 1.8s ease-in-out infinite;
+}
+.pipe-node[data-status="running"] .pipe-data::after {
+  content: " · LIVE";
+  color: #D92243;
+  animation: aws-pulse 1.1s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) {
   .aws-architecture[data-run-status="queued"] .aws-node,
