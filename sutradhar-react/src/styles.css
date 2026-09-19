@@ -1217,6 +1217,24 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
   to { background-position: -140% 0; }
 }
 @keyframes pipeline-box-scan { to { left: 125%; } }
+.source-coverage {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 9px;
+  padding: 5px 8px;
+  border-left: 3px solid #B48726;
+  background: rgba(180,135,38,.11);
+  color: #6f531b;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .04em;
+  line-height: 1.35;
+}
+.source-coverage b { color: #8f6410; white-space: nowrap; text-transform: uppercase; }
+.source-coverage span { color: rgba(23,19,16,.68); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) {
   .aws-architecture[data-run-status="queued"] .aws-node,
   .aws-architecture[data-run-status="running"] .aws-node,

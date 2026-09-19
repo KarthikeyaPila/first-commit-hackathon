@@ -1066,16 +1066,19 @@ function formatRetrievedTime(value){
 
 function backendStory(summary){
   const sourceNames = (summary.sources || []).join(" · ");
+  const sourceCount = Array.isArray(summary.sources) ? summary.sources.length : 0;
   return {
     cat: "Coverage",
     date: formatRetrievedTime(summary.latest_published_at),
     read: "Compare",
     by: sourceNames || "Sutradhar desk",
     h: summary.story_title || "Untitled story",
-    dek: "Grouped coverage from the Sutradhar story graph.",
+    dek: `Cross-source coverage · ${sourceCount} ${sourceCount === 1 ? "publisher" : "publishers"} cover this story.`,
     body: ["This story is backed by the live Sutradhar story API.", sourceNames ? "Sources: " + sourceNames + "." : "Open the original publisher links to inspect the coverage."],
     articleCount: Math.max(Number(summary.article_count || 0), Array.isArray(summary.article_ids) ? summary.article_ids.length : 0),
     articleIds: Array.isArray(summary.article_ids) ? summary.article_ids : [],
+    sourceCount,
+    sourceNames,
     publishedAt: summary.latest_published_at || "",
     kind: "grouped",
     api: { runId: summary.run_id, storyId: summary.story_id }
@@ -1614,7 +1617,10 @@ function renderStories(key, limit = 12){
     const b = document.createElement("button");
     b.type = "button";
     b.className = "story" + (i === 0 ? " lead" : "");
-    const meta = `${feedSummaryMarkup(st.dek)}<span class="by">${st.by} · ${st.read} read</span>`;
+    const coverage = st.kind === "grouped"
+      ? `<span class="source-coverage"><b>${st.sourceCount || 0} ${st.sourceCount === 1 ? "source" : "sources"}</b><span>${escapeHtml(st.sourceNames || st.by || "Publisher coverage")}</span></span>`
+      : "";
+    const meta = `${feedSummaryMarkup(st.dek)}${coverage}<span class="by">${st.by} · ${st.read} read</span>`;
     b.innerHTML =
       `<span class="idx">${String(i+1).padStart(2,"0")}</span>` +
       `<span class="col-a"><span class="cat">${st.cat}<s>${st.date}</s></span>` +
