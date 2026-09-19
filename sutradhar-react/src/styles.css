@@ -1235,6 +1235,7 @@ body:has(.stage) .grain{opacity:.055;mix-blend-mode:multiply}
 }
 .source-coverage b { color: #8f6410; white-space: nowrap; }
 .source-coverage span { color: rgba(23,19,16,.68); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cross-source-coverage { display: block; margin-top: 9px; color: rgba(23,19,16,.62); font-family: var(--mono); font-size: 10px; letter-spacing: .05em; }
 @media (prefers-reduced-motion: reduce) {
   .aws-architecture[data-run-status="queued"] .aws-node,
   .aws-architecture[data-run-status="running"] .aws-node,

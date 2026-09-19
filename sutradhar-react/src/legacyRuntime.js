@@ -1136,8 +1136,14 @@ function storyOrder(a,b){
 function groupedCoverageMarkup(story){
   if(story.kind !== "grouped") return "";
   const sourceNames = story.sourceNames || story.by || "Publisher coverage";
+  return `<span class="source-coverage"><b>Sources</b><span>${escapeHtml(sourceNames)}</span></span>`;
+}
+
+function crossSourceCoverageMarkup(story){
+  if(story.kind !== "grouped") return "";
+  const sourceNames = story.sourceNames || story.by || "";
   const sourceCount = Number(story.sourceCount) || sourceNames.split(" · ").map(name=>name.trim()).filter(Boolean).length;
-  return `<span class="source-coverage"><b>Covered by ${sourceCount} ${sourceCount === 1 ? "source" : "sources"}</b><span>${escapeHtml(sourceNames)}</span></span>`;
+  return `<span class="cross-source-coverage">Cross-source coverage · ${sourceCount} ${sourceCount === 1 ? "source" : "sources"}</span>`;
 }
 
 async function hydrateState(key, force = false){
@@ -1761,7 +1767,7 @@ function renderStoriesData(stories,key,limit=12){
   spCount.textContent=`${stories.length} stories · ${articleTotal} articles · edition 01`;
   stories.slice(0,limit).forEach((st,i)=>{
     const b=document.createElement("button"); b.type="button"; b.className="story"+(i===0?" lead":"");
-    const coverage=groupedCoverageMarkup(st);
+    const coverage=crossSourceCoverageMarkup(st) + groupedCoverageMarkup(st);
     const byline=st.kind === "grouped" ? "" : `<span class="by">${escapeHtml(st.by)} · ${escapeHtml(st.read)} read</span>`;
     const meta=`${feedSummaryMarkup(st.dek)}${coverage}${byline}`;
     b.innerHTML=`<span class="idx">${String(i+1).padStart(2,"0")}</span>`+
