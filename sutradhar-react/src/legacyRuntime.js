@@ -1221,6 +1221,8 @@ async function hydrateAllStates(force = false, exclude = []){
   }
 }
 
+let marketRefreshTimer = null;
+
 function formatMarketValue(item){
   if(item.value == null) return "—";
   if(item.key === "usd_inr") return "₹" + Number(item.value).toFixed(2);
@@ -1231,6 +1233,11 @@ function formatMarketValue(item){
 async function hydrateMarket(){
   try {
     const payload = await getMarket();
+    const tickerLabel = document.querySelector(".ticker-label");
+    if(tickerLabel){
+      const fetched = payload.fetched_at ? formatRetrievedTime(payload.fetched_at) : "live feed";
+      tickerLabel.textContent = `Market desk · updated ${fetched}`;
+    }
     const byLabel = new Map((payload.instruments || []).map(item => [String(item.label || "").toUpperCase(), item]));
     document.querySelectorAll(".ticker-item").forEach(item => {
       const labelNode = item.querySelector("b");
@@ -1248,6 +1255,9 @@ async function hydrateMarket(){
     });
   } catch(error) {
     console.warn("Sutradhar market API unavailable; keeping reference ticker values.", error);
+  } finally {
+    if(marketRefreshTimer) clearTimeout(marketRefreshTimer);
+    marketRefreshTimer = setTimeout(()=>void hydrateMarket(), 60000);
   }
 }
 
