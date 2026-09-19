@@ -1032,7 +1032,7 @@ const HINT_DEFAULT = hint.textContent;
 
 let hovered = null, busy = false, current = null;
 const stateStoryCache = new Map();
-const STATE_CACHE_PREFIX = "sutradhar-state-snapshot:v4:";
+const STATE_CACHE_PREFIX = "sutradhar-state-snapshot:v5:";
 const NATIONAL_CACHE_KEY = "sutradhar-national-snapshot:v3";
 
 function readStateSnapshot(key){
@@ -1162,7 +1162,6 @@ async function hydrateState(key, force = false){
       stateStoryCache.set(key, snapshot.stories);
       STATES[key].allStories = snapshot.stories;
       STATES[key].stories = snapshot.stories;
-      STATES[key].facts = snapshot.facts || STATES[key].facts;
       updateFeaturedCount(key);
       if(current === key) refreshStateContent(key);
       return;
@@ -1194,7 +1193,6 @@ async function hydrateState(key, force = false){
       .filter(story=>story.kind === "grouped")
       .reduce((total, story)=>total + Math.max(0, Number(story.articleCount || 0)), 0);
     const latestCount = stories.filter(story=>story.kind === "latest").length;
-    STATES[key].facts = [["Total articles", String(groupedArticleCount + latestCount)], ["Grouped articles", String(groupedArticleCount)], ["Latest reports", String(latestCount)], ["Capital", STATES[key].cap]];
     writeStateSnapshot(key, stories, STATES[key].facts);
     updateFeaturedCount(key);
     if(current === key) refreshStateContent(key);
@@ -1203,7 +1201,6 @@ async function hydrateState(key, force = false){
     stateStoryCache.delete(key);
     STATES[key].allStories = [];
     STATES[key].stories = [];
-    STATES[key].facts = [["Total articles", "Unavailable"], ["Grouped articles", "Unavailable"], ["Latest reports", "Unavailable"], ["Capital", STATES[key].cap]];
     updateFeaturedCount(key);
     if(current === key) refreshStateContent(key);
   }
@@ -1642,7 +1639,7 @@ function renderStories(key, limit = 12){
   const latestCount = s.stories.filter(story=>story.kind === "latest").length;
   const totalGroupedCount = allStories.filter(story=>story.kind !== "latest").length;
   const totalLatestCount = allStories.filter(story=>story.kind === "latest").length;
-  spCount.textContent = `Showing ${s.stories.length} of ${allStories.length} dispatches · ${groupedCount}/${totalGroupedCount} grouped stories · ${latestCount}/${totalLatestCount} latest reports · edition 01`;
+  spCount.textContent = `${totalGroupedCount} grouped stories · ${totalLatestCount} latest reports · edition 01`;
   s.stories.slice(0, limit).forEach((st,i)=>{
     const b = document.createElement("button");
     b.type = "button";
@@ -1705,7 +1702,8 @@ const NATIONAL = {
   facts:[
     ["Desks","33"],
     ["Coverage","Nationwide"],
-    ["Filed","Today"]
+    ["Publisher network","Live national sources"],
+    ["Edition","Today"]
   ],
   stories:[
     {cat:"Economy",date:"18 SEP",h:"Reserve Bank holds rates, signals a longer pause",dek:"Markets watch the central bank's next signals as policymakers balance inflation and growth.",by:"National Desk",read:"4 min",body:["The latest national economic signals are being watched closely by businesses, households and markets.","Policymakers continue to balance price stability with the pace of growth as the next set of decisions approaches."]},
@@ -1764,8 +1762,9 @@ async function renderNational(){
 function renderStoriesData(stories,key,limit=12){
   stories.sort(storyOrder);
   spStories.innerHTML="";
-  const articleTotal = stories.reduce((total, story)=>total + Math.max(1, Number(story.articleCount || 0)), 0);
-  spCount.textContent=`${stories.length} stories · ${articleTotal} articles · edition 01`;
+  const groupedCount = stories.filter(story=>story.kind === "grouped").length;
+  const latestCount = stories.filter(story=>story.kind === "latest").length;
+  spCount.textContent=`${groupedCount} grouped stories · ${latestCount} latest reports · edition 01`;
   stories.slice(0,limit).forEach((st,i)=>{
     const b=document.createElement("button"); b.type="button"; b.className="story"+(i===0?" lead":"");
     const coverage=groupedCoverageSummaryMarkup(st) + groupedCoverageMarkup(st);
@@ -2373,7 +2372,6 @@ function hydrateBackend(){
   // remains navigable, but no fictional dispatch is shown as current news.
   KEYS.forEach(key=>{
     STATES[key].stories = [];
-    STATES[key].facts = [["Total articles", "Loading"], ["Grouped articles", "Loading"], ["Latest reports", "Loading"], ["Capital", STATES[key].cap]];
   });
   // Load the latest persisted state projections quietly. The printing press
   // remains the explicit action that starts a fresh processing run.
