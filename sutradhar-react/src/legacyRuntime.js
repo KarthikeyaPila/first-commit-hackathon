@@ -1032,6 +1032,26 @@ const HINT_DEFAULT = hint.textContent;
 
 let hovered = null, busy = false, current = null;
 const stateStoryCache = new Map();
+const STATE_CACHE_PREFIX = "sutradhar-state-snapshot:";
+
+function readStateSnapshot(key){
+  try {
+    const raw = localStorage.getItem(STATE_CACHE_PREFIX + key);
+    if(!raw) return null;
+    const snapshot = JSON.parse(raw);
+    return Array.isArray(snapshot.stories) ? snapshot : null;
+  } catch(error) {
+    return null;
+  }
+}
+
+function writeStateSnapshot(key, stories, facts){
+  try {
+    localStorage.setItem(STATE_CACHE_PREFIX + key, JSON.stringify({stories, facts, savedAt: Date.now()}));
+  } catch(error) {
+    // A full/private browser storage area should not block live news loading.
+  }
+}
 
 function escapeHtml(value){
   return String(value ?? "").replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch]));
@@ -1090,6 +1110,18 @@ async function hydrateState(key, force = false){
     if(current === key) refreshStateContent(key);
     return;
   }
+  if(!force){
+    const snapshot = readStateSnapshot(key);
+    if(snapshot){
+      stateStoryCache.set(key, snapshot.stories);
+      STATES[key].allStories = snapshot.stories;
+      STATES[key].stories = snapshot.stories.slice(0, 30);
+      STATES[key].facts = snapshot.facts || STATES[key].facts;
+      updateFeaturedCount(key);
+      if(current === key) refreshStateContent(key);
+      return;
+    }
+  }
   try {
     const stateName = backendStateName(key);
     const payload = await getStateStories(stateName);
@@ -1119,6 +1151,7 @@ async function hydrateState(key, force = false){
       .reduce((total, story)=>total + Math.max(0, Number(story.articleCount || 0)), 0);
     const latestCount = stories.filter(story=>story.kind === "latest").length;
     STATES[key].facts = [["Total articles", String(groupedArticleCount + latestCount)], ["Grouped articles", String(groupedArticleCount)], ["Latest reports", String(latestCount)], ["Capital", STATES[key].cap]];
+    writeStateSnapshot(key, stories, STATES[key].facts);
     updateFeaturedCount(key);
     if(current === key) refreshStateContent(key);
   } catch (error) {
@@ -1770,7 +1803,7 @@ async function select(key){
   // Start the live request after the page is visible so network latency never
   // blocks the map-to-desk transition. The local shell remains readable while
   // the API response replaces its reference dispatches in the background.
-  void hydrateState(key, true);
+  void hydrateState(key);
   document.body.classList.add("reading");
   await wait(60);
   curtainDown();
@@ -1823,7 +1856,7 @@ async function switchTo(key){
   setHot(key,true); hovered = key;
   zoomState(key,10);
   renderState(key);
-  void hydrateState(key, true);
+  void hydrateState(key);
   curtainDown();
   await wait(760);
   busy = false;
