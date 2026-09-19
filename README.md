@@ -31,7 +31,7 @@ The AWS backend is deployed in Mumbai (`ap-south-1`) and includes:
   cached market context
 - Live processing-stage telemetry with statuses and metrics
 - Lambda retry handling and retained SQS failure queue
-- Disabled-by-default hourly EventBridge rule
+- Enabled hourly EventBridge rule targeting the processing Lambda
 - Cached NIFTY 50, Sensex, USD/INR, gold, and silver market context
 
 The React/Vite frontend foundation is now implemented. It recreates the editorial
@@ -180,8 +180,8 @@ is `karthikeya-pila` in `ap-south-1`.
 /home/ditsco/.local/bin/sam deploy   --template-file .aws-sam/build/template.yaml   --config-file /absolute/path/to/infra/samconfig.toml   --profile karthikeya-pila
 ```
 
-The hourly EventBridge rule exists but is explicitly disabled. Do not enable it
-until hourly cost and failure behavior are deliberately accepted.
+The hourly EventBridge rule is enabled and invokes the processing Lambda every
+hour.
 
 ## Frontend development
 

@@ -49,7 +49,7 @@ reliable states first, and same-story clustering as the main NLP problem.
 | Tests | pytest configuration and foundation tests | Configured; pytest package still needs installation |
 | Linting | Ruff configuration | Configured; not yet run |
 | NLP dependencies | NumPy, pandas, scikit-learn, Sentence Transformers | Declared as optional; not yet used |
-| Cloud runtime | AWS Lambda, EventBridge Scheduler, DynamoDB, API Gateway | Planned; not deployed |
+| Cloud runtime | AWS Lambda, EventBridge Scheduler, DynamoDB, API Gateway | Deployed; hourly EventBridge processing enabled |
 | Object storage | S3 | Optional/planned for static deployment only; not a raw-news archive |
 
 ## Implemented software components
