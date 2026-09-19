@@ -1138,10 +1138,12 @@ function refreshStateContent(key){
   renderStories(key);
 }
 
-async function hydrateAllStates(force = false){
+async function hydrateAllStates(force = false, exclude = []){
+  const excluded = new Set(exclude);
+  const pendingKeys = KEYS.filter(key=>!excluded.has(key));
   const batchSize = 6;
-  for(let i=0;i<KEYS.length;i+=batchSize){
-    await Promise.all(KEYS.slice(i,i+batchSize).map(key=>hydrateState(key, force)));
+  for(let i=0;i<pendingKeys.length;i+=batchSize){
+    await Promise.all(pendingKeys.slice(i,i+batchSize).map(key=>hydrateState(key, force)));
   }
 }
 
@@ -2257,7 +2259,11 @@ function hydrateBackend(){
   });
   // Load the latest persisted state projections quietly. The printing press
   // remains the explicit action that starts a fresh processing run.
-  hydrateAllStates();
+  // Load the states shown on the front page first, then fill the rest of the
+  // map quietly. This keeps the coverage panel useful immediately without
+  // delaying the map or any state transition.
+  void Promise.all(FEATURED.map(key=>hydrateState(key)))
+    .then(()=>hydrateAllStates(false, FEATURED));
 }
 hydrateBackend();
 
