@@ -1033,6 +1033,7 @@ const HINT_DEFAULT = hint.textContent;
 let hovered = null, busy = false, current = null;
 const stateStoryCache = new Map();
 const STATE_CACHE_PREFIX = "sutradhar-state-snapshot:v4:";
+const NATIONAL_CACHE_KEY = "sutradhar-national-snapshot:v1";
 
 function readStateSnapshot(key){
   try {
@@ -1051,6 +1052,21 @@ function writeStateSnapshot(key, stories, facts){
   } catch(error) {
     // A full/private browser storage area should not block live news loading.
   }
+}
+
+function readNationalSnapshot(){
+  try {
+    const raw = localStorage.getItem(NATIONAL_CACHE_KEY);
+    if(!raw) return null;
+    const stories = JSON.parse(raw);
+    return Array.isArray(stories) ? stories : null;
+  } catch(error) {
+    return null;
+  }
+}
+
+function writeNationalSnapshot(stories){
+  try { localStorage.setItem(NATIONAL_CACHE_KEY, JSON.stringify(stories)); } catch(error) {}
 }
 
 function escapeHtml(value){
@@ -1714,7 +1730,7 @@ async function renderNational(){
   spFacts.innerHTML=NATIONAL.facts.map(f=>`<div class="fact"><dt>${f[0]}</dt><dd>${f[1]}</dd></div>`).join("");
   buildNationalArt();
   buildMini("__national__");
-  NATIONAL.stories = [];
+  NATIONAL.stories = readNationalSnapshot() || [];
   renderStoriesData(NATIONAL.stories,"national");
   spScroll.scrollTop=0;
   nextState.innerHTML=`Back to states <i>→</i>`;
@@ -1726,7 +1742,10 @@ async function renderNational(){
   try {
     const payload = await getNationalStories();
     const stories = Array.isArray(payload.stories) ? payload.stories.map(backendStory) : [];
-    if(stories.length > 0) NATIONAL.stories = stories;
+    if(stories.length > 0){
+      NATIONAL.stories = stories;
+      writeNationalSnapshot(stories);
+    }
   } catch(error) {
     console.warn("Sutradhar national API unavailable.", error);
   }
