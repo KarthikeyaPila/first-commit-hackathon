@@ -1694,13 +1694,6 @@ async function renderNational(){
   buildNationalArt();
   buildMini("__national__");
   NATIONAL.stories = [];
-  try {
-    const payload = await getNationalStories();
-    const stories = Array.isArray(payload.stories) ? payload.stories.map(backendStory) : [];
-    if(stories.length > 0) NATIONAL.stories = stories;
-  } catch(error) {
-    console.warn("Sutradhar national API unavailable.", error);
-  }
   renderStoriesData(NATIONAL.stories,"national");
   spScroll.scrollTop=0;
   nextState.innerHTML=`Back to states <i>→</i>`;
@@ -1709,6 +1702,14 @@ async function renderNational(){
   statePage.removeAttribute("data-open");
   void statePage.offsetWidth;
   statePage.setAttribute("data-open","1");
+  try {
+    const payload = await getNationalStories();
+    const stories = Array.isArray(payload.stories) ? payload.stories.map(backendStory) : [];
+    if(stories.length > 0) NATIONAL.stories = stories;
+  } catch(error) {
+    console.warn("Sutradhar national API unavailable.", error);
+  }
+  renderStoriesData(NATIONAL.stories,"national");
 }
 
 function renderStoriesData(stories,key,limit=12){
