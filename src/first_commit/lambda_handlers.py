@@ -105,17 +105,29 @@ def api_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
             return _response(200, {"run_id": None, "stories": []})
         from .sources import SOURCES
         national_names = {source.name for source in SOURCES if source.scope == "NATIONAL"}
+        sources_by_id = {source.source_id: source for source in SOURCES}
         result = _query_all(table,
             IndexName="RunStoriesIndex",
             KeyConditionExpression=Key("GSI1PK").eq(f"RUN#{latest_run_id}"),
         )
         stories = []
         for story in result:
-            sources = [name for name in story.get("sources", []) if name in national_names]
-            if not sources:
+            all_sources = set(story.get("sources", []))
+            for article_id in story.get("article_ids", []):
+                article = table.get_item(
+                    Key={"PK": f"ARTICLE#{article_id}", "SK": "META"}
+                ).get("Item")
+                source = sources_by_id.get(str(article.get("source_id"))) if article else None
+                if source:
+                    all_sources.add(source.name)
+            if not any(name in national_names for name in all_sources):
                 continue
             story = _with_latest_published_at(table, story)
-            story["sources"] = sources
+            # A national story is selected because at least one national
+            # publisher covers it, but its card should expose every publisher
+            # covering the same underlying story. The detail endpoint already
+            # shows the full comparison; keep the summary count consistent.
+            story["sources"] = sorted(all_sources)
             story["state"] = "National"
             stories.append(story)
         stories.sort(key=lambda story: int(story.get("article_count", 0)), reverse=True)
